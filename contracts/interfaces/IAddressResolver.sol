@@ -1,6 +1,7 @@
 pragma solidity >=0.4.24;
 
 
+// https://docs.shadows.link/contracts/source/interfaces/iaddressresolver
 interface IAddressResolver {
     function getAddress(bytes32 name) external view returns (address);
 

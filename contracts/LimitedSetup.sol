@@ -1,34 +1,20 @@
-/*
------------------------------------------------------------------
-FILE INFORMATION
------------------------------------------------------------------
-file:       LimitedSetup.sol
------------------------------------------------------------------
-*/
+pragma solidity ^0.5.16;
 
-pragma solidity ^0.4.21;
 
-/**
- * @title Any function decorated with the modifier this contract provides
- * deactivates after a specified setup period.
- */
+// https://docs.shadows.link/contracts/source/contracts/limitedsetup
 contract LimitedSetup {
-
-    uint setupExpiryTime;
+    uint public setupExpiryTime;
 
     /**
-     * @dev Constructor.
+     * @dev LimitedSetup Constructor.
      * @param setupDuration The time the setup period will last for.
      */
-    function LimitedSetup(uint setupDuration)
-        public
-    {
+    constructor(uint setupDuration) internal {
         setupExpiryTime = now + setupDuration;
     }
 
-    modifier setupFunction
-    {
-        require(now < setupExpiryTime);
+    modifier onlyDuringSetup {
+        require(now < setupExpiryTime, "Can only perform this action during setup");
         _;
     }
 }
