@@ -1,19 +1,48 @@
-pragma solidity ^0.5.16;
+/*
+-----------------------------------------------------------------
+FILE INFORMATION
+-----------------------------------------------------------------
+
+file:       LimitedSetup.sol
+version:    1.1
+author:     Anton Jurisevic
+
+date:       2018-05-15
+
+-----------------------------------------------------------------
+MODULE DESCRIPTION
+-----------------------------------------------------------------
+
+A contract with a limited setup period. Any function modified
+with the setup modifier will cease to work after the
+conclusion of the configurable-length post-construction setup period.
+
+-----------------------------------------------------------------
+*/
 
 
-// https://docs.shadows.link/contracts/source/contracts/limitedsetup
+pragma solidity 0.4.25;
+
+/**
+ * @title Any function decorated with the modifier this contract provides
+ * deactivates after a specified setup period.
+ */
 contract LimitedSetup {
-    uint public setupExpiryTime;
+
+    uint setupExpiryTime;
 
     /**
      * @dev LimitedSetup Constructor.
      * @param setupDuration The time the setup period will last for.
      */
-    constructor(uint setupDuration) internal {
+    constructor(uint setupDuration)
+        public
+    {
         setupExpiryTime = now + setupDuration;
     }
 
-    modifier onlyDuringSetup {
+    modifier onlyDuringSetup
+    {
         require(now < setupExpiryTime, "Can only perform this action during setup");
         _;
     }

@@ -1,2 +1,2 @@
-# Shadows
-Shadows Solidity smart contracts
+# shadows-contract
+shadows-contract contract

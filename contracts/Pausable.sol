@@ -1,17 +1,47 @@
-pragma solidity ^0.5.16;
+/*
+-----------------------------------------------------------------
+FILE INFORMATION
+-----------------------------------------------------------------
 
-// Inheritance
+file:       Pausable.sol
+version:    1.0
+author:     Kevin Brown
+
+date:       2018-05-22
+
+-----------------------------------------------------------------
+MODULE DESCRIPTION
+-----------------------------------------------------------------
+
+This contract allows an inheriting contract to be marked as
+paused. It also defines a modifier which can be used by the
+inheriting contract to prevent actions while paused.
+
+-----------------------------------------------------------------
+*/
+
+pragma solidity 0.4.25;
+
+
 import "./Owned.sol";
 
 
-// https://docs.shadows.link/contracts/source/contracts/pausable
+/**
+ * @title A contract that can be paused by its owner
+ */
 contract Pausable is Owned {
+    
     uint public lastPauseTime;
     bool public paused;
 
-    constructor() internal {
-        // This contract is abstract, and thus cannot be instantiated directly
-        require(owner != address(0), "Owner must be set");
+    /**
+     * @dev Constructor
+     * @param _owner The account which controls this contract.
+     */
+    constructor(address _owner)
+        Owned(_owner)
+        public
+    {
         // Paused will be false, and lastPauseTime will be 0 upon initialisation
     }
 
@@ -19,7 +49,10 @@ contract Pausable is Owned {
      * @notice Change the paused state of the contract
      * @dev Only the contract owner may call this.
      */
-    function setPaused(bool _paused) external onlyOwner {
+    function setPaused(bool _paused)
+        external
+        onlyOwner
+    {
         // Ensure we're actually changing the state before we do anything
         if (_paused == paused) {
             return;
@@ -27,7 +60,7 @@ contract Pausable is Owned {
 
         // Set our paused state.
         paused = _paused;
-
+        
         // If applicable, set the last pause time.
         if (paused) {
             lastPauseTime = now;
