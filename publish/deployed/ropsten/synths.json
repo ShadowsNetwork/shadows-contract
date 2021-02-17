@@ -1,0 +1,368 @@
+[
+	{
+		"name": "xEUR",
+		"asset": "EUR",
+		"category": "forex",
+		"sign": "€",
+		"desc": "Euros",
+		"aggregator": "0xe95feDE497d0c02a2DBc8e20C5E8bFFE9339F03a"
+	},
+	{
+		"name": "xJPY",
+		"asset": "JPY",
+		"category": "forex",
+		"sign": "¥",
+		"desc": "Japanese Yen",
+		"aggregator": "0x8eAeBAF0eA3BC2a160b461703AF409d074CDEC6e"
+	},
+	{
+		"name": "xUSD",
+		"asset": "USD",
+		"category": "forex",
+		"sign": "$",
+		"desc": "US Dollars"
+	},
+	{
+		"name": "xAUD",
+		"asset": "AUD",
+		"category": "forex",
+		"sign": "$",
+		"desc": "Australian Dollars",
+		"aggregator": "0x1c621Aab85F7879690B5407404A097068770b59a"
+	},
+	{
+		"name": "xGBP",
+		"asset": "GBP",
+		"category": "forex",
+		"sign": "£",
+		"desc": "Pound Sterling",
+		"aggregator": "0xa2Dbd50FD09B9572a8A37ED4C2aEE4093A4b3Ef7"
+	},
+	{
+		"name": "xCHF",
+		"asset": "CHF",
+		"category": "forex",
+		"sign": "Fr",
+		"desc": "Swiss Franc",
+		"aggregator": "0xD49c81796BccAbb5cd804f9d186B5E00E9Ac21fF"
+	},
+	{
+		"name": "xXAU",
+		"asset": "XAU",
+		"category": "commodity",
+		"sign": "oz",
+		"desc": "Gold Ounce",
+		"aggregator": "0x2419A5aA4A82a6A18cA9b20Ea2934d7467E6a2cf"
+	},
+	{
+		"name": "xXAG",
+		"asset": "XAG",
+		"category": "commodity",
+		"sign": "oz",
+		"desc": "Silver Ounce",
+		"aggregator": "0x42dE9E69B3a5a45600a11D3f37768dffA2846A8A"
+	},
+	{
+		"name": "xBTC",
+		"asset": "BTC",
+		"category": "crypto",
+		"sign": "₿",
+		"desc": "Bitcoin"
+	},
+	{
+		"name": "xETH",
+		"asset": "ETH",
+		"category": "crypto",
+		"sign": "Ξ",
+		"desc": "Ether",
+		"subclass": "MultiCollateralSynth"
+	},
+	{
+		"name": "xBNB",
+		"asset": "BNB",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Binance Coin",
+		"subclass": "PurgeableSynth"
+	},
+	{
+		"name": "xMKR",
+		"asset": "MKR",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Maker",
+		"subclass": "PurgeableSynth"
+	},
+	{
+		"name": "xTRX",
+		"asset": "TRX",
+		"category": "crypto",
+		"sign": "",
+		"desc": "TRON"
+	},
+	{
+		"name": "xXTZ",
+		"asset": "XTZ",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Tezos",
+		"subclass": "PurgeableSynth"
+	},
+	{
+		"name": "sXRP",
+		"asset": "XRP",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Ripple"
+	},
+	{
+		"name": "sLTC",
+		"asset": "LTC",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Litecoin",
+		"subclass": "PurgeableSynth"
+	},
+	{
+		"name": "sLINK",
+		"asset": "LINK",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Chainlink"
+	},
+	{
+		"name": "xCEX",
+		"asset": "CEX",
+		"category": "index",
+		"index": [
+			{
+				"symbol": "BNB",
+				"name": "Binance Coin",
+				"units": 17.88
+			},
+			{
+				"symbol": "LEO",
+				"name": "UNUS SED LEO",
+				"units": 153.85
+			},
+			{
+				"symbol": "HT",
+				"name": "Huobi Token",
+				"units": 20.51
+			},
+			{
+				"symbol": "OKB",
+				"name": "OKB",
+				"units": 32.52
+			},
+			{
+				"symbol": "KCS",
+				"name": "KuCoin Shares",
+				"units": 59.82
+			}
+		],
+		"sign": "",
+		"desc": "Centralised Exchange Index",
+		"subclass": "PurgeableSynth"
+	},
+	{
+		"name": "sDEFI",
+		"asset": "DEFI",
+		"category": "index",
+		"index": [
+			{
+				"symbol": "LINK",
+				"name": "Chainlink",
+				"units": 88.03
+			},
+			{
+				"symbol": "MKR",
+				"name": "Maker",
+				"units": 0.37
+			},
+			{
+				"symbol": "ZRX",
+				"name": "0x",
+				"units": 488.72
+			},
+			{
+				"symbol": "DOWS",
+				"name": "Shadows",
+				"units": 121.5
+			},
+			{
+				"symbol": "REN",
+				"name": "Ren Protocol",
+				"units": 1138.52
+			},
+			{
+				"symbol": "LRC",
+				"name": "Loopring",
+				"units": 2047.78
+			},
+			{
+				"symbol": "KNC",
+				"name": "Kyber Network",
+				"units": 350.88
+			},
+			{
+				"symbol": "BNT",
+				"name": "Bancor",
+				"units": 109.03
+			},
+			{
+				"symbol": "MLN",
+				"name": "Melon Protocol",
+				"units": 6.04
+			}
+		],
+		"sign": "",
+		"desc": "DeFi Index",
+		"subclass": "PurgeableSynth"
+	},
+	{
+		"name": "iBTC",
+		"asset": "BTC",
+		"category": "crypto",
+		"sign": "₿",
+		"desc": "Inverted Bitcoin",
+		"subclass": "PurgeableSynth",
+		"inverted": {
+			"entryPoint": 10600,
+			"upperLimit": 15900,
+			"lowerLimit": 5300
+		}
+	},
+	{
+		"name": "iETH",
+		"asset": "ETH",
+		"category": "crypto",
+		"sign": "Ξ",
+		"desc": "Inverted Ether",
+		"subclass": "PurgeableSynth",
+		"inverted": {
+			"entryPoint": 220,
+			"upperLimit": 330,
+			"lowerLimit": 110
+		}
+	},
+	{
+		"name": "iBNB",
+		"asset": "BNB",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Inverted Binance Coin",
+		"subclass": "PurgeableSynth",
+		"inverted": {
+			"entryPoint": 13.3,
+			"upperLimit": 19.95,
+			"lowerLimit": 6.65
+		}
+	},
+	{
+		"name": "iMKR",
+		"asset": "MKR",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Inverted Maker",
+		"subclass": "PurgeableSynth",
+		"inverted": {
+			"entryPoint": 550,
+			"upperLimit": 825,
+			"lowerLimit": 275
+		}
+	},
+	{
+		"name": "iTRX",
+		"asset": "TRX",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Inverted TRON",
+		"subclass": "PurgeableSynth",
+		"inverted": {
+			"entryPoint": 0.0186888,
+			"upperLimit": 0.0280332,
+			"lowerLimit": 0.0093444
+		}
+	},
+	{
+		"name": "iXTZ",
+		"asset": "XTZ",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Inverted Tezos",
+		"subclass": "PurgeableSynth",
+		"inverted": {
+			"entryPoint": 1.7,
+			"upperLimit": 2.55,
+			"lowerLimit": 0.85
+		}
+	},
+	{
+		"name": "iXRP",
+		"asset": "XRP",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Inverted Ripple",
+		"subclass": "PurgeableSynth",
+		"inverted": {
+			"entryPoint": 0.2605,
+			"upperLimit": 0.3908,
+			"lowerLimit": 0.1303
+		}
+	},
+	{
+		"name": "iLINK",
+		"asset": "LINK",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Inverted Chainlink",
+		"subclass": "PurgeableSynth",
+		"inverted": {
+			"entryPoint": 2.944615425,
+			"upperLimit": 4.416923138,
+			"lowerLimit": 1.472307713
+		}
+	},
+	{
+		"name": "iLTC",
+		"asset": "LTC",
+		"category": "crypto",
+		"sign": "",
+		"desc": "Inverted Litecoin",
+		"subclass": "PurgeableSynth",
+		"inverted": {
+			"entryPoint": 58.73,
+			"upperLimit": 88.095,
+			"lowerLimit": 29.365
+		}
+	},
+	{
+		"name": "iCEX",
+		"asset": "CEX",
+		"category": "index",
+		"index": "xCEX",
+		"sign": "",
+		"desc": "Inverted Centralised Exchange Index",
+		"subclass": "PurgeableSynth",
+		"inverted": {
+			"entryPoint": 1000,
+			"upperLimit": 1500,
+			"lowerLimit": 500
+		}
+	},
+	{
+		"name": "iDEFI",
+		"asset": "DEFI",
+		"category": "index",
+		"index": "sDEFI",
+		"sign": "",
+		"desc": "Inverted DeFi Index",
+		"subclass": "PurgeableSynth",
+		"inverted": {
+			"entryPoint": 1000,
+			"upperLimit": 1500,
+			"lowerLimit": 500
+		}
+	}
+]

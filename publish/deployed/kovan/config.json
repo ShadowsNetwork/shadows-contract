@@ -1,0 +1,353 @@
+{
+	"AddressResolver": {
+		"deploy": false
+	},
+	"ArbRewarder": {
+		"deploy": false
+	},
+	"Depot": {
+		"deploy": false
+	},
+	"DappMaintenance": {
+		"deploy": false
+	},
+	"EscrowChecker": {
+		"deploy": false
+	},
+	"EtherCollateral": {
+		"deploy": false
+	},
+	"ExchangeRates": {
+		"deploy": false
+	},
+	"Exchanger": {
+		"deploy": false
+	},
+	"ExchangeState": {
+		"deploy": false
+	},
+	"FeePool": {
+		"deploy": false
+	},
+	"FeePoolState": {
+		"deploy": false
+	},
+	"FeePoolEternalStorage": {
+		"deploy": false
+	},
+	"DelegateApprovals": {
+		"deploy": false
+	},
+	"Issuer": {
+		"deploy": false
+	},
+	"SupplySchedule": {
+		"deploy": false
+	},
+	"Shadows": {
+		"deploy": false
+	},
+	"ShadowsEscrow": {
+		"deploy": false
+	},
+	"RewardEscrow": {
+		"deploy": false
+	},
+	"RewardsDistribution": {
+		"deploy": false
+	},
+	"ShadowsState": {
+		"deploy": false
+	},
+	"SynthxUSD": {
+		"deploy": false
+	},
+	"SynthxEUR": {
+		"deploy": false
+	},
+	"SynthxJPY": {
+		"deploy": false
+	},
+	"SynthxAUD": {
+		"deploy": false
+	},
+	"SynthxGBP": {
+		"deploy": false
+	},
+	"SynthxCHF": {
+		"deploy": false
+	},
+	"SynthxXAU": {
+		"deploy": false
+	},
+	"SynthxXAG": {
+		"deploy": false
+	},
+	"SynthxBTC": {
+		"deploy": false
+	},
+	"ProxyERC20": {
+		"deploy": false
+	},
+	"ProxyFeePool": {
+		"deploy": false
+	},
+	"ProxyShadows": {
+		"deploy": false
+	},
+	"ProxyxUSD": {
+		"deploy": false
+	},
+	"ProxyxEUR": {
+		"deploy": false
+	},
+	"ProxyxJPY": {
+		"deploy": false
+	},
+	"ProxyxAUD": {
+		"deploy": false
+	},
+	"ProxyxGBP": {
+		"deploy": false
+	},
+	"ProxyxCHF": {
+		"deploy": false
+	},
+	"ProxyxXAU": {
+		"deploy": false
+	},
+	"ProxyxXAG": {
+		"deploy": false
+	},
+	"ProxyxBTC": {
+		"deploy": false
+	},
+	"SafeDecimalMath": {
+		"deploy": false
+	},
+	"Math": {
+		"deploy": false
+	},
+	"TokenStateShadows": {
+		"deploy": false
+	},
+	"TokenStatexUSD": {
+		"deploy": false
+	},
+	"TokenStatexEUR": {
+		"deploy": false
+	},
+	"TokenStatexJPY": {
+		"deploy": false
+	},
+	"TokenStatexAUD": {
+		"deploy": false
+	},
+	"TokenStatexGBP": {
+		"deploy": false
+	},
+	"TokenStatexCHF": {
+		"deploy": false
+	},
+	"TokenStatexXAU": {
+		"deploy": false
+	},
+	"TokenStatexXAG": {
+		"deploy": false
+	},
+	"TokenStatexBTC": {
+		"deploy": false
+	},
+	"TokenStatexETH": {
+		"deploy": false
+	},
+	"ProxyxETH": {
+		"deploy": false
+	},
+	"SynthxETH": {
+		"deploy": false
+	},
+	"TokenStatexBNB": {
+		"deploy": false
+	},
+	"ProxyxBNB": {
+		"deploy": false
+	},
+	"SynthxBNB": {
+		"deploy": false
+	},
+	"TokenStatexMKR": {
+		"deploy": false
+	},
+	"ProxyxMKR": {
+		"deploy": false
+	},
+	"SynthxMKR": {
+		"deploy": false
+	},
+	"TokenStatexTRX": {
+		"deploy": false
+	},
+	"ProxyxTRX": {
+		"deploy": false
+	},
+	"SynthxTRX": {
+		"deploy": false
+	},
+	"TokenStatexXTZ": {
+		"deploy": false
+	},
+	"ProxyxXTZ": {
+		"deploy": false
+	},
+	"SynthxXTZ": {
+		"deploy": false
+	},
+	"TokenStateiBTC": {
+		"deploy": false
+	},
+	"ProxyiBTC": {
+		"deploy": false
+	},
+	"SynthiBTC": {
+		"deploy": false
+	},
+	"TokenStateiETH": {
+		"deploy": false
+	},
+	"ProxyiETH": {
+		"deploy": false
+	},
+	"SynthiETH": {
+		"deploy": false
+	},
+	"TokenStateiBNB": {
+		"deploy": false
+	},
+	"ProxyiBNB": {
+		"deploy": false
+	},
+	"SynthiBNB": {
+		"deploy": false
+	},
+	"TokenStateiMKR": {
+		"deploy": false
+	},
+	"ProxyiMKR": {
+		"deploy": false
+	},
+	"SynthiMKR": {
+		"deploy": false
+	},
+	"TokenStateiTRX": {
+		"deploy": false
+	},
+	"ProxyiTRX": {
+		"deploy": false
+	},
+	"SynthiTRX": {
+		"deploy": false
+	},
+	"TokenStateiXTZ": {
+		"deploy": false
+	},
+	"ProxyiXTZ": {
+		"deploy": false
+	},
+	"SynthiXTZ": {
+		"deploy": false
+	},
+	"TokenStatexCEX": {
+		"deploy": false
+	},
+	"ProxyxCEX": {
+		"deploy": false
+	},
+	"SynthxCEX": {
+		"deploy": false
+	},
+	"TokenStateiCEX": {
+		"deploy": false
+	},
+	"ProxyiCEX": {
+		"deploy": false
+	},
+	"SynthiCEX": {
+		"deploy": false
+	},
+	"ProxyERC20xUSD": {
+		"deploy": false
+	},
+	"TokenStatesXRP": {
+		"deploy": false
+	},
+	"ProxysXRP": {
+		"deploy": false
+	},
+	"SynthsXRP": {
+		"deploy": false
+	},
+	"TokenStatesLTC": {
+		"deploy": false
+	},
+	"ProxysLTC": {
+		"deploy": false
+	},
+	"SynthsLTC": {
+		"deploy": false
+	},
+	"TokenStatesLINK": {
+		"deploy": false
+	},
+	"ProxysLINK": {
+		"deploy": false
+	},
+	"SynthsLINK": {
+		"deploy": false
+	},
+	"TokenStatesDEFI": {
+		"deploy": false
+	},
+	"ProxysDEFI": {
+		"deploy": false
+	},
+	"SynthsDEFI": {
+		"deploy": false
+	},
+	"TokenStateiXRP": {
+		"deploy": false
+	},
+	"ProxyiXRP": {
+		"deploy": false
+	},
+	"SynthiXRP": {
+		"deploy": false
+	},
+	"TokenStateiLINK": {
+		"deploy": false
+	},
+	"ProxyiLINK": {
+		"deploy": false
+	},
+	"SynthiLINK": {
+		"deploy": false
+	},
+	"TokenStateiLTC": {
+		"deploy": false
+	},
+	"ProxyiLTC": {
+		"deploy": false
+	},
+	"SynthiLTC": {
+		"deploy": false
+	},
+	"TokenStateiDEFI": {
+		"deploy": false
+	},
+	"ProxyiDEFI": {
+		"deploy": false
+	},
+	"SynthiDEFI": {
+		"deploy": false
+	}
+}

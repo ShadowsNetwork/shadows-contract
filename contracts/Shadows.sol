@@ -1,211 +1,201 @@
-/*
------------------------------------------------------------------
-FILE INFORMATION
------------------------------------------------------------------
-
-file:       Shadows.sol
-version:    2.0
-author:     Kevin Brown
-            Gavin Conway
-date:       2018-09-14
-
------------------------------------------------------------------
-MODULE DESCRIPTION
------------------------------------------------------------------
-
-Shadows token contract. SNX is a transferable ERC20 token,
-and also give its holders the following privileges.
-An owner of SNX has the right to issue synths in all synth flavours.
-
-After a fee period terminates, the duration and fees collected for that
-period are computed, and the next period begins. Thus an account may only
-withdraw the fees owed to them for the previous period, and may only do
-so once per period. Any unclaimed fees roll over into the common pot for
-the next period.
-
-== Average Balance Calculations ==
-
-The fee entitlement of a synthetix holder is proportional to their average
-issued synth balance over the last fee period. This is computed by
-measuring the area under the graph of a user's issued synth balance over
-time, and then when a new fee period begins, dividing through by the
-duration of the fee period.
-
-We need only update values when the balances of an account is modified.
-This occurs when issuing or burning for issued synth balances,
-and when transferring for synthetix balances. This is for efficiency,
-and adds an implicit friction to interacting with SNX.
-A synthetix holder pays for his own recomputation whenever he wants to change
-his position, which saves the foundation having to maintain a pot dedicated
-to resourcing this.
-
-A hypothetical user's balance history over one fee period, pictorially:
-
-      s ____
-       |    |
-       |    |___ p
-       |____|___|___ __ _  _
-       f    t   n
-
-Here, the balance was s between times f and t, at which time a transfer
-occurred, updating the balance to p, until n, when the present transfer occurs.
-When a new transfer occurs at time n, the balance being p,
-we must:
-
-  - Add the area p * (n - t) to the total area recorded so far
-  - Update the last transfer time to n
-
-So if this graph represents the entire current fee period,
-the average SNX held so far is ((t-f)*s + (n-t)*p) / (n-f).
-The complementary computations must be performed for both sender and
-recipient.
-
-Note that a transfer keeps global supply of SNX invariant.
-The sum of all balances is constant, and unmodified by any transfer.
-So the sum of all balances multiplied by the duration of a fee period is also
-constant, and this is equivalent to the sum of the area of every user's
-time/balance graph. Dividing through by that duration yields back the total
-synthetix supply. So, at the end of a fee period, we really do yield a user's
-average share in the synthetix supply over that period.
-
-A slight wrinkle is introduced if we consider the time r when the fee period
-rolls over. Then the previous fee period k-1 is before r, and the current fee
-period k is afterwards. If the last transfer took place before r,
-but the latest transfer occurred afterwards:
-
-k-1       |        k
-      s __|_
-       |  | |
-       |  | |____ p
-       |__|_|____|___ __ _  _
-          |
-       f  | t    n
-          r
-
-In this situation the area (r-f)*s contributes to fee period k-1, while
-the area (t-r)*s contributes to fee period k. We will implicitly consider a
-zero-value transfer to have occurred at time r. Their fee entitlement for the
-previous period will be finalised at the time of their first transfer during the
-current fee period, or when they query or withdraw their fee entitlement.
-
-In the implementation, the duration of different fee periods may be slightly irregular,
-as the check that they have rolled over occurs only when state-changing synthetix
-operations are performed.
-
-== Issuance and Burning ==
-
-In this version of the synthetix contract, synths can only be issued by
-those that have been nominated by the synthetix foundation. Synths are assumed
-to be valued at $1, as they are a stable unit of account.
-
-All synths issued require a proportional value of SNX to be locked,
-where the proportion is governed by the current issuance ratio. This
-means for every $1 of SNX locked up, $(issuanceRatio) synths can be issued.
-i.e. to issue 100 synths, 100/issuanceRatio dollars of SNX need to be locked up.
-
-To determine the value of some amount of SNX(S), an oracle is used to push
-the price of SNX (P_S) in dollars to the contract. The value of S
-would then be: S * P_S.
-
-Any SNX that are locked up by this issuance process cannot be transferred.
-The amount that is locked floats based on the price of SNX. If the price
-of SNX moves up, less SNX are locked, so they can be issued against,
-or transferred freely. If the price of SNX moves down, more SNX are locked,
-even going above the initial wallet balance.
-
------------------------------------------------------------------
-*/
-
 pragma solidity 0.4.25;
 
-
-import "./FeePool.sol";
 import "./ExternStateToken.sol";
-import "./Synth.sol";
-import "./ShadowsEscrow.sol";
-import "./ShadowsState.sol";
 import "./TokenState.sol";
-import "./ExchangeRates.sol";
+import "./MixinResolver.sol";
+import "./SupplySchedule.sol";
+import "./Synth.sol";
+import "./interfaces/IShadowsState.sol";
+import "./interfaces/IExchangeRates.sol";
+import "./interfaces/IShadowsEscrow.sol";
+import "./interfaces/IFeePool.sol";
+import "./interfaces/IRewardsDistribution.sol";
+import "./interfaces/IExchanger.sol";
+import "./interfaces/IIssuer.sol";
+import "./interfaces/IEtherCollateral.sol";
+
 
 /**
  * @title Shadows ERC20 contract.
  * @notice The Shadows contracts not only facilitates transfers, exchanges, and tracks balances,
- * but it also computes the quantity of fees each synthetix holder is entitled to.
+ * but it also computes the quantity of fees each shadows holder is entitled to.
  */
-contract Shadows is ExternStateToken {
-
+contract Shadows is ExternStateToken, MixinResolver {
     // ========== STATE VARIABLES ==========
 
     // Available Synths which can be used with the system
     Synth[] public availableSynths;
-    mapping(bytes4 => Synth) public synths;
+    mapping(bytes32 => Synth) public synths;
+    mapping(address => bytes32) public synthsByAddress;
 
-    FeePool public feePool;
-    ShadowsEscrow public escrow;
-    ExchangeRates public exchangeRates;
-    ShadowsState public synthetixState;
-
-    uint constant SYNTHETIX_SUPPLY = 1e8 * SafeDecimalMath.unit();
     string constant TOKEN_NAME = "Shadows Network Token";
-    string constant TOKEN_SYMBOL = "SNX";
+    string constant TOKEN_SYMBOL = "DOWS";
     uint8 constant DECIMALS = 18;
+    bytes32 constant xUSD = "xUSD";
 
     // ========== CONSTRUCTOR ==========
 
     /**
      * @dev Constructor
-     * @param _tokenState A pre-populated contract containing token balances.
-     * If the provided address is 0x0, then a fresh one will be constructed with the contract owning all tokens.
+     * @param _proxy The main token address of the Proxy contract. This will be ProxyERC20.sol
+     * @param _tokenState Address of the external immutable contract containing token balances.
      * @param _owner The owner of this contract.
+     * @param _totalSupply On upgrading set to reestablish the current total supply (This should be in ShadowsState if ever updated)
+     * @param _resolver The address of the Shadows Address Resolver
      */
-    constructor(address _proxy, TokenState _tokenState, ShadowsState _synthetixState,
-        address _owner, ExchangeRates _exchangeRates, FeePool _feePool
-    )
-        ExternStateToken(_proxy, _tokenState, TOKEN_NAME, TOKEN_SYMBOL, SYNTHETIX_SUPPLY, DECIMALS, _owner)
+    constructor(address _proxy, TokenState _tokenState, address _owner, uint _totalSupply, address _resolver)
         public
-    {
-        synthetixState = _synthetixState;
-        exchangeRates = _exchangeRates;
-        feePool = _feePool;
+        ExternStateToken(_proxy, _tokenState, TOKEN_NAME, TOKEN_SYMBOL, _totalSupply, DECIMALS, _owner)
+        MixinResolver(_owner, _resolver)
+    {}
+
+    /* ========== VIEWS ========== */
+
+    function exchanger() internal view returns (IExchanger) {
+        return IExchanger(resolver.requireAndGetAddress("Exchanger", "Missing Exchanger address"));
     }
 
-    // ========== SETTERS ========== */
+    function etherCollateral() internal view returns (IEtherCollateral) {
+        return IEtherCollateral(resolver.requireAndGetAddress("EtherCollateral", "Missing EtherCollateral address"));
+    }
+
+    function issuer() internal view returns (IIssuer) {
+        return IIssuer(resolver.requireAndGetAddress("Issuer", "Missing Issuer address"));
+    }
+
+    function shadowsState() internal view returns (IShadowsState) {
+        return IShadowsState(resolver.requireAndGetAddress("ShadowsState", "Missing ShadowsState address"));
+    }
+
+    function exchangeRates() internal view returns (IExchangeRates) {
+        return IExchangeRates(resolver.requireAndGetAddress("ExchangeRates", "Missing ExchangeRates address"));
+    }
+
+    function feePool() internal view returns (IFeePool) {
+        return IFeePool(resolver.requireAndGetAddress("FeePool", "Missing FeePool address"));
+    }
+
+    function supplySchedule() internal view returns (SupplySchedule) {
+        return SupplySchedule(resolver.requireAndGetAddress("SupplySchedule", "Missing SupplySchedule address"));
+    }
+
+    function rewardEscrow() internal view returns (IShadowsEscrow) {
+        return IShadowsEscrow(resolver.requireAndGetAddress("RewardEscrow", "Missing RewardEscrow address"));
+    }
+
+    function shadowsEscrow() internal view returns (IShadowsEscrow) {
+        return IShadowsEscrow(resolver.requireAndGetAddress("ShadowsEscrow", "Missing ShadowsEscrow address"));
+    }
+
+    function rewardsDistribution() internal view returns (IRewardsDistribution) {
+        return
+            IRewardsDistribution(
+                resolver.requireAndGetAddress("RewardsDistribution", "Missing RewardsDistribution address")
+            );
+    }
+
+    /**
+     * @notice Total amount of synths issued by the system, priced in currencyKey
+     * @param currencyKey The currency to value the synths in
+     */
+    function _totalIssuedSynths(bytes32 currencyKey, bool excludeEtherCollateral) internal view returns (uint) {
+        IExchangeRates exRates = exchangeRates();
+        uint total = 0;
+        uint currencyRate = exRates.rateForCurrency(currencyKey);
+
+        (uint[] memory rates, bool anyRateStale) = exRates.ratesAndStaleForCurrencies(availableCurrencyKeys());
+        require(!anyRateStale, "Rates are stale");
+
+        for (uint i = 0; i < availableSynths.length; i++) {
+            // What's the total issued value of that synth in the destination currency?
+            // Note: We're not using exchangeRates().effectiveValue() because we don't want to go get the
+            //       rate for the destination currency and check if it's stale repeatedly on every
+            //       iteration of the loop
+            uint totalSynths = availableSynths[i].totalSupply();
+
+            // minus total issued synths from Ether Collateral from xETH.totalSupply()
+            if (excludeEtherCollateral && availableSynths[i] == synths["xETH"]) {
+                totalSynths = totalSynths.sub(etherCollateral().totalIssuedSynths());
+            }
+
+            uint synthValue = totalSynths.multiplyDecimalRound(rates[i]);
+            total = total.add(synthValue);
+        }
+
+        return total.divideDecimalRound(currencyRate);
+    }
+
+    /**
+     * @notice Total amount of synths issued by the system priced in currencyKey
+     * @param currencyKey The currency to value the synths in
+     */
+    function totalIssuedSynths(bytes32 currencyKey) public view returns (uint) {
+        return _totalIssuedSynths(currencyKey, false);
+    }
+
+    /**
+     * @notice Total amount of synths issued by the system priced in currencyKey, excluding ether collateral
+     * @param currencyKey The currency to value the synths in
+     */
+    function totalIssuedSynthsExcludeEtherCollateral(bytes32 currencyKey) public view returns (uint) {
+        return _totalIssuedSynths(currencyKey, true);
+    }
+
+    /**
+     * @notice Returns the currencyKeys of availableSynths for rate checking
+     */
+    function availableCurrencyKeys() public view returns (bytes32[]) {
+        bytes32[] memory currencyKeys = new bytes32[](availableSynths.length);
+
+        for (uint i = 0; i < availableSynths.length; i++) {
+            currencyKeys[i] = synthsByAddress[availableSynths[i]];
+        }
+
+        return currencyKeys;
+    }
+
+    /**
+     * @notice Returns the count of available synths in the system, which you can use to iterate availableSynths
+     */
+    function availableSynthCount() public view returns (uint) {
+        return availableSynths.length;
+    }
+
+    function isWaitingPeriod(bytes32 currencyKey) external view returns (bool) {
+        return exchanger().maxSecsLeftInWaitingPeriod(messageSender, currencyKey) > 0;
+    }
+
+    // ========== MUTATIVE FUNCTIONS ==========
 
     /**
      * @notice Add an associated Synth contract to the Shadows system
      * @dev Only the contract owner may call this.
      */
-    function addSynth(Synth synth)
-        external
-        optionalProxy_onlyOwner
-    {
-        bytes4 currencyKey = synth.currencyKey();
+    function addSynth(Synth synth) external optionalProxy_onlyOwner {
+        bytes32 currencyKey = synth.currencyKey();
 
         require(synths[currencyKey] == Synth(0), "Synth already exists");
+        require(synthsByAddress[synth] == bytes32(0), "Synth address already exists");
 
         availableSynths.push(synth);
         synths[currencyKey] = synth;
-
-        emitSynthAdded(currencyKey, synth);
+        synthsByAddress[synth] = currencyKey;
     }
 
     /**
      * @notice Remove an associated Synth contract from the Shadows system
      * @dev Only the contract owner may call this.
      */
-    function removeSynth(bytes4 currencyKey)
-        external
-        optionalProxy_onlyOwner
-    {
+    function removeSynth(bytes32 currencyKey) external optionalProxy_onlyOwner {
         require(synths[currencyKey] != address(0), "Synth does not exist");
         require(synths[currencyKey].totalSupply() == 0, "Synth supply exists");
-        require(currencyKey != "XDR", "Cannot remove XDR synth");
+        require(currencyKey != xUSD, "Cannot remove synth");
 
         // Save the address we're removing for emitting the event at the end.
         address synthToRemove = synths[currencyKey];
 
         // Remove the synth from the availableSynths array.
-        for (uint8 i = 0; i < availableSynths.length; i++) {
+        for (uint i = 0; i < availableSynths.length; i++) {
             if (availableSynths[i] == synthToRemove) {
                 delete availableSynths[i];
 
@@ -222,162 +212,23 @@ contract Shadows is ExternStateToken {
         }
 
         // And remove it from the synths mapping
+        delete synthsByAddress[synths[currencyKey]];
         delete synths[currencyKey];
 
-        emitSynthRemoved(currencyKey, synthToRemove);
-    }
-
-    /**
-     * @notice Set the associated synthetix escrow contract.
-     * @dev Only the contract owner may call this.
-     */
-    function setEscrow(ShadowsEscrow _escrow)
-        external
-        optionalProxy_onlyOwner
-    {
-        escrow = _escrow;
-        // Note: No event here as our contract exceeds max contract size
+        // Note: No event here as Shadows contract exceeds max contract size
         // with these events, and it's unlikely people will need to
         // track these events specifically.
     }
-
-    /**
-     * @notice Set the ExchangeRates contract address where rates are held.
-     * @dev Only callable by the contract owner.
-     */
-    function setExchangeRates(ExchangeRates _exchangeRates)
-        external
-        optionalProxy_onlyOwner
-    {
-        exchangeRates = _exchangeRates;
-        // Note: No event here as our contract exceeds max contract size
-        // with these events, and it's unlikely people will need to
-        // track these events specifically.
-    }
-
-    /**
-     * @notice Set the synthetixState contract address where issuance data is held.
-     * @dev Only callable by the contract owner.
-     */
-    function setShadowsState(ShadowsState _synthetixState)
-        external
-        optionalProxy_onlyOwner
-    {
-        synthetixState = _synthetixState;
-
-        emitStateContractChanged(_synthetixState);
-    }
-
-    /**
-     * @notice Set your preferred currency. Note: This does not automatically exchange any balances you've held previously in
-     * other synth currencies in this address, it will apply for any new payments you receive at this address.
-     */
-    function setPreferredCurrency(bytes4 currencyKey)
-        external
-        optionalProxy
-    {
-        require(currencyKey == 0 || !exchangeRates.rateIsStale(currencyKey), "Currency rate is stale or doesn't exist.");
-
-        synthetixState.setPreferredCurrency(messageSender, currencyKey);
-
-        emitPreferredCurrencyChanged(messageSender, currencyKey);
-    }
-
-    // ========== VIEWS ==========
-
-    /**
-     * @notice A function that lets you easily convert an amount in a source currency to an amount in the destination currency
-     * @param sourceCurrencyKey The currency the amount is specified in
-     * @param sourceAmount The source amount, specified in UNIT base
-     * @param destinationCurrencyKey The destination currency
-     */
-    function effectiveValue(bytes4 sourceCurrencyKey, uint sourceAmount, bytes4 destinationCurrencyKey)
-        public
-        view
-        rateNotStale(sourceCurrencyKey)
-        rateNotStale(destinationCurrencyKey)
-        returns (uint)
-    {
-        // If there's no change in the currency, then just return the amount they gave us
-        if (sourceCurrencyKey == destinationCurrencyKey) return sourceAmount;
-
-        // Calculate the effective value by going from source -> USD -> destination
-        return sourceAmount.multiplyDecimalRound(exchangeRates.rateForCurrency(sourceCurrencyKey))
-            .divideDecimalRound(exchangeRates.rateForCurrency(destinationCurrencyKey));
-    }
-
-    /**
-     * @notice Total amount of synths issued by the system, priced in currencyKey
-     * @param currencyKey The currency to value the synths in
-     */
-    function totalIssuedSynths(bytes4 currencyKey)
-        public
-        view
-        rateNotStale(currencyKey)
-        returns (uint)
-    {
-        uint total = 0;
-        uint currencyRate = exchangeRates.rateForCurrency(currencyKey);
-
-        for (uint8 i = 0; i < availableSynths.length; i++) {
-            // Ensure the rate isn't stale.
-            // TODO: Investigate gas cost optimisation of doing a single call with all keys in it vs
-            // individual calls like this.
-            require(!exchangeRates.rateIsStale(availableSynths[i].currencyKey()), "Rate is stale");
-
-            // What's the total issued value of that synth in the destination currency?
-            // Note: We're not using our effectiveValue function because we don't want to go get the
-            //       rate for the destination currency and check if it's stale repeatedly on every
-            //       iteration of the loop
-            uint synthValue = availableSynths[i].totalSupply()
-                .multiplyDecimalRound(exchangeRates.rateForCurrency(availableSynths[i].currencyKey()))
-                .divideDecimalRound(currencyRate);
-            total = total.add(synthValue);
-        }
-
-        return total;
-    }
-
-    /**
-     * @notice Returns the count of available synths in the system, which you can use to iterate availableSynths
-     */
-    function availableSynthCount()
-        public
-        view
-        returns (uint)
-    {
-        return availableSynths.length;
-    }
-
-    // ========== MUTATIVE FUNCTIONS ==========
 
     /**
      * @notice ERC20 transfer function.
      */
-    function transfer(address to, uint value)
-        public
-        returns (bool)
-    {
-        bytes memory empty;
-        return transfer(to, value, empty);
-    }
-
-    /**
-     * @notice ERC223 transfer function. Does not conform with the ERC223 spec, as:
-     *         - Transaction doesn't revert if the recipient doesn't implement tokenFallback()
-     *         - Emits a standard ERC20 event without the bytes data parameter so as not to confuse
-     *           tooling such as Etherscan.
-     */
-    function transfer(address to, uint value, bytes data)
-        public
-        optionalProxy
-        returns (bool)
-    {
-        // Ensure they're not trying to exceed their locked amount
-        require(value <= transferableShadows(messageSender), "Insufficient balance");
+    function transfer(address to, uint value) public optionalProxy returns (bool) {
+        // Ensure they're not trying to exceed their staked DOWS amount
+        require(value <= transferableShadows(messageSender), "Cannot transfer staked or escrowed DOWS");
 
         // Perform the transfer: if there is a problem an exception will be thrown in this call.
-        _transfer_byProxy(messageSender, to, value, data);
+        _transfer_byProxy(messageSender, to, value);
 
         return true;
     }
@@ -385,501 +236,188 @@ contract Shadows is ExternStateToken {
     /**
      * @notice ERC20 transferFrom function.
      */
-    function transferFrom(address from, address to, uint value)
-        public
-        returns (bool)
-    {
-        bytes memory empty;
-        return transferFrom(from, to, value, empty);
-    }
-
-    /**
-     * @notice ERC223 transferFrom function. Does not conform with the ERC223 spec, as:
-     *         - Transaction doesn't revert if the recipient doesn't implement tokenFallback()
-     *         - Emits a standard ERC20 event without the bytes data parameter so as not to confuse
-     *           tooling such as Etherscan.
-     */
-    function transferFrom(address from, address to, uint value, bytes data)
-        public
-        optionalProxy
-        returns (bool)
-    {
+    function transferFrom(address from, address to, uint value) public optionalProxy returns (bool) {
         // Ensure they're not trying to exceed their locked amount
-        require(value <= transferableShadows(from), "Insufficient balance");
+        require(value <= transferableShadows(from), "Cannot transfer staked or escrowed DOWS");
 
         // Perform the transfer: if there is a problem,
         // an exception will be thrown in this call.
-        _transferFrom_byProxy(messageSender, from, to, value, data);
-
-        return true;
+        return _transferFrom_byProxy(messageSender, from, to, value);
     }
 
-    /**
-     * @notice Function that allows you to exchange synths you hold in one flavour for another.
-     * @param sourceCurrencyKey The source currency you wish to exchange from
-     * @param sourceAmount The amount, specified in UNIT of source currency you wish to exchange
-     * @param destinationCurrencyKey The destination currency you wish to obtain.
-     * @param destinationAddress Where the result should go. If this is address(0) then it sends back to the message sender.
-     * @return Boolean that indicates whether the transfer succeeded or failed.
-     */
-    function exchange(bytes4 sourceCurrencyKey, uint sourceAmount, bytes4 destinationCurrencyKey, address destinationAddress)
+    function issueSynths(uint amount) external optionalProxy {
+        return issuer().issueSynths(messageSender, amount);
+    }
+
+    function issueMaxSynths() external optionalProxy {
+        return issuer().issueMaxSynths(messageSender);
+    }
+
+    function burnSynths(uint amount) external optionalProxy {
+        return issuer().burnSynths(messageSender, amount);
+    }
+
+    function exchange(bytes32 sourceCurrencyKey, uint sourceAmount, bytes32 destinationCurrencyKey)
         external
         optionalProxy
-        // Note: We don't need to insist on non-stale rates because effectiveValue will do it for us.
-        returns (bool)
+        returns (uint amountReceived)
     {
-        require(sourceCurrencyKey != destinationCurrencyKey, "Exchange must use different synths");
-        require(sourceAmount > 0, "Zero amount");
-
-        // Pass it along, defaulting to the sender as the recipient.
-        return _internalExchange(
-            messageSender,
-            sourceCurrencyKey,
-            sourceAmount,
-            destinationCurrencyKey,
-            destinationAddress == address(0) ? messageSender : destinationAddress,
-            true // Charge fee on the exchange
-        );
+        return exchanger().exchange(messageSender, sourceCurrencyKey, sourceAmount, destinationCurrencyKey, messageSender);
     }
 
-    /**
-     * @notice Function that allows synth contract to delegate exchanging of a synth that is not the same sourceCurrency
-     * @dev Only the synth contract can call this function
-     * @param from The address to exchange / burn synth from
-     * @param sourceCurrencyKey The source currency you wish to exchange from
-     * @param sourceAmount The amount, specified in UNIT of source currency you wish to exchange
-     * @param destinationCurrencyKey The destination currency you wish to obtain.
-     * @param destinationAddress Where the result should go.
-     * @return Boolean that indicates whether the transfer succeeded or failed.
-     */
-    function synthInitiatedExchange(
-        address from,
-        bytes4 sourceCurrencyKey,
-        uint sourceAmount,
-        bytes4 destinationCurrencyKey,
-        address destinationAddress
-    )
-        external
-        onlySynth
-        returns (bool)
-    {
-        require(sourceCurrencyKey != destinationCurrencyKey, "Can't be same synth");
-        require(sourceAmount > 0, "Zero amount");
-
-        // Pass it along
-        return _internalExchange(
-            from,
-            sourceCurrencyKey,
-            sourceAmount,
-            destinationCurrencyKey,
-            destinationAddress,
-            false // Don't charge fee on the exchange, as they've already been charged a transfer fee in the synth contract
-        );
-    }
-
-    /**
-     * @notice Function that allows synth contract to delegate sending fee to the fee Pool.
-     * @dev Only the synth contract can call this function.
-     * @param from The address fee is coming from.
-     * @param sourceCurrencyKey source currency fee from.
-     * @param sourceAmount The amount, specified in UNIT of source currency.
-     * @return Boolean that indicates whether the transfer succeeded or failed.
-     */
-    function synthInitiatedFeePayment(
-        address from,
-        bytes4 sourceCurrencyKey,
-        uint sourceAmount
-    )
-        external
-        onlySynth
-        returns (bool)
-    {
-        require(sourceAmount > 0, "Source can't be 0");
-
-        // Pass it along, defaulting to the sender as the recipient.
-        bool result = _internalExchange(
-            from,
-            sourceCurrencyKey,
-            sourceAmount,
-            "XDR",
-            feePool.FEE_ADDRESS(),
-            false // Don't charge a fee on the exchange because this is already a fee
-        );
-
-        // Tell the fee pool about this.
-        feePool.feePaid(sourceCurrencyKey, sourceAmount);
-
-        return result;
-    }
-
-    /**
-     * @notice Function that allows synth contract to delegate sending fee to the fee Pool.
-     * @dev fee pool contract address is not allowed to call function
-     * @param from The address to move synth from
-     * @param sourceCurrencyKey source currency from.
-     * @param sourceAmount The amount, specified in UNIT of source currency.
-     * @param destinationCurrencyKey The destination currency to obtain.
-     * @param destinationAddress Where the result should go.
-     * @param chargeFee Boolean to charge a fee for transaction.
-     * @return Boolean that indicates whether the transfer succeeded or failed.
-     */
-    function _internalExchange(
-        address from,
-        bytes4 sourceCurrencyKey,
-        uint sourceAmount,
-        bytes4 destinationCurrencyKey,
-        address destinationAddress,
-        bool chargeFee
-    )
-        internal
-        notFeeAddress(from)
-        returns (bool)
-    {
-        require(destinationAddress != address(0), "Zero destination");
-        require(destinationAddress != address(this), "Shadows is invalid destination");
-        require(destinationAddress != address(proxy), "Proxy is invalid destination");
-
-        // Note: We don't need to check their balance as the burn() below will do a safe subtraction which requires
-        // the subtraction to not overflow, which would happen if their balance is not sufficient.
-
-        // Burn the source amount
-        synths[sourceCurrencyKey].burn(from, sourceAmount);
-
-        // How much should they get in the destination currency?
-        uint destinationAmount = effectiveValue(sourceCurrencyKey, sourceAmount, destinationCurrencyKey);
-
-        // What's the fee on that currency that we should deduct?
-        uint amountReceived = destinationAmount;
-        uint fee = 0;
-
-        if (chargeFee) {
-            amountReceived = feePool.amountReceivedFromExchange(destinationAmount);
-            fee = destinationAmount.sub(amountReceived);
-        }
-
-        // Issue their new synths
-        synths[destinationCurrencyKey].issue(destinationAddress, amountReceived);
-
-        // Remit the fee in XDRs
-        if (fee > 0) {
-            uint xdrFeeAmount = effectiveValue(destinationCurrencyKey, fee, "XDR");
-            synths["XDR"].issue(feePool.FEE_ADDRESS(), xdrFeeAmount);
-        }
-
-        // Nothing changes as far as issuance data goes because the total value in the system hasn't changed.
-
-        // Call the ERC223 transfer callback if needed
-        synths[destinationCurrencyKey].triggerTokenFallbackIfNeeded(from, destinationAddress, amountReceived);
-
-        // Gas optimisation:
-        // No event emitted as it's assumed users will be able to track transfers to the zero address, followed
-        // by a transfer on another synth from the zero address and ascertain the info required here.
-
-        return true;
-    }
-
-    /**
-     * @notice Function that registers new synth as they are isseud. Calculate delta to append to synthetixState.
-     * @dev Only internal calls from synthetix address.
-     * @param currencyKey The currency to register synths in, for example sUSD or sAUD
-     * @param amount The amount of synths to register with a base of UNIT
-     */
-    function _addToDebtRegister(bytes4 currencyKey, uint amount)
-        internal
-        optionalProxy
-    {
-        // What is the value of the requested debt in XDRs?
-        uint xdrValue = effectiveValue(currencyKey, amount, "XDR");
-
-        // What is the value of all issued synths of the system (priced in XDRs)?
-        uint totalDebtIssued = totalIssuedSynths("XDR");
-
-        // What will the new total be including the new value?
-        uint newTotalDebtIssued = xdrValue.add(totalDebtIssued);
-
-        // What is their percentage (as a high precision int) of the total debt?
-        uint debtPercentage = xdrValue.divideDecimalRoundPrecise(newTotalDebtIssued);
-
-        // And what effect does this percentage have on the global debt holding of other issuers?
-        // The delta specifically needs to not take into account any existing debt as it's already
-        // accounted for in the delta from when they issued previously.
-        // The delta is a high precision integer.
-        uint delta = SafeDecimalMath.preciseUnit().sub(debtPercentage);
-
-        // How much existing debt do they have?
-        uint existingDebt = debtBalanceOf(messageSender, "XDR");
-
-        // And what does their debt ownership look like including this previous stake?
-        if (existingDebt > 0) {
-            debtPercentage = xdrValue.add(existingDebt).divideDecimalRoundPrecise(newTotalDebtIssued);
-        }
-
-        // Are they a new issuer? If so, record them.
-        if (!synthetixState.hasIssued(messageSender)) {
-            synthetixState.incrementTotalIssuerCount();
-        }
-
-        // Save the debt entry parameters
-        synthetixState.setCurrentIssuanceData(messageSender, debtPercentage);
-
-        // And if we're the first, push 1 as there was no effect to any other holders, otherwise push
-        // the change for the rest of the debt holders. The debt ledger holds high precision integers.
-        if (synthetixState.debtLedgerLength() > 0) {
-            synthetixState.appendDebtLedgerValue(
-                synthetixState.lastDebtLedgerEntry().multiplyDecimalRoundPrecise(delta)
-            );
-        } else {
-            synthetixState.appendDebtLedgerValue(SafeDecimalMath.preciseUnit());
-        }
-    }
-
-    /**
-     * @notice Issue synths against the sender's SNX.
-     * @dev Issuance is only allowed if the synthetix price isn't stale. Amount should be larger than 0.
-     * @param currencyKey The currency you wish to issue synths in, for example sUSD or sAUD
-     * @param amount The amount of synths you wish to issue with a base of UNIT
-     */
-    function issueSynths(bytes4 currencyKey, uint amount)
-        public
-        optionalProxy
-        nonZeroAmount(amount)
-        // No need to check if price is stale, as it is checked in issuableSynths.
-    {
-        require(amount <= remainingIssuableSynths(messageSender, currencyKey), "Amount too large");
-
-        // Keep track of the debt they're about to create
-        _addToDebtRegister(currencyKey, amount);
-
-        // Create their synths
-        synths[currencyKey].issue(messageSender, amount);
-    }
-
-    /**
-     * @notice Issue the maximum amount of Synths possible against the sender's SNX.
-     * @dev Issuance is only allowed if the synthetix price isn't stale.
-     * @param currencyKey The currency you wish to issue synths in, for example sUSD or sAUD
-     */
-    function issueMaxSynths(bytes4 currencyKey)
-        external
-        optionalProxy
-    {
-        // Figure out the maximum we can issue in that currency
-        uint maxIssuable = remainingIssuableSynths(messageSender, currencyKey);
-
-        // And issue them
-        issueSynths(currencyKey, maxIssuable);
-    }
-
-    /**
-     * @notice Burn synths to clear issued synths/free SNX.
-     * @param currencyKey The currency you're specifying to burn
-     * @param amount The amount (in UNIT base) you wish to burn
-     */
-    function burnSynths(bytes4 currencyKey, uint amount)
-        external
-        optionalProxy
-        // No need to check for stale rates as _removeFromDebtRegister calls effectiveValue
-        // which does this for us
-    {
-        // How much debt do they have?
-        uint debt = debtBalanceOf(messageSender, currencyKey);
-
-        require(debt > 0, "No debt to forgive");
-
-        // If they're trying to burn more debt than they actually owe, rather than fail the transaction, let's just
-        // clear their debt and leave them be.
-        uint amountToBurn = debt < amount ? debt : amount;
-
-        // Remove their debt from the ledger
-        _removeFromDebtRegister(currencyKey, amountToBurn);
-
-        // synth.burn does a safe subtraction on balance (so it will revert if there are not enough synths).
-        synths[currencyKey].burn(messageSender, amountToBurn);
-    }
-
-    /**
-     * @notice Remove a debt position from the register
-     * @param currencyKey The currency the user is presenting to forgive their debt
-     * @param amount The amount (in UNIT base) being presented
-     */
-    function _removeFromDebtRegister(bytes4 currencyKey, uint amount)
-        internal
-    {
-        // How much debt are they trying to remove in XDRs?
-        uint debtToRemove = effectiveValue(currencyKey, amount, "XDR");
-
-        // How much debt do they have?
-        uint existingDebt = debtBalanceOf(messageSender, "XDR");
-
-        // What percentage of the total debt are they trying to remove?
-        uint totalDebtIssued = totalIssuedSynths("XDR");
-        uint debtPercentage = debtToRemove.divideDecimalRoundPrecise(totalDebtIssued);
-
-        // And what effect does this percentage have on the global debt holding of other issuers?
-        // The delta specifically needs to not take into account any existing debt as it's already
-        // accounted for in the delta from when they issued previously.
-        uint delta = SafeDecimalMath.preciseUnit().add(debtPercentage);
-
-        // Are they exiting the system, or are they just decreasing their debt position?
-        if (debtToRemove == existingDebt) {
-            synthetixState.clearIssuanceData(messageSender);
-            synthetixState.decrementTotalIssuerCount();
-        } else {
-            // What percentage of the debt will they be left with?
-            uint newDebt = existingDebt.sub(debtToRemove);
-            uint newTotalDebtIssued = totalDebtIssued.sub(debtToRemove);
-            uint newDebtPercentage = newDebt.divideDecimalRoundPrecise(newTotalDebtIssued);
-
-            // Store the debt percentage and debt ledger as high precision integers
-            synthetixState.setCurrentIssuanceData(messageSender, newDebtPercentage);
-        }
-
-        // Update our cumulative ledger. This is also a high precision integer.
-        synthetixState.appendDebtLedgerValue(
-            synthetixState.lastDebtLedgerEntry().multiplyDecimalRoundPrecise(delta)
-        );
+    function settle(bytes32 currencyKey) external optionalProxy returns (uint reclaimed, uint refunded) {
+        return exchanger().settle(messageSender, currencyKey);
     }
 
     // ========== Issuance/Burning ==========
 
     /**
-     * @notice The maximum synths an issuer can issue against their total synthetix quantity, priced in XDRs.
+     * @notice The maximum synths an issuer can issue against their total shadows quantity.
      * This ignores any already issued synths, and is purely giving you the maximimum amount the user can issue.
      */
-    function maxIssuableSynths(address issuer, bytes4 currencyKey)
+    function maxIssuableSynths(address _issuer)
         public
         view
-        // We don't need to check stale rates here as effectiveValue will do it for us.
-        returns (uint)
+        returns (
+            // We don't need to check stale rates here as effectiveValue will do it for us.
+            uint
+        )
     {
-        // What is the value of their SNX balance in the destination currency?
-        uint destinationValue = effectiveValue("SNX", collateral(issuer), currencyKey);
+        // What is the value of their DOWS balance in the destination currency?
+        uint destinationValue = exchangeRates().effectiveValue("DOWS", collateral(_issuer), xUSD);
 
         // They're allowed to issue up to issuanceRatio of that value
-        return destinationValue.multiplyDecimal(synthetixState.issuanceRatio());
+        return destinationValue.multiplyDecimal(shadowsState().issuanceRatio());
     }
 
     /**
      * @notice The current collateralisation ratio for a user. Collateralisation ratio varies over time
-     * as the value of the underlying Shadows asset changes, e.g. if a user issues their maximum available
+     * as the value of the underlying Shadows asset changes,
+     * e.g. based on an issuance ratio of 20%. if a user issues their maximum available
      * synths when they hold $10 worth of Shadows, they will have issued $2 worth of synths. If the value
-     * of Shadows changes, the ratio returned by this function will adjust accordlingly. Users are
+     * of Shadows changes, the ratio returned by this function will adjust accordingly. Users are
      * incentivised to maintain a collateralisation ratio as close to the issuance ratio as possible by
      * altering the amount of fees they're able to claim from the system.
      */
-    function collateralisationRatio(address issuer)
-        public
-        view
-        returns (uint)
-    {
-        uint totalOwnedShadows = collateral(issuer);
+    function collateralisationRatio(address _issuer) public view returns (uint) {
+        uint totalOwnedShadows = collateral(_issuer);
         if (totalOwnedShadows == 0) return 0;
 
-        uint debtBalance = debtBalanceOf(issuer, "SNX");
+        uint debtBalance = debtBalanceOf(_issuer, "DOWS");
         return debtBalance.divideDecimalRound(totalOwnedShadows);
     }
 
-/**
-     * @notice If a user issues synths backed by SNX in their wallet, the SNX become locked. This function
+    /**
+     * @notice If a user issues synths backed by DOWS in their wallet, the DOWS become locked. This function
      * will tell you how many synths a user has to give back to the system in order to unlock their original
      * debt position. This is priced in whichever synth is passed in as a currency key, e.g. you can price
-     * the debt in sUSD, XDR, or any other synth you wish.
+     * the debt in xUSD, or any other synth you wish.
      */
-    function debtBalanceOf(address issuer, bytes4 currencyKey)
+    function debtBalanceOf(address _issuer, bytes32 currencyKey)
         public
         view
-        // Don't need to check for stale rates here because totalIssuedSynths will do it for us
-        returns (uint)
+        returns (
+            // Don't need to check for stale rates here because totalIssuedSynths will do it for us
+            uint
+        )
     {
+        IShadowsState state = shadowsState();
+
         // What was their initial debt ownership?
         uint initialDebtOwnership;
         uint debtEntryIndex;
-        (initialDebtOwnership, debtEntryIndex) = synthetixState.issuanceData(issuer);
+        (initialDebtOwnership, debtEntryIndex) = state.issuanceData(_issuer);
 
         // If it's zero, they haven't issued, and they have no debt.
         if (initialDebtOwnership == 0) return 0;
 
         // Figure out the global debt percentage delta from when they entered the system.
-        // This is a high precision integer.
-        uint currentDebtOwnership = synthetixState.lastDebtLedgerEntry()
-            .divideDecimalRoundPrecise(synthetixState.debtLedger(debtEntryIndex))
+        // This is a high precision integer of 27 (1e27) decimals.
+        uint currentDebtOwnership = state
+            .lastDebtLedgerEntry()
+            .divideDecimalRoundPrecise(state.debtLedger(debtEntryIndex))
             .multiplyDecimalRoundPrecise(initialDebtOwnership);
 
-        // What's the total value of the system in their requested currency?
-        uint totalSystemValue = totalIssuedSynths(currencyKey);
+        // What's the total value of the system excluding ETH backed synths in their requested currency?
+        uint totalSystemValue = totalIssuedSynthsExcludeEtherCollateral(currencyKey);
 
         // Their debt balance is their portion of the total system value.
-        uint highPrecisionBalance = totalSystemValue.decimalToPreciseDecimal()
-            .multiplyDecimalRoundPrecise(currentDebtOwnership);
+        uint highPrecisionBalance = totalSystemValue.decimalToPreciseDecimal().multiplyDecimalRoundPrecise(
+            currentDebtOwnership
+        );
 
+        // Convert back into 18 decimals (1e18)
         return highPrecisionBalance.preciseDecimalToDecimal();
     }
 
     /**
-     * @notice The remaining synths an issuer can issue against their total synthetix balance.
-     * @param issuer The account that intends to issue
-     * @param currencyKey The currency to price issuable value in
+     * @notice The remaining synths an issuer can issue against their total shadows balance.
+     * @param _issuer The account that intends to issue
      */
-    function remainingIssuableSynths(address issuer, bytes4 currencyKey)
+    function remainingIssuableSynths(address _issuer)
         public
         view
-        // Don't need to check for synth existing or stale rates because maxIssuableSynths will do it for us.
-        returns (uint)
+        returns (
+            // Don't need to check for synth existing or stale rates because maxIssuableSynths will do it for us.
+            uint,
+            uint
+        )
     {
-        uint alreadyIssued = debtBalanceOf(issuer, currencyKey);
-        uint max = maxIssuableSynths(issuer, currencyKey);
+        uint alreadyIssued = debtBalanceOf(_issuer, xUSD);
+        uint maxIssuable = maxIssuableSynths(_issuer);
 
-        if (alreadyIssued >= max) {
-            return 0;
+        if (alreadyIssued >= maxIssuable) {
+            maxIssuable = 0;
         } else {
-            return max.sub(alreadyIssued);
+            maxIssuable = maxIssuable.sub(alreadyIssued);
         }
+        return (maxIssuable, alreadyIssued);
     }
 
     /**
-     * @notice The total SNX owned by this account, both escrowed and unescrowed,
+     * @notice The total DOWS owned by this account, both escrowed and unescrowed,
      * against which synths can be issued.
      * This includes those already being used as collateral (locked), and those
      * available for further issuance (unlocked).
      */
-    function collateral(address account)
-        public
-        view
-        returns (uint)
-    {
+    function collateral(address account) public view returns (uint) {
         uint balance = tokenState.balanceOf(account);
 
-        if (escrow != address(0)) {
-            balance = balance.add(escrow.balanceOf(account));
+        if (shadowsEscrow() != address(0)) {
+            balance = balance.add(shadowsEscrow().balanceOf(account));
+        }
+
+        if (rewardEscrow() != address(0)) {
+            balance = balance.add(rewardEscrow().balanceOf(account));
         }
 
         return balance;
     }
 
     /**
-     * @notice The number of SNX that are free to be transferred by an account.
-     * @dev When issuing, escrowed SNX are locked first, then non-escrowed
-     * SNX are locked last, but escrowed SNX are not transferable, so they are not included
+     * @notice The number of DOWS that are free to be transferred for an account.
+     * @dev Escrowed DOWS are not transferable, so they are not included
      * in this calculation.
+     * @notice DOWS rate not stale is checked within debtBalanceOf
      */
     function transferableShadows(address account)
         public
         view
-        rateNotStale("SNX")
+        rateNotStale("DOWS") // DOWS is not a synth so is not checked in totalIssuedSynths
         returns (uint)
     {
-        // How many SNX do they have, excluding escrow?
+        // How many DOWS do they have, excluding escrow?
         // Note: We're excluding escrow here because we're interested in their transferable amount
-        // and escrowed SNX are not transferable.
+        // and escrowed DOWS are not transferable.
         uint balance = tokenState.balanceOf(account);
 
         // How many of those will be locked by the amount they've issued?
-        // Assuming issuance ratio is 20%, then issuing 20 SNX of value would require
-        // 100 SNX to be locked in their wallet to maintain their collateralisation ratio
-        // The locked synthetix value can exceed their balance.
-        uint lockedShadowsValue = debtBalanceOf(account, "SNX").divideDecimalRound(synthetixState.issuanceRatio());
+        // Assuming issuance ratio is 20%, then issuing 20 DOWS of value would require
+        // 100 DOWS to be locked in their wallet to maintain their collateralisation ratio
+        // The locked shadows value can exceed their balance.
+        uint lockedShadowsValue = debtBalanceOf(account, "DOWS").divideDecimalRound(shadowsState().issuanceRatio());
 
-        // If we exceed the balance, no SNX are transferable, otherwise the difference is.
+        // If we exceed the balance, no DOWS are transferable, otherwise the difference is.
         if (lockedShadowsValue >= balance) {
             return 0;
         } else {
@@ -887,61 +425,100 @@ contract Shadows is ExternStateToken {
         }
     }
 
+    /**
+     * @notice Mints the inflationary DOWS supply. The inflation shedule is
+     * defined in the SupplySchedule contract.
+     * The mint() function is publicly callable by anyone. The caller will
+     receive a minter reward as specified in supplySchedule.minterReward().
+     */
+    function mint() external returns (bool) {
+        require(rewardsDistribution() != address(0), "RewardsDistribution not set");
+
+        SupplySchedule _supplySchedule = supplySchedule();
+        IRewardsDistribution _rewardsDistribution = rewardsDistribution();
+
+        uint supplyToMint = _supplySchedule.mintableSupply();
+        require(supplyToMint > 0, "No supply is mintable");
+
+        // record minting event before mutation to token supply
+        _supplySchedule.recordMintEvent(supplyToMint);
+
+        // Set minted DOWS balance to RewardEscrow's balance
+        // Minus the minterReward and set balance of minter to add reward
+        uint minterReward = _supplySchedule.minterReward();
+        // Get the remainder
+        uint amountToDistribute = supplyToMint.sub(minterReward);
+
+        // Set the token balance to the RewardsDistribution contract
+        tokenState.setBalanceOf(_rewardsDistribution, tokenState.balanceOf(_rewardsDistribution).add(amountToDistribute));
+        emitTransfer(this, _rewardsDistribution, amountToDistribute);
+
+        // Kick off the distribution of rewards
+        _rewardsDistribution.distributeRewards(amountToDistribute);
+
+        // Assign the minters reward.
+        tokenState.setBalanceOf(msg.sender, tokenState.balanceOf(msg.sender).add(minterReward));
+        emitTransfer(this, msg.sender, minterReward);
+
+        totalSupply = totalSupply.add(supplyToMint);
+
+        return true;
+    }
+
     // ========== MODIFIERS ==========
 
-    modifier rateNotStale(bytes4 currencyKey) {
-        require(!exchangeRates.rateIsStale(currencyKey), "Rate stale or nonexistant currency");
+    modifier rateNotStale(bytes32 currencyKey) {
+        require(!exchangeRates().rateIsStale(currencyKey), "Rate stale or not a synth");
         _;
     }
 
-    modifier notFeeAddress(address account) {
-        require(account != feePool.FEE_ADDRESS(), "Fee address not allowed");
-        _;
-    }
-
-    modifier onlySynth() {
-        bool isSynth = false;
-
-        // No need to repeatedly call this function either
-        for (uint8 i = 0; i < availableSynths.length; i++) {
-            if (availableSynths[i] == msg.sender) {
-                isSynth = true;
-                break;
-            }
-        }
-
-        require(isSynth, "Only synth allowed");
-        _;
-    }
-
-    modifier nonZeroAmount(uint _amount) {
-        require(_amount > 0, "Amount needs to be larger than 0");
+    modifier onlyExchanger() {
+        require(msg.sender == address(exchanger()), "Only the exchanger contract can invoke this function");
         _;
     }
 
     // ========== EVENTS ==========
+    /* solium-disable */
+    event SynthExchange(
+        address indexed account,
+        bytes32 fromCurrencyKey,
+        uint256 fromAmount,
+        bytes32 toCurrencyKey,
+        uint256 toAmount,
+        address toAddress
+    );
+    bytes32 constant SYNTHEXCHANGE_SIG = keccak256("SynthExchange(address,bytes32,uint256,bytes32,uint256,address)");
 
-    event PreferredCurrencyChanged(address indexed account, bytes4 newPreferredCurrency);
-    bytes32 constant PREFERREDCURRENCYCHANGED_SIG = keccak256("PreferredCurrencyChanged(address,bytes4)");
-    function emitPreferredCurrencyChanged(address account, bytes4 newPreferredCurrency) internal {
-        proxy._emit(abi.encode(newPreferredCurrency), 2, PREFERREDCURRENCYCHANGED_SIG, bytes32(account), 0, 0);
+    function emitSynthExchange(
+        address account,
+        bytes32 fromCurrencyKey,
+        uint256 fromAmount,
+        bytes32 toCurrencyKey,
+        uint256 toAmount,
+        address toAddress
+    ) external onlyExchanger {
+        proxy._emit(
+            abi.encode(fromCurrencyKey, fromAmount, toCurrencyKey, toAmount, toAddress),
+            2,
+            SYNTHEXCHANGE_SIG,
+            bytes32(account),
+            0,
+            0
+        );
     }
 
-    event StateContractChanged(address stateContract);
-    bytes32 constant STATECONTRACTCHANGED_SIG = keccak256("StateContractChanged(address)");
-    function emitStateContractChanged(address stateContract) internal {
-        proxy._emit(abi.encode(stateContract), 1, STATECONTRACTCHANGED_SIG, 0, 0, 0);
+    event ExchangeReclaim(address indexed account, bytes32 currencyKey, uint amount);
+    bytes32 constant EXCHANGERECLAIM_SIG = keccak256("ExchangeReclaim(address,bytes32,uint256)");
+
+    function emitExchangeReclaim(address account, bytes32 currencyKey, uint256 amount) external onlyExchanger {
+        proxy._emit(abi.encode(currencyKey, amount), 2, EXCHANGERECLAIM_SIG, bytes32(account), 0, 0);
     }
 
-    event SynthAdded(bytes4 currencyKey, address newSynth);
-    bytes32 constant SYNTHADDED_SIG = keccak256("SynthAdded(bytes4,address)");
-    function emitSynthAdded(bytes4 currencyKey, address newSynth) internal {
-        proxy._emit(abi.encode(currencyKey, newSynth), 1, SYNTHADDED_SIG, 0, 0, 0);
-    }
+    event ExchangeRebate(address indexed account, bytes32 currencyKey, uint amount);
+    bytes32 constant EXCHANGEREBATE_SIG = keccak256("ExchangeRebate(address,bytes32,uint256)");
 
-    event SynthRemoved(bytes4 currencyKey, address removedSynth);
-    bytes32 constant SYNTHREMOVED_SIG = keccak256("SynthRemoved(bytes4,address)");
-    function emitSynthRemoved(bytes4 currencyKey, address removedSynth) internal {
-        proxy._emit(abi.encode(currencyKey, removedSynth), 1, SYNTHREMOVED_SIG, 0, 0, 0);
+    function emitExchangeRebate(address account, bytes32 currencyKey, uint256 amount) external onlyExchanger {
+        proxy._emit(abi.encode(currencyKey, amount), 2, EXCHANGEREBATE_SIG, bytes32(account), 0, 0);
     }
+    /* solium-enable */
 }

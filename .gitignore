@@ -1,21 +1,32 @@
-# Build and Release Folders
-bin-debug/
-bin-release/
-[Oo]bj/
-[Bb]in/
+/**/__pycache__/*
+test_settings.py
+deploy_settings.py
+*.pyc
 
-# Other files and folders
-.settings/
+# gitignore - Truffle proj
+.idea/
+build/
+bin/
+node_modules
+yarn-error.log
 
-# Executables
-*.swf
-*.air
-*.ipa
-*.apk
+# mkdocs 
+site/
 
-# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
-# should NOT be excluded as they contain compiler settings and other important
-# information for Eclipse / Flash Builder.
+# Our environment settings
+.env
 
-/build/
-/node_modules/
+# Build artifacts
+flattened-contracts/
+
+# For eth-gas-reporter in tests
+test-gas-used.log
+
+# For integration testing
+keys.json
+
+# vscode
+.vscode/launch.json
+
+.DS_Store
+
