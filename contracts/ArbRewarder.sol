@@ -1,12 +1,4 @@
 /*
------------------------------------------------------------------
-FILE INFORMATION
------------------------------------------------------------------
-file:       ArbRewarder.sol
-version:    1.0
-author:     justwanttoknowathing
-checked:    Clinton Ennis, Jackson Chan
-date:       2019-05-01
 
 -----------------------------------------------------------------
 MODULE DESCRIPTION

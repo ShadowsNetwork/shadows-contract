@@ -1,16 +1,4 @@
 /*
------------------------------------------------------------------
-FILE INFORMATION
------------------------------------------------------------------
-
-file:       Proxyable.sol
-version:    1.1
-author:     Anton Jurisevic
-
-date:       2018-05-15
-
-checked:    Mike Spain
-approved:   Samuel Brooks
 
 -----------------------------------------------------------------
 MODULE DESCRIPTION

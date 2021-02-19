@@ -1,15 +1,4 @@
 /*
------------------------------------------------------------------
-FILE INFORMATION
------------------------------------------------------------------
-
-file:       ExternStateToken.sol
-version:    1.3
-author:     Anton Jurisevic
-            Dominic Romanowski
-            Kevin Brown
-
-date:       2018-05-29
 
 -----------------------------------------------------------------
 MODULE DESCRIPTION

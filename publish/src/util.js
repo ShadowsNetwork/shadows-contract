@@ -79,9 +79,9 @@ const loadConnections = ({ network }) => {
 	const etherscanUrl =
 		network === 'mainnet'
 			? 'https://api.etherscan.io/api'
-			: `https://api-${network}.etherscan.io/api`;
+			: `http://api-${network}.etherscan.io/api`;
 
-	const etherscanLinkPrefix = `https://${network !== 'mainnet' ? network + '.' : ''}etherscan.io`;
+	const etherscanLinkPrefix = `http://${network !== 'mainnet' ? network + '.' : ''}etherscan.io`;
 	return { providerUrl, privateKey, etherscanUrl, etherscanLinkPrefix };
 };
 

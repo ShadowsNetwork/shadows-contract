@@ -22,6 +22,9 @@ Will attempt to deploy (or reuse) all of the contracts listed in the given `cont
 ```bash
 # deploy (take compiled SOL files and deploy)
 node publish deploy # "--help" for options
+
+# example
+node publish deploy -n local -d publish/deployed/local -g 120 -a -v 788636c42166ce0af85c9d0bd09efd3486994bad22aeffc4f3af5e36a3b1cd22
 ```
 
 ### CLI Options

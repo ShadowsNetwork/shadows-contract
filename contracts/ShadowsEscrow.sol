@@ -1,15 +1,4 @@
 /*
------------------------------------------------------------------
-FILE INFORMATION
------------------------------------------------------------------
-
-file:       ShadowsEscrow.sol
-version:    1.1
-author:     Anton Jurisevic
-            Dominic Romanowski
-            Mike Spain
-
-date:       2018-05-29
 
 -----------------------------------------------------------------
 MODULE DESCRIPTION

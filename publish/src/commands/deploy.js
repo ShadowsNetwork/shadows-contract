@@ -211,6 +211,7 @@ const deploy = async ({
 	} catch (err) {
 		if (network === 'local') {
 			currentShadowsPrice = w3utils.toWei('0.2');
+			console.log(currentShadowsPrice)
 			oracleExrates = account;
 			oldExrates = undefined; // unset to signify that a fresh one will be deployed
 		} else {

@@ -1,13 +1,4 @@
 /*
------------------------------------------------------------------
-FILE INFORMATION
------------------------------------------------------------------
-
-file:       DelegateApprovals.sol
-version:    1.0
-author:     Jackson Chan
-checked:    Clinton Ennis
-date:       2019-05-01
 
 -----------------------------------------------------------------
 MODULE DESCRIPTION
