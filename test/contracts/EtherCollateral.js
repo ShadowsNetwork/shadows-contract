@@ -34,17 +34,6 @@ contract('EtherCollateral', async accounts => {
 
 	const [xUSD, xETH, ETH, DOWS] = ['xUSD', 'xETH', 'ETH', 'DOWS'].map(toBytes32);
 
-	// const [XDR, xUSD, xAUD, xEUR, xBTC, DOWS, iBTC, xETH] = [
-	// 	'XDR',
-	// 	'xUSD',
-	// 	'xAUD',
-	// 	'xEUR',
-	// 	'xBTC',
-	// 	'DOWS',
-	// 	'iBTC',
-	// 	'xETH',
-	// ].map(toBytes32);
-
 	const ISSUACE_RATIO = toUnit('0.666666666666666667');
 	const ZERO_BN = toUnit('0');
 
@@ -69,24 +58,6 @@ contract('EtherCollateral', async accounts => {
 		xETHSynth,
 		FEE_ADDRESS;
 
-	// const updateRatesWithDefaults = async () => {
-	// 	const timestamp = await currentTime();
-
-	// 	await exchangeRates.updateRates(
-	// 		[XDR, xAUD, xEUR, DOWS, xBTC, iBTC, xETH],
-	// 		['5', '0.5', '1.25', '0.1', '5000', '4000', '172'].map(toUnit),
-	// 		timestamp,
-	// 		{
-	// 			from: oracle,
-	// 		}
-	// 	);
-	// };
-
-	// const fastForwardAndUpdateRates = async seconds => {
-	// 	console.log('fastForwardAndUpdateRates', seconds);
-	// 	await fastForward(seconds);
-	// 	await updateRatesWithDefaults();
-	// };
 
 	const getLoanID = async tx => {
 		const event = tx.logs.find(log => log.event === 'LoanCreated');

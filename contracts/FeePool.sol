@@ -358,48 +358,6 @@ contract FeePool is Proxyable, SelfDestructible, LimitedSetup, MixinResolver {
     }
 
     /**
-    * @notice One time onlyOwner call to convert all XDR balance in the FEE_ADDRESS to xUSD
-    */
-    function convertXDRFeesToxUSD(address exchangeRatesAddress) public optionalProxy_onlyOwner {
-        // Get the ExchageRates address with the XDR rate (its not in the new one)
-        address _exchangeRates = 0xE95Ef4e7a04d2fB05cb625c62CA58da10112c605;
-        if (exchangeRatesAddress != 0) {
-            _exchangeRates = exchangeRatesAddress;
-        }
-
-        Synth xdrSynth = shadows().synths("XDR");
-        Synth xUSDSynth = shadows().synths(xUSD);
-
-        // FeePools XDR Balance
-        uint xdrAmount = xdrSynth.balanceOf(FEE_ADDRESS);
-
-        // How much xUSD should be minted from the XDR's
-        uint xUSDAmount = IExchangeRates(_exchangeRates).effectiveValue("XDR", xdrAmount, xUSD);
-
-        // Burn the XDRs
-        xdrSynth.burn(FEE_ADDRESS, xdrAmount);
-
-        // Mint their new synths
-        xUSDSynth.issue(FEE_ADDRESS, xUSDAmount);
-
-        // Convert FeePeriods To xUSD
-        for (uint i = 0; i < FEE_PERIOD_LENGTH; i++) {
-            uint feesToDistribute = IExchangeRates(_exchangeRates).effectiveValue(
-                "XDR",
-                _recentFeePeriodsStorage(i).feesToDistribute,
-                xUSD
-            );
-            uint feesClaimed = IExchangeRates(_exchangeRates).effectiveValue(
-                "XDR",
-                _recentFeePeriodsStorage(i).feesClaimed,
-                xUSD
-            );
-            _recentFeePeriodsStorage(i).feesToDistribute = feesToDistribute;
-            _recentFeePeriodsStorage(i).feesClaimed = feesClaimed;
-        }
-    }
-
-    /**
     * @notice Approve an address to be able to claim your fees to your account on your behalf.
     * This is intended to be able to delegate a mobile wallet to call the function to claim fees to
     * your cold storage wallet

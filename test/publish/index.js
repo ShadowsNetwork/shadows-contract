@@ -122,7 +122,7 @@ describe('publish scripts', function() {
 
 				sources = dows.getSource({ network });
 				targets = dows.getTarget({ network });
-				synths = dows.getSynths({ network }).filter(({ name }) => name !== 'xUSD' && name !== 'XDR');
+				synths = dows.getSynths({ network }).filter(({ name }) => name !== 'xUSD');
 
 				Shadows = new web3.eth.Contract(
 					sources['Shadows'].abi,

@@ -1,12 +1,5 @@
 [
 	{
-		"name": "XDR",
-		"asset": "",
-		"category": "internal",
-		"sign": "",
-		"desc": "Shadows Drawing Rights"
-	},
-	{
 		"name": "xEUR",
 		"asset": "EUR",
 		"category": "forex",

@@ -222,6 +222,7 @@ program
 			const feePeriodLength = await feePool.methods.FEE_PERIOD_LENGTH().call();
 
 			// Unless on local, check feePeriods are imported for feePool correctly with feePeriodId set
+			/*
 			if (network !== 'local') {
 				for (let i = 0; i < feePeriodLength; i++) {
 					const period = await feePool.methods.recentFeePeriods(i).call();
@@ -232,6 +233,7 @@ program
 					}
 				}
 			}
+			*/
 
 			console.log(gray(`Using gas price of ${gasPriceInGwei} gwei.`));
 
@@ -265,9 +267,9 @@ program
 			// so that if a test fails we only lose minor amounts of DOWS and xUSD (i.e. dust). - JJ
 
 			// #2 - Now some test DOWS
-			console.log(gray(`Transferring 2e-12 DOWS to user1 (${user1.address})`));
+			console.log(gray(`Transferring 2e-11 DOWS to user1 (${user1.address})`));
 			txns.push(
-				await Shadows.methods.transfer(user1.address, web3.utils.toWei('0.000000000002')).send({
+				await Shadows.methods.transfer(user1.address, web3.utils.toWei('0.00000000002')).send({
 					from: owner.address,
 					gas,
 					gasPrice,

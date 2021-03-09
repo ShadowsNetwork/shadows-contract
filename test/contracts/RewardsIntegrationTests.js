@@ -23,8 +23,8 @@ contract('Rewards Integration Tests', async accounts => {
 		const timestamp = await currentTime();
 
 		await exchangeRates.updateRates(
-			[XDR, xAUD, xEUR, DOWS, xBTC, iBTC, xETH],
-			['5', '0.5', '1.25', '0.1', '5000', '4000', '172'].map(toUnit),
+			[xAUD, xEUR, DOWS, xBTC, iBTC, xETH],
+			['0.5', '1.25', '0.1', '5000', '4000', '172'].map(toUnit),
 			timestamp,
 			{
 				from: oracle,
@@ -83,8 +83,7 @@ contract('Rewards Integration Tests', async accounts => {
 	// };
 
 	// CURRENCIES
-	const [XDR, xUSD, xAUD, xEUR, xBTC, DOWS, iBTC, xETH] = [
-		'XDR',
+	const [xUSD, xAUD, xEUR, xBTC, DOWS, iBTC, xETH] = [
 		'xUSD',
 		'xAUD',
 		'xEUR',

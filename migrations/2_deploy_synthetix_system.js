@@ -265,7 +265,7 @@ module.exports = async function(deployer, network, accounts) {
 	// ----------------
 	// Synths
 	// ----------------
-	const currencyKeys = ['XDR', 'xUSD', 'xAUD', 'xEUR', 'xBTC', 'iBTC', 'xETH'];
+	const currencyKeys = ['xUSD', 'xAUD', 'xEUR', 'xBTC', 'iBTC', 'xETH'];
 	// const currencyKeys = ['xUSD', 'xETH'];
 	// Initial prices
 	const { timestamp } = await web3.eth.getBlock('latest');
@@ -280,7 +280,7 @@ module.exports = async function(deployer, network, accounts) {
 			.concat(['DOWS'])
 			.map(toBytes32),
 		// ['172', '1.20'].map(number =>
-		['5', '0.5', '1.25', '0.1', '5000', '4000', '172'].map(number =>
+		['0.5', '1.25', '0.1', '5000', '4000', '172'].map(number =>
 			web3.utils.toWei(number, 'ether')
 		),
 		timestamp,

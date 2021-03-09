@@ -29,8 +29,8 @@ contract('FeePool', async accounts => {
 		const timestamp = await currentTime();
 
 		await exchangeRates.updateRates(
-			[XDR, xAUD, xEUR, DOWS, xBTC, iBTC, xETH],
-			['5', '0.5', '1.25', '0.1', '5000', '4000', '172'].map(toUnit),
+			[xAUD, xEUR, DOWS, xBTC, iBTC, xETH],
+			['0.5', '1.25', '0.1', '5000', '4000', '172'].map(toUnit),
 			timestamp,
 			{
 				from: oracle,
@@ -70,8 +70,7 @@ contract('FeePool', async accounts => {
 	// };
 
 	// CURRENCIES
-	const [XDR, xUSD, xAUD, xEUR, xBTC, DOWS, iBTC, xETH] = [
-		'XDR',
+	const [xUSD, xAUD, xEUR, xBTC, DOWS, iBTC, xETH] = [
 		'xUSD',
 		'xAUD',
 		'xEUR',
@@ -93,7 +92,6 @@ contract('FeePool', async accounts => {
 		delegates,
 		rewardEscrow,
 		xUSDContract,
-		XDRContract,
 		addressResolver;
 
 	beforeEach(async () => {
@@ -112,7 +110,6 @@ contract('FeePool', async accounts => {
 		shadowsState = await ShadowsState.deployed();
 
 		xUSDContract = await Synth.at(await shadows.synths(xUSD));
-		XDRContract = await Synth.at(await shadows.synths(XDR));
 
 		addressResolver = await AddressResolver.deployed();
 		// Send a price update to guarantee we're not stale.
@@ -1374,87 +1371,6 @@ contract('FeePool', async accounts => {
 
 			const vestingScheduleEntry = await rewardEscrow.getVestingScheduleEntry(account3, 0);
 			assert.bnEqual(vestingScheduleEntry[1], escrowAmount);
-		});
-	});
-
-	describe('Converting XDR Fees to xUSD Fees', async () => {
-		const XDRAmount = toUnit('100');
-
-		beforeEach(async () => {
-			// Setup XDRs at Fee Address for testing
-
-			// overwrite the Shadows address in the resolver so we can issue
-			await addressResolver.importAddresses(['Shadows'].map(toBytes32), [owner], { from: owner });
-			await XDRContract.issue(FEE_ADDRESS, XDRAmount, { from: owner });
-			// now put it back so functionality works correctly
-			await addressResolver.importAddresses(['Shadows'].map(toBytes32), [shadows.address], {
-				from: owner,
-			});
-
-			// import Fee Period Data
-			await feePool.importFeePeriod(0, 0, 0, 0, toUnit('100'), toUnit('1'), 0, 0, { from: owner });
-			await feePool.importFeePeriod(1, 1, 0, 1, toUnit('200'), toUnit('2'), 0, 0, { from: owner });
-			await feePool.importFeePeriod(2, 2, 0, 2, toUnit('300'), toUnit('3'), 0, 0, { from: owner });
-
-			await updateRatesWithDefaults();
-		});
-
-		it('should revert if non owner calls convertXDRFeesToxUSD', async () => {
-			await assert.revert(feePool.convertXDRFeesToxUSD(exchangeRates.address, { from: account1 }));
-		});
-
-		it('should revert if invalid ExchangeRates address passed in', async () => {
-			await assert.revert(feePool.convertXDRFeesToxUSD(account1, { from: owner }));
-		});
-
-		it('should convert XDR Synths to xUSD when called by owner', async () => {
-			// Assert that we have correct values in the fee pool
-			const oldXDRBalance = await XDRContract.balanceOf(FEE_ADDRESS);
-			const oldxUSDBalance = await xUSDContract.balanceOf(FEE_ADDRESS);
-
-			assert.bnEqual(oldxUSDBalance, 0);
-			assert.bnEqual(oldXDRBalance, XDRAmount);
-
-			// Convert
-			await feePool.convertXDRFeesToxUSD(exchangeRates.address, { from: owner });
-
-			const newXDRBalance = await XDRContract.balanceOf(FEE_ADDRESS);
-			const newxUSDBalance = await xUSDContract.balanceOf(FEE_ADDRESS);
-
-			assert.bnEqual(newXDRBalance, 0);
-			const conversionAmount = await exchangeRates.effectiveValue(XDR, oldXDRBalance, xUSD);
-			assert.bnEqual(newxUSDBalance, conversionAmount);
-		});
-
-		it('should convert FeePeriod Data from XDRs to xUSD', async () => {
-			const oldFeePeriods = [];
-
-			// Assert that we have correct values in the fee pool
-			for (let i = 0; i <= 3; i++) {
-				oldFeePeriods[i] = await feePool.recentFeePeriods(i);
-			}
-
-			// Convert
-			await feePool.convertXDRFeesToxUSD(exchangeRates.address, { from: owner });
-
-			// Assert
-			for (let i = 0; i <= 3; i++) {
-				const feesToDistributexUSD = await exchangeRates.effectiveValue(
-					XDR,
-					oldFeePeriods[i].feesToDistribute,
-					xUSD
-				);
-				const feesClaimedxUSD = await exchangeRates.effectiveValue(
-					XDR,
-					oldFeePeriods[i].feesClaimed,
-					xUSD
-				);
-
-				const feePeriodConverted = await feePool.recentFeePeriods(i);
-
-				assert.bnEqual(feesToDistributexUSD, feePeriodConverted.feesToDistribute);
-				assert.bnEqual(feesClaimedxUSD, feePeriodConverted.feesClaimed);
-			}
 		});
 	});
 });

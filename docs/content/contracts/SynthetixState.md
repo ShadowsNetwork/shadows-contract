@@ -83,10 +83,6 @@ A list of factors indicating, for each [debt-modifying event](#appenddebtledgerv
 
 ---
 
-### `importedXDRAmount`
-
-The XDR-equivalent debt of `xUSD` imported which was outstanding immediately before the multicurrency transition.
-
 **Type:** `uint public`
 
 ---
@@ -325,10 +321,6 @@ This function allowed the owner to migrate xUSD issuance data during the launch 
 
     * [`Owned.onlyOwner`](Owned.md#onlyowner)
     * [`LimitedSetup.onlyDuringSetup`](LimitedSetup.md#onlyduringsetup)
-
-    **Preconditions**
-
-    * The `XDR` price [must not be stale](ExchangeRates.md#rateisstale).
 
 ---
 

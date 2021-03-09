@@ -64,9 +64,6 @@ contract ShadowsState is State, LimitedSetup {
     // Global debt pool tracking
     uint[] public debtLedger;
 
-    // Import state
-    uint public importedXDRAmount;
-
     // A quantity of synths greater than this ratio
     // may not be issued against a given value of DOWS.
     uint public issuanceRatio = SafeDecimalMath.unit() / 5;
