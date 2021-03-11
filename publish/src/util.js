@@ -16,7 +16,7 @@ const {
 const stringify = input => JSON.stringify(input, null, '\t') + '\n';
 
 const ensureNetwork = network => {
-	if (!/^(local|kovan|rinkeby|ropsten|mainnet)$/.test(network)) {
+	if (!/^(local|kovan|rinkeby|ropsten|mainnet|bsctestnet)$/.test(network)) {
 		throw Error(
 			`Invalid network name of "${network}" supplied. Must be one of local, kovan, rinkeby, ropsten or mainnet`
 		);
@@ -71,17 +71,24 @@ const loadConnections = ({ network }) => {
 		throw Error('Missing .env key of INFURA_PROJECT_ID. Please add and retry.');
 	}
 
-	const providerUrl =
+	let providerUrl =
 		network === 'local'
 			? 'http://127.0.0.1:8545'
 			: `https://${network}.infura.io/v3/${process.env.INFURA_PROJECT_ID}`;
 	const privateKey = process.env.DEPLOY_PRIVATE_KEY;
-	const etherscanUrl =
+	let etherscanUrl =
 		network === 'mainnet'
 			? 'https://api.etherscan.io/api'
 			: `http://api-${network}.etherscan.io/api`;
 
-	const etherscanLinkPrefix = `http://${network !== 'mainnet' ? network + '.' : ''}etherscan.io`;
+	let etherscanLinkPrefix = `http://${network !== 'mainnet' ? network + '.' : ''}etherscan.io`;
+	//BSC testnet
+	if(network === 'bsctestnet'){
+		providerUrl = process.env.BSC_TESTNET_PROVIDER_URL;
+		etherscanUrl = `${process.env.BSCSCAN_TESTNET_URL}/api`;
+		etherscanLinkPrefix = `${process.env.BSCSCAN_TESTNET_URL}`;
+	}
+	console.log( providerUrl, etherscanLinkPrefix )
 	return { providerUrl, privateKey, etherscanUrl, etherscanLinkPrefix };
 };
 

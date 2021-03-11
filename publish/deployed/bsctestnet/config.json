@@ -1,0 +1,164 @@
+{
+	"AddressResolver": {
+		"deploy": false
+	},
+	"ArbRewarder": {
+		"deploy": false
+	},
+	"Depot": {
+		"deploy": false
+	},
+	"DappMaintenance": {
+		"deploy": false
+	},
+	"EscrowChecker": {
+		"deploy": false
+	},
+	"EtherCollateral": {
+		"deploy": false
+	},
+	"ExchangeRates": {
+		"deploy": false
+	},
+	"Exchanger": {
+		"deploy": false
+	},
+	"ExchangeState": {
+		"deploy": false
+	},
+	"FeePool": {
+		"deploy": false
+	},
+	"FeePoolState": {
+		"deploy": false
+	},
+	"FeePoolEternalStorage": {
+		"deploy": false
+	},
+	"DelegateApprovals": {
+		"deploy": false
+	},
+	"Issuer": {
+		"deploy": false
+	},
+	"SupplySchedule": {
+		"deploy": false
+	},
+	"Shadows": {
+		"deploy": false
+	},
+	"ShadowsEscrow": {
+		"deploy": false
+	},
+	"RewardEscrow": {
+		"deploy": false
+	},
+	"RewardsDistribution": {
+		"deploy": false
+	},
+	"ShadowsState": {
+		"deploy": false
+	},
+	"ProxyERC20": {
+		"deploy": false
+	},
+	"ProxyFeePool": {
+		"deploy": false
+	},
+	"ProxyShadows": {
+		"deploy": false
+	},
+	"SafeDecimalMath": {
+		"deploy": false
+	},
+	"Math": {
+		"deploy": false
+	},
+	"TokenStateShadows": {
+		"deploy": false
+	},
+	"SynthxUSD": {
+		"deploy": false
+	},
+	"TokenStatexUSD": {
+		"deploy": false
+	},
+	"ProxyxUSD": {
+		"deploy": false
+	},
+	"ProxyERC20xUSD": {
+		"deploy": false
+	},
+	"SynthxBTC": {
+		"deploy": false
+	},
+	"ProxyxBTC": {
+		"deploy": false
+	},
+	"TokenStatexBTC": {
+		"deploy": false
+	},
+	"TokenStatexETH": {
+		"deploy": false
+	},
+	"ProxyxETH": {
+		"deploy": false
+	},
+	"SynthxETH": {
+		"deploy": false
+	},
+	"TokenStatexBNB": {
+		"deploy": false
+	},
+	"ProxyxBNB": {
+		"deploy": false
+	},
+	"SynthxBNB": {
+		"deploy": false
+	},
+	"TokenStateiBTC": {
+		"deploy": false
+	},
+	"ProxyiBTC": {
+		"deploy": false
+	},
+	"SynthiBTC": {
+		"deploy": false
+	},
+	"TokenStateiETH": {
+		"deploy": false
+	},
+	"ProxyiETH": {
+		"deploy": false
+	},
+	"SynthiETH": {
+		"deploy": false
+	},
+	"TokenStateiBNB": {
+		"deploy": false
+	},
+	"ProxyiBNB": {
+		"deploy": false
+	},
+	"SynthiBNB": {
+		"deploy": false
+	},
+	"TokenStatexCEX": {
+		"deploy": false
+	},
+	"ProxyxCEX": {
+		"deploy": false
+	},
+	"SynthxCEX": {
+		"deploy": false
+	},
+	"TokenStateiCEX": {
+		"deploy": false
+	},
+	"ProxyiCEX": {
+		"deploy": false
+	},
+	"SynthiCEX": {
+		"deploy": false
+	}
+}

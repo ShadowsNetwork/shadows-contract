@@ -51,6 +51,10 @@ const verify = async ({ buildPath, network, deploymentPath }) => {
 
 	const tableData = [];
 
+	let apikey = process.env.ETHERSCAN_KEY;
+	if(network === 'bsctestnet' || network === 'bsc'){
+		apikey = process.env.BSC_ETHERSCAN_KEY;	
+	}
 	for (const name of Object.keys(config)) {
 		const { address } = deployment.targets[name];
 		// Check if this contract already has been verified.
@@ -60,7 +64,7 @@ const verify = async ({ buildPath, network, deploymentPath }) => {
 				module: 'contract',
 				action: 'getabi',
 				address,
-				apikey: process.env.ETHERSCAN_KEY,
+				apikey: apikey,
 			},
 		});
 
@@ -77,7 +81,7 @@ const verify = async ({ buildPath, network, deploymentPath }) => {
 					action: 'txlist',
 					address,
 					sort: 'asc',
-					apikey: process.env.ETHERSCAN_KEY,
+					apikey: apikey,
 				},
 			});
 
@@ -131,7 +135,7 @@ const verify = async ({ buildPath, network, deploymentPath }) => {
 					runs: optimizerRuns,
 					libraryname1: 'SafeDecimalMath',
 					libraryaddress1: deployment.targets['SafeDecimalMath'].address,
-					apikey: process.env.ETHERSCAN_KEY,
+					apikey: apikey,
 				}),
 				{
 					headers: {

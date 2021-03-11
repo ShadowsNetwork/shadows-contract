@@ -45,3 +45,14 @@ $ npm test
 - **SelfDestructible.sol:** Allows an owner of a contract to set a self destruct timer on it, then once the timer has expired, to kill the contract with `selfdestruct`.
 - **State.sol:** Implements the concept of an associated contract which can be changed by the owner.
 - **TokenState.sol:** Holds approval and balance information for tokens.
+
+## publish
+publish to BSC
+```
+node publish deploy -n bsctestnet -d publish/deployed/bsctestnet -a -v ${private key} -y -g 20
+```
+
+veryfy to BSC
+```
+node publish verify --deployment-path publish/deployed/bsctestnet
+```

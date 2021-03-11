@@ -170,7 +170,7 @@ const deploy = async ({
 		currentLastMintEvent =
 			inflationStartDate + currentWeekOfInflation * secondsInWeek + mintingBuffer;
 	} catch (err) {
-		if (network === 'local') {
+		if (network === 'local' ||　network === 'bsctestnet') {
 			currentShadowsSupply = w3utils.toWei((100e6).toString());
 			currentWeekOfInflation = 0;
 			currentLastMintEvent = 0;
@@ -189,7 +189,7 @@ const deploy = async ({
 		const oldFeePool = getExistingContract({ contract: 'FeePool' });
 		currentExchangeFee = await oldFeePool.methods.exchangeFeeRate().call();
 	} catch (err) {
-		if (network === 'local') {
+		if (network === 'local' ||　network === 'bsctestnet') {
 			currentExchangeFee = w3utils.toWei('0.003'.toString());
 		} else {
 			console.error(
@@ -209,7 +209,7 @@ const deploy = async ({
 			oracleExrates = await oldExrates.methods.oracle().call();
 		}
 	} catch (err) {
-		if (network === 'local') {
+		if (network === 'local' ||　network === 'bsctestnet') {
 			currentShadowsPrice = w3utils.toWei('0.2');
 			console.log(currentShadowsPrice)
 			oracleExrates = account;
@@ -788,18 +788,21 @@ const deploy = async ({
 
 		// track the original supply if we're deploying a new synth contract for an existing synth
 		let originalTotalSupply = 0;
+		/**
 		if (synthConfig.deploy) {
 			try {
 				const oldSynth = getExistingContract({ contract: `Synth${currencyKey}` });
 				originalTotalSupply = await oldSynth.methods.totalSupply().call();
 			} catch (err) {
-				if (network !== 'local') {
+				if (network !== 'local' || network !== 'bsctestnet') {
 					// only throw if not local - allows local environments to handle both new
 					// and updating configurations
 					throw err;
 				}
 			}
 		}
+		 * 
+		 */
 
 		// MultiCollateral needs additionalConstructorArgs to be ordered
 		const additionalConstructorArgsMap = {
