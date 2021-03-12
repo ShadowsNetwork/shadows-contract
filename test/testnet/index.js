@@ -161,7 +161,7 @@ program
 				sources['ExchangeRates'].abi,
 				targets['ExchangeRates'].address
 			);
-			const currencyKeys = [{ name: 'DOWS' }].concat(cryptoSynths).concat(forexSynths);
+			const currencyKeys = [{ name: 'DOWS' }, {name: 'xUSD'}].concat(cryptoSynths).concat(forexSynths);
 			const currencyKeysBytes = currencyKeys.map(key => { 
 				let b = toBytes32(key.name);
 				console.log(key,b);
@@ -207,6 +207,8 @@ program
 
 			const Depot = new web3.eth.Contract(sources['Depot'].abi, targets['Depot'].address);
 			const SynthxUSD = new web3.eth.Contract(sources['Synth'].abi, targets['ProxyxUSD'].address);
+
+			console.log(await Shadows.methods.availableCurrencyKeys().call());
 
 			// Check totalIssuedSynths and debtLedger matches
 			const totalIssuedSynths = await Shadows.methods.totalIssuedSynths(xUSD).call();
@@ -255,12 +257,12 @@ program
 			const lastTxnLink = () => `${etherscanLinkPrefix}/tx/${txns.slice(-1)[0].transactionHash}`;
 
 			// #1 - Send the account some test ether
-			console.log(gray(`Transferring 0.05 test ETH to ${user1.address}`));
+			console.log(gray(`Transferring 0.5 test ETH to ${user1.address}`));
 			txns.push(
 				await web3.eth.sendTransaction({
 					from: owner.address,
 					to: user1.address,
-					value: web3.utils.toWei('0.05'),
+					value: web3.utils.toWei('0.1'),
 					gas,
 					gasPrice,
 				})
