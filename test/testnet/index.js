@@ -59,7 +59,7 @@ program
 	.option('-g, --gas-price <value>', 'Gas price in GWEI', '5')
 	.option('-y, --yes', 'Dont prompt, just reply yes.')
 	.action(async ({ network, yes, gasPrice: gasPriceInGwei }) => {
-		if (!/^(kovan|rinkeby|ropsten|mainnet|local)$/.test(network)) {
+		if (!/^(kovan|rinkeby|ropsten|mainnet|local|bsctestnet)$/.test(network)) {
 			throw Error('Unsupported environment', network);
 		}
 		let esLinkPrefix;
@@ -162,7 +162,11 @@ program
 				targets['ExchangeRates'].address
 			);
 			const currencyKeys = [{ name: 'DOWS' }].concat(cryptoSynths).concat(forexSynths);
-			const currencyKeysBytes = currencyKeys.map(key => toBytes32(key.name));
+			const currencyKeysBytes = currencyKeys.map(key => { 
+				let b = toBytes32(key.name);
+				console.log(key,b);
+				return b;
+			});
 
 			// View all current ExchangeRates
 			const rates = await exchangeRates.methods.ratesForCurrencies(currencyKeysBytes).call();
