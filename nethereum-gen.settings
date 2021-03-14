@@ -1,0 +1,7 @@
+{
+    "projectName": "ShadowsContract",
+    "namespace": "ShadowsContract.Contracts",
+    "lang": 0,
+    "autoCodeGen": true,
+    "projectPath": "../"
+}
