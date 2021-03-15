@@ -1,4 +1,4 @@
-## run script
+## deploy contract
 ```
 npx hardhat run scripts/shadows-token-script.js --network bsctestnet --show-stack-traces --verbose
 ```

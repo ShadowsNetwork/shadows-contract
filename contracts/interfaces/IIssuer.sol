@@ -1,4 +1,5 @@
-pragma solidity 0.4.25;
+// SPDX-License-Identifier: MI
+pragma solidity 0.6.11;
 
 
 interface IIssuer {

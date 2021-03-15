@@ -5,8 +5,11 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20PausableUpgradeable
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
-contract Shadows is Initializable,OwnableUpgradeable,ERC20PausableUpgradeable {
-    
+contract Shadows is
+    Initializable,
+    OwnableUpgradeable,
+    ERC20PausableUpgradeable
+{
     uint256 constant maxTotalSupply = 1e8 ether;
 
     function initialize() external initializer {

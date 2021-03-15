@@ -1,10 +1,9 @@
-pragma solidity 0.4.25;
+// SPDX-License-Identifier: MI
+pragma solidity 0.6.11
 
 
 interface IExchanger {
     function maxSecsLeftInWaitingPeriod(address account, bytes32 currencyKey) external view returns (uint);
-
-    function feeRateForExchange(bytes32 sourceCurrencyKey, bytes32 destinationCurrencyKey) external view returns (uint);
 
     function settlementOwing(address account, bytes32 currencyKey)
         external

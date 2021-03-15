@@ -2,7 +2,7 @@
 pragma solidity 0.6.11;
 
 
-interface ISynth {
+interface ISynths {
     function burn(address account, uint amount) external;
 
     function issue(address account, uint amount) external;

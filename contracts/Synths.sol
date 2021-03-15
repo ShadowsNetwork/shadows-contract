@@ -4,13 +4,13 @@ pragma solidity 0.6.11;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "./library/AddressResolverUpgradeable.sol"
 import "./interfaces/IFeePool.sol";
 import "./interfaces/IShadows.sol";
 import "./interfaces/IExchanger.sol";
 import "./interfaces/IIssuer.sol"
 
-//SyAs is Synthetic assets
-contract SyAs is Initializable, OwnableUpgradeable, ERC20Upgradeable {
+contract Synths is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressResolverUpgradeable {
 
     bytes32 public currencyKey;
 
@@ -23,10 +23,12 @@ contract SyAs is Initializable, OwnableUpgradeable, ERC20Upgradeable {
     function initialize(
         string calldata _tokenName,
         string calldata _tokenSymbol,
-        bytes32 _currencyKey
+        bytes32 _currencyKey,
+        address _resolver
     ) external initializer {
         __Ownable_init();
         __ERC20_init(_tokenName, _tokenSymbol);
+        __AddressResolver_init(_resolver);
         currencyKey = _currencyKey;
     }
 
