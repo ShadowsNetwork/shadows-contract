@@ -1,29 +1,13 @@
 // SPDX-License-Identifier: MI
 pragma solidity 0.6.11
 
-/**
- * @title Shadows interface contract
- * @notice Abstract contract to hold public getters
- * @dev pseudo interface, actually declared as contract to hold the public getters
- */
-import "../interfaces/IShadowsState.sol";
-import "../interfaces/ISynth.sol";
-import "../interfaces/IShadowsEscrow.sol";
-import "../interfaces/IFeePool.sol";
-import "../interfaces/IExchangeRates.sol";
-import "../Synth.sol";
-
-
 contract IShadows {
-    // ========== PUBLIC STATE VARIABLES ==========
 
     uint public totalSupply;
 
     mapping(bytes32 => Synth) public synths;
 
     mapping(address => bytes32) public synthsByAddress;
-
-    // ========== PUBLIC FUNCTIONS ==========
 
     function balanceOf(address account) public view returns (uint);
 
