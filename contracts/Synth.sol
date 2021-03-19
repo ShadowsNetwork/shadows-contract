@@ -10,15 +10,11 @@ import "./interfaces/IShadows.sol";
 import "./interfaces/IExchanger.sol";
 import "./interfaces/IIssuer.sol"
 
-contract Synths is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressResolverUpgradeable {
+contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressResolverUpgradeable {
 
     bytes32 public currencyKey;
 
     uint8 public constant DECIMALS = 18;
-
-    // Where fees are pooled in xUSD
-    address public constant FEE_ADDRESS =
-        0xfeEFEEfeefEeFeefEEFEEfEeFeefEEFeeFEEFEeF;
 
     function initialize(
         string calldata _tokenName,
@@ -32,28 +28,22 @@ contract Synths is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressR
         currencyKey = _currencyKey;
     }
 
-    function shadows() internal view returns (IShadows) {
-        return IShadows(resolver.requireAndGetAddress("Shadows", "Missing Shadows address"));
-    }
-
-    function feePool() internal view returns (IFeePool) {
-        return IFeePool(resolver.requireAndGetAddress("FeePool", "Missing FeePool address"));
-    }
-
-    function exchanger() internal view returns (IExchanger) {
-        return IExchanger(resolver.requireAndGetAddress("Exchanger", "Missing Exchanger address"));
-    }
-
-    function issuer() internal view returns (IIssuer) {
-        return IIssuer(resolver.requireAndGetAddress("Issuer", "Missing Issuer address"));
-    }
-
     function transferableSynths(address account) public view returns (uint) {
         return balanceOf(account);
     }
 
+    function issue(address account, uint amount) external onlyInternalContracts {
+        _mint(account, amount);
+        emit Issued(account, amount);
+    }
+
+    function burn(address account, uint amount) external onlyInternalContracts {
+        _burn(account, amount);
+        emit Burned(account, amount);
+    }
+
     function _transfer(address sender, address recipient, uint256 amount) internal override {
-        if (recipient == FEE_ADDRESS) {
+        if (recipient == feePool().FEE_ADDRESS()) {
             return _transferToFeeAddress(sender, amount);
         }
 
@@ -74,7 +64,7 @@ contract Synths is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressR
             amountInUSD = amount;
             super._transfer(_msgSender(), recipient, amount);
         } else {
-            amountInUSD = exchanger().exchange(_msgSender(), currencyKey, amount, "xUSD", FEE_ADDRESS);
+            amountInUSD = exchanger().exchange(_msgSender(), currencyKey, amount, "xUSD", feePool().FEE_ADDRESS());
         }
 
         feePool().recordFeePaid(amountInUSD);
@@ -82,14 +72,20 @@ contract Synths is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressR
         return true;
     }
 
-    function issue(address account, uint amount) external onlyInternalContracts {
-        _mint(account, amount);
-        emit Issued(account, amount);
+    function shadows() internal view returns (IShadows) {
+        return IShadows(resolver.requireAndGetAddress("Shadows", "Missing Shadows address"));
     }
 
-    function burn(address account, uint amount) external onlyInternalContracts {
-        _burn(account, amount);
-        emit Burned(account, amount);
+    function feePool() internal view returns (IFeePool) {
+        return IFeePool(resolver.requireAndGetAddress("FeePool", "Missing FeePool address"));
+    }
+
+    function exchanger() internal view returns (IExchanger) {
+        return IExchanger(resolver.requireAndGetAddress("Exchanger", "Missing Exchanger address"));
+    }
+
+    function issuer() internal view returns (IIssuer) {
+        return IIssuer(resolver.requireAndGetAddress("Issuer", "Missing Issuer address"));
     }
 
     modifier onlyInternalContracts() {

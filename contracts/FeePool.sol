@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "./library/AddressResolverUpgradeable.sol"
 import "./SafeDecimalMath.sol";
 
-contract Synths is Initializable, OwnableUpgradeable, AddressResolverUpgradeable {
+contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeable {
     using SafeMath for uint;
     using SafeDecimalMath for uint;
 

@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "./library/AddressResolverUpgradeable.sol";
+import "./Synth.sol";
 
 contract Shadows is
     Initializable,
@@ -21,14 +22,7 @@ contract Shadows is
     mapping(bytes32 => Synth) public synths;
     struct IssuanceData {
         // Percentage of the total debt owned at the time
-        // of issuance. This number is modified by the global debt
-        // delta array. You can figure out a user's exit price and
-        // collateralisation ratio using a combination of their initial
-        // debt and the slice of global debt delta which applies to them.
         uint256 initialDebtOwnership;
-        // This lets us know when (in relative terms) the user entered
-        // the debt pool so we can calculate their exit price and
-        // collateralistion ratio
         uint256 debtEntryIndex;
     }
 
@@ -43,36 +37,6 @@ contract Shadows is
         __ERC20_init("Shadows Network Token", "DOWS");
         _mint(_msgSender(), 1e8 ether);
         __AddressResolver_init(_resolver);
-    }
-
-    function exchanger() internal view returns (IExchanger) {
-        return
-            IExchanger(
-                resolver.requireAndGetAddress(
-                    "Exchanger",
-                    "Missing Exchanger address"
-                )
-            );
-    }
-
-    function oracle() internal view returns (IOracle) {
-        return
-            IOracle(
-                resolver.requireAndGetAddress(
-                    "IOracle",
-                    "Missing Oracle address"
-                )
-            );
-    }
-
-    function feePool() internal view returns (IFeePool) {
-        return
-            IFeePool(
-                resolver.requireAndGetAddress(
-                    "FeePool",
-                    "Missing FeePool address"
-                )
-            );
     }
 
     function debtLedgerLength() external view returns (uint256) {
@@ -123,7 +87,7 @@ contract Shadows is
         return availableSynths.length;
     }
 
-    function addSynth(Synth synth) external optionalProxy_onlyOwner {
+    function addSynth(Synth synth) external onlyOwner {
         bytes32 currencyKey = synth.currencyKey();
 
         require(synths[currencyKey] == Synth(0), "Synth already exists");
@@ -137,7 +101,7 @@ contract Shadows is
         synthsByAddress[synth] = currencyKey;
     }
 
-    function removeSynth(bytes32 currencyKey) external optionalProxy_onlyOwner {
+    function removeSynth(bytes32 currencyKey) external onlyOwner {
         require(synths[currencyKey] != address(0), "Synth does not exist");
         require(synths[currencyKey].totalSupply() == 0, "Synth supply exists");
         require(currencyKey != xUSD, "Cannot remove xUSD");
@@ -166,7 +130,7 @@ contract Shadows is
         delete synths[currencyKey];
     }
 
-    function issueSynths(address from, uint256 amount) public onlyShadows {
+    function issueSynths(address from, uint256 amount) public {
         (uint256 maxIssuable, uint256 existingDebt) =
             remainingIssuableSynths(from);
         require(amount <= maxIssuable, "Amount too large");
@@ -178,18 +142,14 @@ contract Shadows is
         _appendAccountIssuanceRecord(from);
     }
 
-    function issueMaxSynths(address from) external onlyShadows {
+    function issueMaxSynths(address from) external {
         (uint256 maxIssuable, uint256 existingDebt) =
             remainingIssuableSynths(from);
 
         return issueSynths(from, maxmaxIssuable);
     }
 
-    function burnSynths(address from, uint256 amount) external onlyShadows {
-        IExchanger _exchanger = exchanger();
-
-        (, uint256 refunded) = _exchanger.settle(from, xUSD);
-
+    function burnSynths(address from, uint256 amount) external {
         uint256 existingDebt = debtBalanceOf(from, xUSD);
 
         require(existingDebt > 0, "No debt to forgive");
@@ -438,14 +398,34 @@ contract Shadows is
         emit IssuanceRatioUpdated(_issuanceRatio);
     }
 
-    function _mint(address account, uint256 amount) internal override {
-        uint256 totalSupply = super.totalSupply();
-        require(
-            maxTotalSupply >= totalSupply.add(amount),
-            "Max total supply over"
-        );
+    function exchanger() internal view returns (IExchanger) {
+        return
+            IExchanger(
+                resolver.requireAndGetAddress(
+                    "Exchanger",
+                    "Missing Exchanger address"
+                )
+            );
+    }
 
-        super._mint(account, amount);
+    function oracle() internal view returns (IOracle) {
+        return
+            IOracle(
+                resolver.requireAndGetAddress(
+                    "IOracle",
+                    "Missing Oracle address"
+                )
+            );
+    }
+
+    function feePool() internal view returns (IFeePool) {
+        return
+            IFeePool(
+                resolver.requireAndGetAddress(
+                    "FeePool",
+                    "Missing FeePool address"
+                )
+            );
     }
 
     event IssuanceRatioUpdated(uint256 newRatio);
