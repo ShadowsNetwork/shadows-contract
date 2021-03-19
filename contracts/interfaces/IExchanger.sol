@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MI
-pragma solidity 0.6.11
+pragma solidity 0.6.11;
 
 
 interface IExchanger {

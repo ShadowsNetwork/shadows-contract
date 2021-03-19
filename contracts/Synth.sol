@@ -4,11 +4,10 @@ pragma solidity 0.6.11;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
-import "./library/AddressResolverUpgradeable.sol"
+import "./library/AddressResolverUpgradeable.sol";
 import "./interfaces/IFeePool.sol";
 import "./interfaces/IShadows.sol";
 import "./interfaces/IExchanger.sol";
-import "./interfaces/IIssuer.sol"
 
 contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressResolverUpgradeable {
 
@@ -43,7 +42,7 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal override {
-        if (recipient == feePool().FEE_ADDRESS()) {
+        if (recipient == feePool().getFeeAddress()) {
             return _transferToFeeAddress(sender, amount);
         }
 
@@ -64,12 +63,12 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
             amountInUSD = amount;
             super._transfer(_msgSender(), recipient, amount);
         } else {
-            amountInUSD = exchanger().exchange(_msgSender(), currencyKey, amount, "xUSD", feePool().FEE_ADDRESS());
+            amountInUSD = exchanger().exchange(_msgSender(), currencyKey, amount, "xUSD", feePool().getFeeAddress());
         }
 
         feePool().recordFeePaid(amountInUSD);
 
-        return true;
+        return;
     }
 
     function shadows() internal view returns (IShadows) {
@@ -84,18 +83,13 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
         return IExchanger(resolver.requireAndGetAddress("Exchanger", "Missing Exchanger address"));
     }
 
-    function issuer() internal view returns (IIssuer) {
-        return IIssuer(resolver.requireAndGetAddress("Issuer", "Missing Issuer address"));
-    }
-
     modifier onlyInternalContracts() {
         bool isShadows = msg.sender == address(shadows());
         bool isFeePool = msg.sender == address(feePool());
         bool isExchanger = msg.sender == address(exchanger());
-        bool isIssuer = msg.sender == address(issuer());
 
         require(
-            isShadows || isFeePool || isExchanger || isIssuer,
+            isShadows || isFeePool || isExchanger,
             "Only Shadows, FeePool, Exchanger or Issuer contracts allowed"
         );
         _;

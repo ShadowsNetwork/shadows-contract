@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11
+pragma solidity 0.6.11;
 
-import "./SafeDecimalMath.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";;
-import "chainlink/contracts/interfaces/AggregatorInterface.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "@chainlink/contracts/src/v0.6/interfaces/AggregatorInterface.sol";
+import "./library/SafeDecimalMath.sol";
 
 contract Oracle is Initializable, OwnableUpgradeable {
     using SafeMath for uint;
@@ -39,8 +39,8 @@ contract Oracle is Initializable, OwnableUpgradeable {
     function initialize(
         address _owner,
         address _oracle,
-        bytes32[] _currencyKeys,
-        uint[] _newRates 
+        bytes32[] calldata _currencyKeys,
+        uint[] calldata _newRates 
     ) external initializer {
         __Ownable_init();
         require(_currencyKeys.length == _newRates.length, "Currency key length and rate length must match.");
@@ -53,18 +53,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
         internalUpdateRates(_currencyKeys, _newRates, now);
     }
 
-    function setOracle(address _oracle) external onlyOwner {
-        oracle = _oracle;
-        emit OracleUpdated(oracle);
-    }
-
-    function setRateStalePeriod(uint _time) external onlyOwner {
-        rateStalePeriod = _time;
-        emit RateStalePeriodUpdated(rateStalePeriod);
-    }
-
-    
-    function updateRates(bytes32[] currencyKeys, uint[] newRates, uint timeSent) external onlyOracle returns (bool) {
+    function updateRates(bytes32[] calldata currencyKeys, uint[] calldata newRates, uint timeSent) external onlyOracle returns (bool) {
         return internalUpdateRates(currencyKeys, newRates, timeSent);
     }
 
@@ -156,7 +145,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
         return getRateAndUpdatedTime(currencyKey).time;
     }
 
-    function lastRateUpdateTimesForCurrencies(bytes32[] currencyKeys) public view returns (uint[]) {
+    function lastRateUpdateTimesForCurrencies(bytes32[] calldata currencyKeys) public view returns (uint[] calldata) {
         uint[] memory lastUpdateTimes = new uint[](currencyKeys.length);
 
         for (uint i = 0; i < currencyKeys.length; i++) {
@@ -187,7 +176,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
         return getRateAndUpdatedTime(currencyKey).rate;
     }
 
-    function ratesForCurrencies(bytes32[] currencyKeys) external view returns (uint[]) {
+    function ratesForCurrencies(bytes32[] calldata currencyKeys) external view returns (uint[] calldata) {
         uint[] memory _localRates = new uint[](currencyKeys.length);
 
         for (uint i = 0; i < currencyKeys.length; i++) {
@@ -197,7 +186,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
         return _localRates;
     }
 
-    function ratesAndStaleForCurrencies(bytes32[] currencyKeys) external view returns (uint[], bool) {
+    function ratesAndStaleForCurrencies(bytes32[] calldata currencyKeys) external view returns (uint[] memory, bool) {
         uint[] memory _localRates = new uint[](currencyKeys.length);
 
         bool anyRateStale = false;
@@ -213,9 +202,6 @@ contract Oracle is Initializable, OwnableUpgradeable {
         return (_localRates, anyRateStale);
     }
 
-    /**
-     * @notice Check if a specific currency's rate hasn't been updated for longer than the stale period.
-     */
     function rateIsStale(bytes32 currencyKey) public view returns (bool) {
         // xUSD is a special case and is never stale.
         if (currencyKey == "xUSD") return false;
@@ -223,10 +209,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
         return lastRateUpdateTimes(currencyKey).add(rateStalePeriod) < now;
     }
 
-    /**
-     * @notice Check if any of the currency rates passed in haven't been updated for longer than the stale period.
-     */
-    function anyRateIsStale(bytes32[] currencyKeys) external view returns (bool) {
+    function anyRateIsStale(bytes32[] calldata currencyKeys) external view returns (bool) {
         // Loop through each key and check whether the data point is stale.
         uint256 i = 0;
 
@@ -251,7 +234,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
         });
     }
 
-    function internalUpdateRates(bytes32[] currencyKeys, uint[] newRates, uint timeSent) internal returns (bool) {
+    function internalUpdateRates(bytes32[] calldata currencyKeys, uint[] calldata newRates, uint timeSent) internal returns (bool) {
         require(currencyKeys.length == newRates.length, "Currency key array length must match rates array length.");
         require(timeSent < (now + ORACLE_FUTURE_LIMIT), "Time is too far into the future");
 
@@ -280,7 +263,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
     }
 
 
-    function getRateAndUpdatedTime(bytes32 currencyKey) internal view returns (RateAndUpdatedTime) {
+    function getRateAndUpdatedTime(bytes32 currencyKey) internal view returns (RateAndUpdatedTime calldata) {
         if (aggregators[currencyKey] != address(0)) {
             return
                 RateAndUpdatedTime({
@@ -292,23 +275,13 @@ contract Oracle is Initializable, OwnableUpgradeable {
         }
     }
 
-    /**
-     * @notice Remove a single value from an array by iterating through until it is found.
-     * @param entry The entry to find
-     * @param array The array to mutate
-     * @return bool Whether or not the entry was found and removed
-     */
     function removeFromArray(bytes32 entry, bytes32[] storage array) internal returns (bool) {
         for (uint i = 0; i < array.length; i++) {
             if (array[i] == entry) {
                 delete array[i];
 
-                // Copy the last key into the place of the one we just deleted
-                // If there's only one key, this is array[0] = array[0].
-                // If we're deleting the last one, it's also a NOOP in the same way.
                 array[i] = array[array.length - 1];
 
-                // Decrease the size of the array by one.
                 array.length--;
 
                 return true;
@@ -331,6 +304,15 @@ contract Oracle is Initializable, OwnableUpgradeable {
         return getRateAndUpdatedTime(currencyKey).rate;
     }
 
+    function setOracle(address _oracle) external onlyOwner {
+        oracle = _oracle;
+        emit OracleUpdated(oracle);
+    }
+
+    function setRateStalePeriod(uint _time) external onlyOwner {
+        rateStalePeriod = _time;
+        emit RateStalePeriodUpdated(rateStalePeriod);
+    }
 
     modifier rateNotStale(bytes32 currencyKey) {
         require(!rateIsStale(currencyKey), "Rate stale or nonexistant currency");

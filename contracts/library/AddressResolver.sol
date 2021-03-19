@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11
+pragma solidity 0.6.11;
 
-import "@openzeppelin/contracts/access/Ownable.sol"
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract AddressResolver is Ownable {
@@ -9,7 +9,7 @@ contract AddressResolver is Ownable {
 
     constructor(address _owner) public {}
 
-    function importAddresses(bytes32[] names, address[] destinations) public onlyOwner {
+    function importAddresses(bytes32[] calldata names, address[] calldata destinations) public onlyOwner {
         require(names.length == destinations.length, "Input lengths must match");
 
         for (uint i = 0; i < names.length; i++) {
@@ -21,7 +21,7 @@ contract AddressResolver is Ownable {
         return repository[name];
     }
 
-    function requireAndGetAddress(bytes32 name, string reason) public view returns (address) {
+    function requireAndGetAddress(bytes32 name, string calldata reason) public view returns (address) {
         address _foundAddress = repository[name];
         require(_foundAddress != address(0), reason);
         return _foundAddress;

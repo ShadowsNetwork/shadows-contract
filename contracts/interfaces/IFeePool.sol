@@ -6,9 +6,11 @@ pragma solidity 0.6.11;
  * @title FeePool Interface
  * @notice Abstract contract to hold public getters
  */
-contract IFeePool {
-    address public FEE_ADDRESS;
-    uint public exchangeFeeRate;
+interface IFeePool {
+
+    function getFeeAddress() external view returns (address);
+
+    function getExchangeFeeRate() external view returns (uint);
 
     function amountReceivedFromExchange(uint value) external view returns (uint);
 

@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11
+pragma solidity 0.6.11;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
-import "./library/AddressResolverUpgradeable.sol"
-import "./SafeDecimalMath.sol";
+import "./library/AddressResolverUpgradeable.sol";
+import "./library/SafeDecimalMath.sol";
+import "./interfaces/IShadows.sol";
 
 contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeable {
     using SafeMath for uint;
     using SafeDecimalMath for uint;
-
-    uint8 public constant FEE_PERIOD_LENGTH = 6;
 
     address public feePool;
 
@@ -20,14 +19,14 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
         uint debtEntryIndex;
     }
 
+    uint8 public constant FEE_PERIOD_LENGTH = 3;
+
     mapping(address => uint) lastFeeWithdrawalStorage;
 
     // The IssuanceData activity that's happened in a fee period.
     mapping(address => IssuanceData[FEE_PERIOD_LENGTH]) public accountIssuanceLedger;
 
     uint public exchangeFeeRate;
-
-    uint public constant MAX_EXCHANGE_FEE_RATE = SafeDecimalMath.unit() / 10;
 
     address public constant FEE_ADDRESS = 0x43707C6Bb6202a5E1007356539a925C052EA9767;
 
@@ -44,8 +43,6 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
         uint rewardsClaimed;
     }
 
-    uint8 public constant FEE_PERIOD_LENGTH = 3;
-
     FeePeriod[FEE_PERIOD_LENGTH] private _recentFeePeriods;
     uint256 private _currentFeePeriod;
 
@@ -59,7 +56,7 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
     uint public targetThreshold = (1 * SafeDecimalMath.unit()) / 100;
 
     function initialize(
-        uint _exchangeFeeRate
+        uint _exchangeFeeRate,
         address _resolver
     ) external initializer {
         __Ownable_init();
@@ -67,12 +64,20 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
         exchangeFeeRate = _exchangeFeeRate;
     }
 
-    function setExchangeFeeRate(uint _exchangeFeeRate) external optionalProxy_onlyOwner {
-        require(_exchangeFeeRate < MAX_EXCHANGE_FEE_RATE, "rate < MAX_EXCHANGE_FEE_RATE");
+    function getFeeAddress() external view returns (address){
+        return FEE_ADDRESS;
+    }
+
+    function getExchangeFeeRate() external view returns (uint){
+        return exchangeFeeRate;
+    }
+
+    function setExchangeFeeRate(uint _exchangeFeeRate) external onlyOwner {
+        require(_exchangeFeeRate < SafeDecimalMath.unit() / 10, "rate < MAX_EXCHANGE_FEE_RATE");
         exchangeFeeRate = _exchangeFeeRate;
     }
 
-    function setFeePeriodDuration(uint _feePeriodDuration) external optionalProxy_onlyOwner {
+    function setFeePeriodDuration(uint _feePeriodDuration) external onlyOwner {
         require(_feePeriodDuration >= MIN_FEE_PERIOD_DURATION, "value < MIN_FEE_PERIOD_DURATION");
         require(_feePeriodDuration <= MAX_FEE_PERIOD_DURATION, "value > MAX_FEE_PERIOD_DURATION");
 
@@ -81,7 +86,7 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
         emit FeePeriodDurationUpdated(_feePeriodDuration);
     }
 
-    function setTargetThreshold(uint _percent) external optionalProxy_onlyOwner {
+    function setTargetThreshold(uint _percent) external onlyOwner {
         require(_percent >= 0, "Threshold should be positive");
         require(_percent <= 50, "Threshold too high");
         targetThreshold = _percent.mul(SafeDecimalMath.unit()).div(100);
@@ -94,7 +99,7 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
 
     function setRewardsToDistribute(uint amount) external {
         address rewardsAuthority = resolver.getAddress("RewardsDistribution");
-        require(messageSender == rewardsAuthority || msg.sender == rewardsAuthority, "Caller is not rewardsAuthority");
+        require( _msgSender() == rewardsAuthority || msg.sender == rewardsAuthority, "Caller is not rewardsAuthority");
         // Add the amount of DOWS rewards to distribute on top of any rolling unclaimed amount
         _recentFeePeriodsStorage(0).rewardsToDistribute = _recentFeePeriodsStorage(0).rewardsToDistribute.add(amount);
     }
@@ -156,14 +161,14 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
         // Open up the new fee period.
         // Increment periodId from the recent closed period feePeriodId
         _recentFeePeriodsStorage(0).feePeriodId = uint64(uint256(_recentFeePeriodsStorage(1).feePeriodId).add(1));
-        _recentFeePeriodsStorage(0).startingDebtIndex = uint64(shadowsState().debtLedgerLength());
+        _recentFeePeriodsStorage(0).startingDebtIndex = uint64(shadows().debtLedgerLength());
         _recentFeePeriodsStorage(0).startTime = uint64(now);
 
         emit FeePeriodClosed(_recentFeePeriodsStorage(1).feePeriodId);
     }
 
-    function claimFees() external optionalProxy returns (bool) {
-        return _claimFees(messageSender);
+    function claimFees() external returns (bool) {
+        return _claimFees( _msgSender());
     }
 
     function _claimFees(address claimingAddress) internal returns (bool) {
@@ -363,17 +368,120 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
         // This is a high precision integer.
         uint feePeriodDebtOwnership = shadows()
             .debtLedger(closingDebtIndex)
-            .divideDecimalRoundPrecise(_shadowsState.debtLedger(debtEntryIndex))
+            .divideDecimalRoundPrecise(shadows().debtLedger(debtEntryIndex))
             .multiplyDecimalRoundPrecise(ownershipPercentage);
 
         return feePeriodDebtOwnership;
+    }
+
+    function _recordFeePayment(uint xUSDAmount) internal returns (uint) {
+        // Don't assign to the parameter
+        uint remainingToAllocate = xUSDAmount;
+
+        uint feesPaid;
+        // Start at the oldest period and record the amount, moving to newer periods
+        // until we've exhausted the amount.
+        // The condition checks for overflow because we're going to 0 with an unsigned int.
+        for (uint i = FEE_PERIOD_LENGTH - 1; i < FEE_PERIOD_LENGTH; i--) {
+            uint feesAlreadyClaimed = _recentFeePeriodsStorage(i).feesClaimed;
+            uint delta = _recentFeePeriodsStorage(i).feesToDistribute.sub(feesAlreadyClaimed);
+
+            if (delta > 0) {
+                // Take the smaller of the amount left to claim in the period and the amount we need to allocate
+                uint amountInPeriod = delta < remainingToAllocate ? delta : remainingToAllocate;
+
+                _recentFeePeriodsStorage(i).feesClaimed = feesAlreadyClaimed.add(amountInPeriod);
+                remainingToAllocate = remainingToAllocate.sub(amountInPeriod);
+                feesPaid = feesPaid.add(amountInPeriod);
+
+                // No need to continue iterating if we've recorded the whole amount;
+                if (remainingToAllocate == 0) return feesPaid;
+
+                // We've exhausted feePeriods to distribute and no fees remain in last period
+                // User last to claim would in this scenario have their remainder slashed
+                if (i == 0 && remainingToAllocate > 0) {
+                    remainingToAllocate = 0;
+                }
+            }
+        }
+
+        return feesPaid;
+    }
+
+    function _payFees(address account, uint xUSDAmount) internal notFeeAddress(account) {
+        // Checks not really possible but rather gaurds for the internal code.
+        require(
+            account != address(0) ||
+                account != address(this) ||
+                account != address(shadows()),
+            "Can't send fees to this address"
+        );
+
+        // Grab the xUSD Synth
+        Synth xUSDSynth = shadows().synths(xUSD);
+
+        // NOTE: we do not control the FEE_ADDRESS so it is not possible to do an
+        // ERC20.approve() transaction to allow this feePool to call ERC20.transferFrom
+        // to the accounts address
+
+        // Burn the source amount
+        xUSDSynth.burn(FEE_ADDRESS, xUSDAmount);
+
+        // Mint their new synths
+        xUSDSynth.issue(account, xUSDAmount);
+    }
+
+    function _recordRewardPayment(uint dowsAmount) internal returns (uint) {
+        // Don't assign to the parameter
+        uint remainingToAllocate = dowsAmount;
+
+        uint rewardPaid;
+
+        // Start at the oldest period and record the amount, moving to newer periods
+        // until we've exhausted the amount.
+        // The condition checks for overflow because we're going to 0 with an unsigned int.
+        for (uint i = FEE_PERIOD_LENGTH - 1; i < FEE_PERIOD_LENGTH; i--) {
+            uint toDistribute = _recentFeePeriodsStorage(i).rewardsToDistribute.sub(
+                _recentFeePeriodsStorage(i).rewardsClaimed
+            );
+
+            if (toDistribute > 0) {
+                // Take the smaller of the amount left to claim in the period and the amount we need to allocate
+                uint amountInPeriod = toDistribute < remainingToAllocate ? toDistribute : remainingToAllocate;
+
+                _recentFeePeriodsStorage(i).rewardsClaimed = _recentFeePeriodsStorage(i).rewardsClaimed.add(amountInPeriod);
+                remainingToAllocate = remainingToAllocate.sub(amountInPeriod);
+                rewardPaid = rewardPaid.add(amountInPeriod);
+
+                // No need to continue iterating if we've recorded the whole amount;
+                if (remainingToAllocate == 0) return rewardPaid;
+
+                // We've exhausted feePeriods to distribute and no rewards remain in last period
+                // User last to claim would in this scenario have their remainder slashed
+                // due to rounding up of PreciseDecimal
+                if (i == 0 && remainingToAllocate > 0) {
+                    remainingToAllocate = 0;
+                }
+            }
+        }
+        return rewardPaid;
+    }
+
+    function _payRewards(address account, uint dowsAmount) internal notFeeAddress(account) {
+        require(account != address(0), "Account can't be 0");
+        require(account != address(this), "Can't send rewards to fee pool");
+        require(account != address(shadows()), "Can't send rewards to shadows");
+
+        // Record vesting entry for claiming address and amount
+        // DOWS already minted to rewardEscrow balance
+        //todo rewardEscrow().appendVestingEntry(account, dowsAmount);
     }
 
     /**
      * @dev onlyIssuer to call me on shadows.issue() & shadows.burn() calls to store the locked DOWS
      * per fee period so we know to allocate the correct proportions of fees and rewards per period
      */
-    function appendAccountIssuanceRecord(address account, uint debtRatio, uint debtEntryIndex) external onlyIssuer {
+    function appendAccountIssuanceRecord(address account, uint debtRatio, uint debtEntryIndex) external onlyShadows {
         _appendAccountIssuanceRecord(
             account,
             debtRatio,
@@ -389,7 +497,7 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
         uint debtRatio,
         uint debtEntryIndex,
         uint currentPeriodStartDebtIndex
-    ) internal onlyFeePool {
+    ) private {
         // Is the current debtEntryIndex within this fee period
         if (accountIssuanceLedger[account][0].debtEntryIndex < currentPeriodStartDebtIndex) {
             // If its older then shift the previous IssuanceData entries periods down to make room for the new one.
@@ -417,8 +525,28 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
         _;
     }
 
-    modifier onlyIssuer {
-        require(msg.sender == address(issuer()), "FeePool: Only Issuer Authorised");
+    function shadows() internal view returns (IShadows) {
+        return
+            IShadows(
+                resolver.requireAndGetAddress(
+                    "Shadows",
+                    "Missing Shadows address"
+                )
+            );
+    }
+
+    function exchanger() internal view returns (IExchanger) {
+        return
+            IExchanger(
+                resolver.requireAndGetAddress(
+                    "Exchanger",
+                    "Missing Exchanger address"
+                )
+            );
+    }
+
+    modifier onlyShadows {
+        require(msg.sender == address(shadows()), "FeePool: Only Issuer Authorised");
         _;
     }
 

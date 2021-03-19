@@ -5,21 +5,27 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "./library/AddressResolverUpgradeable.sol";
+import "./library/SafeDecimalMath.sol";
 import "./Synth.sol";
+import "./interfaces/IOracle.sol";
 
 contract Shadows is
     Initializable,
     OwnableUpgradeable,
-    ERC20Upgradeablea,
+    ERC20Upgradeable,
     AddressResolverUpgradeable
 {
+    using SafeMath for uint;
+    using SafeDecimalMath for uint;
+
     uint256 constant maxTotalSupply = 1e8 ether;
     bytes32 constant xUSD = "xUSD";
     uint256 public issuanceRatio = SafeDecimalMath.unit() / 5;
-    uint256 constant MAX_ISSUANCE_RATIO = SafeDecimalMath.unit();
 
     Synth[] public availableSynths;
     mapping(bytes32 => Synth) public synths;
+    mapping(address => bytes32) public synthsByAddress;
+
     struct IssuanceData {
         // Percentage of the total debt owned at the time
         uint256 initialDebtOwnership;
@@ -39,11 +45,11 @@ contract Shadows is
         __AddressResolver_init(_resolver);
     }
 
-    function debtLedgerLength() external view returns (uint256) {
+    function debtLedgerLength() public view returns (uint256) {
         return debtLedger.length;
     }
 
-    function lastDebtLedgerEntry() external view returns (uint256) {
+    function lastDebtLedgerEntry() public view returns (uint256) {
         return debtLedger[debtLedger.length - 1];
     }
 
@@ -73,7 +79,7 @@ contract Shadows is
         return total.divideDecimalRound(currencyRate);
     }
 
-    function availableCurrencyKeys() public view returns (bytes32[]) {
+    function availableCurrencyKeys() public view returns (bytes32[] calldata) {
         bytes32[] memory currencyKeys = new bytes32[](availableSynths.length);
 
         for (uint256 i = 0; i < availableSynths.length; i++) {
@@ -146,7 +152,7 @@ contract Shadows is
         (uint256 maxIssuable, uint256 existingDebt) =
             remainingIssuableSynths(from);
 
-        return issueSynths(from, maxmaxIssuable);
+        return issueSynths(from, maxIssuable);
     }
 
     function burnSynths(address from, uint256 amount) external {
@@ -160,7 +166,7 @@ contract Shadows is
 
         uint256 amountToBurn = amountToRemove;
 
-        _shadows.synths(xUSD).burn(from, amountToBurn);
+        synths(xUSD).burn(from, amountToBurn);
 
         _appendAccountIssuanceRecord(from);
     }
@@ -236,14 +242,14 @@ contract Shadows is
         bytes32 sourceCurrencyKey,
         uint256 sourceAmount,
         bytes32 destinationCurrencyKey
-    ) external optionalProxy returns (uint256 amountReceived) {
+    ) external returns (uint256 amountReceived) {
         return
             exchanger().exchange(
-                messageSender,
+                _msgSender(),
                 sourceCurrencyKey,
                 sourceAmount,
                 destinationCurrencyKey,
-                messageSender
+                _msgSender()
             );
     }
 
@@ -256,9 +262,7 @@ contract Shadows is
         uint256 balance = balanceOf(account);
 
         uint256 lockedShadowsValue =
-            debtBalanceOf(account, "DOWS").divideDecimalRound(
-                shadowsState().issuanceRatio()
-            );
+            debtBalanceOf(account, "DOWS").divideDecimalRound(issuanceRatio());
 
         if (lockedShadowsValue >= balance) {
             return 0;
@@ -391,7 +395,7 @@ contract Shadows is
 
     function setIssuanceRatio(uint256 _issuanceRatio) external onlyOwner {
         require(
-            _issuanceRatio <= MAX_ISSUANCE_RATIO,
+            _issuanceRatio <= SafeDecimalMath.unit(),
             "New issuance ratio cannot exceed MAX_ISSUANCE_RATIO"
         );
         issuanceRatio = _issuanceRatio;
@@ -426,6 +430,14 @@ contract Shadows is
                     "Missing FeePool address"
                 )
             );
+    }
+
+    modifier rateNotStale(bytes32 currencyKey) {
+        require(
+            !oracle().rateIsStale(currencyKey),
+            "Rate stale or not a synth"
+        );
+        _;
     }
 
     event IssuanceRatioUpdated(uint256 newRatio);

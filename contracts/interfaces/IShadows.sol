@@ -1,54 +1,105 @@
 // SPDX-License-Identifier: MI
-pragma solidity 0.6.11
+pragma solidity 0.6.11;
 
-contract IShadows {
+import "../Synth.sol";
 
-    uint public totalSupply;
+abstract contract IShadows {
+    uint256 public totalSupply;
+
+    uint256 public issuanceRatio;
 
     mapping(bytes32 => Synth) public synths;
 
     mapping(address => bytes32) public synthsByAddress;
 
-    function balanceOf(address account) public view returns (uint);
+    uint256[] public debtLedger;
 
-    function transfer(address to, uint value) public returns (bool);
+    function balanceOf(address account) external view virtual returns (uint256);
 
-    function transferFrom(address from, address to, uint value) public returns (bool);
-
-    function exchange(bytes32 sourceCurrencyKey, uint sourceAmount, bytes32 destinationCurrencyKey)
+    function transfer(address to, uint256 value)
         external
-        returns (uint amountReceived);
+        virtual
+        returns (bool);
 
-    function issueSynths(uint amount) external;
+    function transferFrom(
+        address from,
+        address to,
+        uint256 value
+    ) external virtual returns (bool);
 
-    function issueMaxSynths() external;
+    function exchange(
+        bytes32 sourceCurrencyKey,
+        uint256 sourceAmount,
+        bytes32 destinationCurrencyKey
+    ) external virtual returns (uint256 amountReceived);
 
-    function burnSynths(uint amount) external;
+    function issueSynths(uint256 amount) external virtual;
 
-    function settle(bytes32 currencyKey) external returns (uint reclaimed, uint refunded);
+    function issueMaxSynths() external virtual;
 
-    function collateralisationRatio(address issuer) public view returns (uint);
+    function burnSynths(uint256 amount) external virtual;
 
-    function totalIssuedSynths(bytes32 currencyKey) public view returns (uint);
+    function settle(bytes32 currencyKey)
+        external
+        virtual
+        returns (uint256 reclaimed, uint256 refunded);
 
-    function totalIssuedSynthsExcludeEtherCollateral(bytes32 currencyKey) public view returns (uint);
+    function collateralisationRatio(address issuer)
+        external
+        view
+        virtual
+        returns (uint256);
 
-    function debtBalanceOf(address issuer, bytes32 currencyKey) public view returns (uint);
+    function totalIssuedSynths(bytes32 currencyKey)
+        external
+        view
+        virtual
+        returns (uint256);
 
-    function remainingIssuableSynths(address issuer) public view returns (uint, uint);
+    function totalIssuedSynthsExcludeEtherCollateral(bytes32 currencyKey)
+        external
+        view
+        virtual
+        returns (uint256);
 
-    function isWaitingPeriod(bytes32 currencyKey) external view returns (bool);
+    function debtBalanceOf(address issuer, bytes32 currencyKey)
+        external
+        view
+        virtual
+        returns (uint256);
+
+    function remainingIssuableSynths(address issuer)
+        external
+        view
+        virtual
+        returns (uint256, uint256);
+
+    function isWaitingPeriod(bytes32 currencyKey)
+        external
+        view
+        virtual
+        returns (bool);
+
+    function debtLedgerLength() external view virtual returns (uint256);
 
     function emitSynthExchange(
         address account,
         bytes32 fromCurrencyKey,
-        uint fromAmount,
+        uint256 fromAmount,
         bytes32 toCurrencyKey,
-        uint toAmount,
+        uint256 toAmount,
         address toAddress
-    ) external;
+    ) external virtual;
 
-    function emitExchangeReclaim(address account, bytes32 currencyKey, uint amount) external;
+    function emitExchangeReclaim(
+        address account,
+        bytes32 currencyKey,
+        uint256 amount
+    ) external virtual;
 
-    function emitExchangeRebate(address account, bytes32 currencyKey, uint amount) external;
+    function emitExchangeRebate(
+        address account,
+        bytes32 currencyKey,
+        uint256 amount
+    ) external virtual;
 }

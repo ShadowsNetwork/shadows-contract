@@ -6,11 +6,11 @@ import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract AddressResolverUpgradeable is Initializable, ContextUpgradeable {
+contract AddressResolverUpgradeable is Initializable, OwnableUpgradeable {
     AddressResolver public resolver;
 
     function __AddressResolver_init(address _resolver) internal initializer {
-        __Context_init_unchained();
+        __Ownable_init();
         __AddressResolver_init_unchained(_resolver);
     }
 

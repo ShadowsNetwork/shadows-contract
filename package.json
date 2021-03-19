@@ -12,6 +12,7 @@
     "hardhat-deploy": "^0.7.0-beta.47"
   },
   "dependencies": {
+    "@chainlink/contracts": "^0.1.6",
     "@openzeppelin/contracts": "^3.4.1",
     "@openzeppelin/contracts-upgradeable": "^3.4.1",
     "chainlink": "0.7.10"
