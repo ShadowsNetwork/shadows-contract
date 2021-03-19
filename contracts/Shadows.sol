@@ -236,12 +236,10 @@ contract Shadows is
         // This is a high precision integer of 27 (1e27) decimals.
         uint256 currentDebtOwnership =
             lastDebtLedgerEntry()
-                .divideDecimalRoundPrecise(state.debtLedger(debtEntryIndex))
+                .divideDecimalRoundPrecise(debtLedger(debtEntryIndex))
                 .multiplyDecimalRoundPrecise(initialDebtOwnership);
 
-        // What's the total value of the system excluding ETH backed synths in their requested currency?
-        uint256 totalSystemValue =
-            totalIssuedSynthsExcludeEtherCollateral(currencyKey);
+        uint256 totalSystemValue = totalIssuedSynths(currencyKey);
 
         // Their debt balance is their portion of the total system value.
         uint256 highPrecisionBalance =
@@ -262,31 +260,45 @@ contract Shadows is
         return destinationValue.multiplyDecimal(issuanceRatio());
     }
 
-    function collateralisationRatio(address _issuer) public view returns (uint) {
-        uint totalOwnedShadows = balanceOf(_issuer);
+    function collateralisationRatio(address _issuer)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 totalOwnedShadows = balanceOf(_issuer);
         if (totalOwnedShadows == 0) return 0;
 
-        uint debtBalance = debtBalanceOf(_issuer, "DOWS");
+        uint256 debtBalance = debtBalanceOf(_issuer, "DOWS");
         return debtBalance.divideDecimalRound(totalOwnedShadows);
     }
 
-    function exchange(bytes32 sourceCurrencyKey, uint sourceAmount, bytes32 destinationCurrencyKey)
-        external
-        optionalProxy
-        returns (uint amountReceived)
-    {
-        return exchanger().exchange(messageSender, sourceCurrencyKey, sourceAmount, destinationCurrencyKey, messageSender);
+    function exchange(
+        bytes32 sourceCurrencyKey,
+        uint256 sourceAmount,
+        bytes32 destinationCurrencyKey
+    ) external optionalProxy returns (uint256 amountReceived) {
+        return
+            exchanger().exchange(
+                messageSender,
+                sourceCurrencyKey,
+                sourceAmount,
+                destinationCurrencyKey,
+                messageSender
+            );
     }
 
     function transferableShadows(address account)
         public
         view
         rateNotStale("DOWS")
-        returns (uint)
+        returns (uint256)
     {
-        uint balance = balanceOf(account);
+        uint256 balance = balanceOf(account);
 
-        uint lockedShadowsValue = debtBalanceOf(account, "DOWS").divideDecimalRound(shadowsState().issuanceRatio());
+        uint256 lockedShadowsValue =
+            debtBalanceOf(account, "DOWS").divideDecimalRound(
+                shadowsState().issuanceRatio()
+            );
 
         if (lockedShadowsValue >= balance) {
             return 0;
@@ -300,7 +312,7 @@ contract Shadows is
         uint256 amount,
         uint256 existingDebt
     ) internal {
-        uint256 totalDebtIssued = shadows().totalIssuedSynths(xUSD);
+        uint256 totalDebtIssued = totalIssuedSynths(xUSD);
 
         uint256 newTotalDebtIssued = amount.add(totalDebtIssued);
 
@@ -332,7 +344,7 @@ contract Shadows is
         // the change for the rest of the debt holders. The debt ledger holds high precision integers.
         if (debtLedgerLength() > 0) {
             _appendDebtLedgerValue(
-                astDebtLedgerEntry().multiplyDecimalRoundPrecise(delta)
+                lastDebtLedgerEntry().multiplyDecimalRoundPrecise(delta)
             );
         } else {
             _appendDebtLedgerValue(SafeDecimalMath.preciseUnit());
@@ -346,7 +358,7 @@ contract Shadows is
     ) internal {
         uint256 debtToRemove = amount;
 
-        uint256 totalDebtIssued = totalIssuedSynthsExcludeEtherCollateral(xUSD);
+        uint256 totalDebtIssued = totalIssuedSynths(xUSD);
 
         uint256 newTotalDebtIssued = totalDebtIssued.sub(debtToRemove);
 
@@ -381,7 +393,7 @@ contract Shadows is
 
         // Update our cumulative ledger. This is also a high precision integer.
         _appendDebtLedgerValue(
-            state.lastDebtLedgerEntry().multiplyDecimalRoundPrecise(delta)
+            lastDebtLedgerEntry().multiplyDecimalRoundPrecise(delta)
         );
     }
 
