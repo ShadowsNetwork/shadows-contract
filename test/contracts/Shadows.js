@@ -1,14 +1,15 @@
 const { expect } = require("chai");
+const Oracle = artifacts.require("Oracle");
+const FeePool = artifacts.require("FeePool");
 
-describe("Greeter", function() {
-  it("Should return the new greeting once it's changed", async function() {
-    const Greeter = await ethers.getContractFactory("Greeter");
-    const greeter = await Greeter.deploy("Hello, world!");
-    
-    await greeter.deployed();
-    expect(await greeter.greet()).to.equal("Hello, world!");
+contract("Shadows", async (accounts) => {
+  let oracle,
+    feePool;
 
-    await greeter.setGreeting("Hola, mundo!");
-    expect(await greeter.greet()).to.equal("Hola, mundo!");
+  beforeEach(async () => {
+    oracle = await Oracle.deployed();
+    feePool = await FeePool.deployed();
   });
+
+  it("should set params on initialize", async () => {});
 });

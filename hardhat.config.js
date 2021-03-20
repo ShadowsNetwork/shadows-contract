@@ -2,6 +2,7 @@ require('dotenv').config();
 require('hardhat-deploy');
 require('@openzeppelin/hardhat-upgrades');
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-truffle5");
 const mnemonic = process.env.MNEMONIC;
 const infuraKey = process.env.INFURAKEY;
 
