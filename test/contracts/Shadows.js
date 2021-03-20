@@ -4,15 +4,10 @@ const Shadows = artifacts.require("Shadows");
 const FeePool = artifacts.require("FeePool");
 const SafeDecimalMath = artifacts.require("SafeDecimalMath");
 const AddressResolver = artifacts.require("AddressResolver");
+const { toBytes32 } = require("../utils");
 
 contract("Shadows", async (accounts) => {
-  let 
-    shadows,  
-    oracle,
-    feePool,
-    safeDecimalMath,
-    addressResolver
-    ;
+  let shadows, oracle, feePool, safeDecimalMath, addressResolver;
 
   beforeEach(async () => {
     addressResolver = await AddressResolver.new();
@@ -24,8 +19,14 @@ contract("Shadows", async (accounts) => {
 
     await Oracle.link(safeDecimalMath);
     oracle = await Oracle.new();
+
     await FeePool.link(safeDecimalMath);
     feePool = await FeePool.new();
+
+    await addressResolver.importAddresses(
+      [toBytes32("Shadows"), toBytes32("Oracle"), toBytes32("FeePool")],
+      [shadows.address, oracle.address, feePool.address]
+    );
   });
 
   it("should set params on initialize", async () => {
