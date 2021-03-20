@@ -15,8 +15,7 @@ contract Shadows is
     ERC20Upgradeable,
     AddressResolverUpgradeable
 {
-    using SafeMath for uint;
-    using SafeDecimalMath for uint;
+    using SafeDecimalMath for uint256;
 
     uint256 constant maxTotalSupply = 1e8 ether;
     bytes32 constant xUSD = "xUSD";
@@ -79,11 +78,11 @@ contract Shadows is
         return total.divideDecimalRound(currencyRate);
     }
 
-    function availableCurrencyKeys() public view returns (bytes32[] calldata) {
+    function availableCurrencyKeys() public view returns (bytes32[] memory) {
         bytes32[] memory currencyKeys = new bytes32[](availableSynths.length);
 
         for (uint256 i = 0; i < availableSynths.length; i++) {
-            currencyKeys[i] = synthsByAddress[availableSynths[i]];
+            currencyKeys[i] = synthsByAddress[address(availableSynths[i])];
         }
 
         return currencyKeys;
@@ -98,24 +97,27 @@ contract Shadows is
 
         require(synths[currencyKey] == Synth(0), "Synth already exists");
         require(
-            synthsByAddress[synth] == bytes32(0),
+            synthsByAddress[address(synth)] == bytes32(0),
             "Synth address already exists"
         );
 
         availableSynths.push(synth);
         synths[currencyKey] = synth;
-        synthsByAddress[synth] = currencyKey;
+        synthsByAddress[address(synth)] = currencyKey;
     }
 
     function removeSynth(bytes32 currencyKey) external onlyOwner {
-        require(synths[currencyKey] != address(0), "Synth does not exist");
+        require(
+            address(synths[currencyKey]) != address(0),
+            "Synth does not exist"
+        );
         require(synths[currencyKey].totalSupply() == 0, "Synth supply exists");
         require(currencyKey != xUSD, "Cannot remove xUSD");
 
-        address synthToRemove = synths[currencyKey];
+        address synthToRemove = address(synths[currencyKey]);
 
         for (uint256 i = 0; i < availableSynths.length; i++) {
-            if (availableSynths[i] == synthToRemove) {
+            if (address(availableSynths[i]) == synthToRemove) {
                 delete availableSynths[i];
 
                 // Copy the last synth into the place of the one we just deleted
@@ -126,13 +128,13 @@ contract Shadows is
                 ];
 
                 // Decrease the size of the array by one.
-                availableSynths.length--;
+                availableSynths.pop();
 
                 break;
             }
         }
 
-        delete synthsByAddress[synths[currencyKey]];
+        delete synthsByAddress[address(synths[currencyKey])];
         delete synths[currencyKey];
     }
 
@@ -143,14 +145,13 @@ contract Shadows is
 
         _addToDebtRegister(from, amount, existingDebt);
 
-        synths(xUSD).issue(from, amount);
+        synths[xUSD].issue(from, amount);
 
         _appendAccountIssuanceRecord(from);
     }
 
     function issueMaxSynths(address from) external {
-        (uint256 maxIssuable, uint256 existingDebt) =
-            remainingIssuableSynths(from);
+        (uint256 maxIssuable, ) = remainingIssuableSynths(from);
 
         return issueSynths(from, maxIssuable);
     }
@@ -166,7 +167,7 @@ contract Shadows is
 
         uint256 amountToBurn = amountToRemove;
 
-        synths(xUSD).burn(from, amountToBurn);
+        synths[xUSD].burn(from, amountToBurn);
 
         _appendAccountIssuanceRecord(from);
     }
@@ -192,9 +193,9 @@ contract Shadows is
         view
         returns (uint256)
     {
-        uint256 initialDebtOwnership;
-        uint256 debtEntryIndex;
-        (initialDebtOwnership, debtEntryIndex) = issuanceData(_issuer);
+        IssuanceData memory data = issuanceData[_issuer];
+        uint256 initialDebtOwnership = data.initialDebtOwnership;
+        uint256 debtEntryIndex = data.debtEntryIndex;
 
         if (initialDebtOwnership == 0) return 0;
 
@@ -202,7 +203,7 @@ contract Shadows is
         // This is a high precision integer of 27 (1e27) decimals.
         uint256 currentDebtOwnership =
             lastDebtLedgerEntry()
-                .divideDecimalRoundPrecise(debtLedger(debtEntryIndex))
+                .divideDecimalRoundPrecise(debtLedger[debtEntryIndex])
                 .multiplyDecimalRoundPrecise(initialDebtOwnership);
 
         uint256 totalSystemValue = totalIssuedSynths(currencyKey);
@@ -223,7 +224,7 @@ contract Shadows is
             oracle().effectiveValue("DOWS", balanceOf(_issuer), xUSD);
 
         // They're allowed to issue up to issuanceRatio of that value
-        return destinationValue.multiplyDecimal(issuanceRatio());
+        return destinationValue.multiplyDecimal(issuanceRatio);
     }
 
     function collateralisationRatio(address _issuer)
@@ -262,7 +263,7 @@ contract Shadows is
         uint256 balance = balanceOf(account);
 
         uint256 lockedShadowsValue =
-            debtBalanceOf(account, "DOWS").divideDecimalRound(issuanceRatio());
+            debtBalanceOf(account, "DOWS").divideDecimalRound(issuanceRatio);
 
         if (lockedShadowsValue >= balance) {
             return 0;
@@ -362,14 +363,12 @@ contract Shadows is
     }
 
     function _appendAccountIssuanceRecord(address from) internal {
-        uint256 initialDebtOwnership;
-        uint256 debtEntryIndex;
-        (initialDebtOwnership, debtEntryIndex) = issuanceData(from);
+        IssuanceData memory data = issuanceData[from];
 
         feePool().appendAccountIssuanceRecord(
             from,
-            initialDebtOwnership,
-            debtEntryIndex
+            data.initialDebtOwnership,
+            data.debtEntryIndex
         );
     }
 

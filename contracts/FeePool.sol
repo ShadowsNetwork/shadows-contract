@@ -64,14 +64,6 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
         exchangeFeeRate = _exchangeFeeRate;
     }
 
-    function getFeeAddress() external view returns (address){
-        return FEE_ADDRESS;
-    }
-
-    function getExchangeFeeRate() external view returns (uint){
-        return exchangeFeeRate;
-    }
-
     function setExchangeFeeRate(uint _exchangeFeeRate) external onlyOwner {
         require(_exchangeFeeRate < SafeDecimalMath.unit() / 10, "rate < MAX_EXCHANGE_FEE_RATE");
         exchangeFeeRate = _exchangeFeeRate;
@@ -257,7 +249,7 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
         // If they don't have any debt ownership and they never minted, they don't have any fees.
         // User ownership can reduce to 0 if user burns all synths,
         // however they could have fees applicable for periods they had minted in before so we check debtEntryIndex.
-        if (debtEntryIndex == 0 && userOwnershipPercentage == 0) return;
+        if (debtEntryIndex == 0 && userOwnershipPercentage == 0) return results;
 
         // The [0] fee period is not yet ready to claim, but it is a fee period that they can have
         // fees owing for, so we need to report on it anyway.
@@ -295,6 +287,7 @@ contract FeePool is Initializable, OwnableUpgradeable, AddressResolverUpgradeabl
                 results[i][1] = rewardsFromPeriod;
             }
         }
+        return results;
     }
 
     function getLastFeeWithdrawal(address _claimingAddress) public view returns (uint) {

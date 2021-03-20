@@ -42,7 +42,7 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal override {
-        if (recipient == feePool().getFeeAddress()) {
+        if (recipient == feePool().FEE_ADDRESS()) {
             return _transferToFeeAddress(sender, amount);
         }
 
@@ -63,7 +63,7 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
             amountInUSD = amount;
             super._transfer(_msgSender(), recipient, amount);
         } else {
-            amountInUSD = exchanger().exchange(_msgSender(), currencyKey, amount, "xUSD", feePool().getFeeAddress());
+            amountInUSD = exchanger().exchange(_msgSender(), currencyKey, amount, "xUSD", feePool().FEE_ADDRESS());
         }
 
         feePool().recordFeePaid(amountInUSD);

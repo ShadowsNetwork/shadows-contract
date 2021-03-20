@@ -4,21 +4,19 @@ pragma solidity 0.6.11;
 
 /**
  * @title FeePool Interface
- * @notice Abstract contract to hold public getters
  */
-interface IFeePool {
+abstract contract IFeePool {
 
-    function getFeeAddress() external view returns (address);
+    address public FEE_ADDRESS;
+    uint public exchangeFeeRate;
 
-    function getExchangeFeeRate() external view returns (uint);
+    function amountReceivedFromExchange(uint value) virtual external view returns (uint);
 
-    function amountReceivedFromExchange(uint value) external view returns (uint);
+    function amountReceivedFromTransfer(uint value) virtual external view returns (uint);
 
-    function amountReceivedFromTransfer(uint value) external view returns (uint);
+    function recordFeePaid(uint xUSDAmount) virtual external;
 
-    function recordFeePaid(uint xUSDAmount) external;
+    function appendAccountIssuanceRecord(address account, uint lockedAmount, uint debtEntryIndex) virtual external;
 
-    function appendAccountIssuanceRecord(address account, uint lockedAmount, uint debtEntryIndex) external;
-
-    function setRewardsToDistribute(uint amount) external;
+    function setRewardsToDistribute(uint amount) virtual external;
 }

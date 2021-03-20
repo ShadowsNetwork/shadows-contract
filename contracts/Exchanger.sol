@@ -9,10 +9,7 @@ import "./interfaces/IOracle.sol";
 import "./interfaces/IShadows.sol";
 import "./interfaces/IFeePool.sol";
 
-contract Exchanger is
-    Initializable,
-    AddressResolverUpgradeable
-{
+contract Exchanger is Initializable, AddressResolverUpgradeable {
     using SafeMath for uint256;
     using SafeDecimalMath for uint256;
 
@@ -55,8 +52,6 @@ contract Exchanger is
         uint256 fee;
 
         (amountReceived, fee) = calculateExchangeAmountMinusFees(
-            sourceCurrencyKey,
-            destinationCurrencyKey,
             destinationAmount
         );
 
@@ -92,21 +87,21 @@ contract Exchanger is
     ) internal {
         // Remit the fee in xUSDs
         uint256 usdFeeAmount = _oracle.effectiveValue(currencyKey, fee, xUSD);
-        _shadows.synths(xUSD).issue(feePool().getFeeAddress(), usdFeeAmount);
+        _shadows.synths(xUSD).issue(feePool().FEE_ADDRESS(), usdFeeAmount);
         // Tell the fee pool about this.
         feePool().recordFeePaid(usdFeeAmount);
     }
 
-    function calculateExchangeAmountMinusFees(
-        bytes32 sourceCurrencyKey,
-        bytes32 destinationCurrencyKey,
-        uint256 destinationAmount
-    ) internal view returns (uint256 amountReceived, uint256 fee) {
+    function calculateExchangeAmountMinusFees(uint256 destinationAmount)
+        internal
+        view
+        returns (uint256 amountReceived, uint256 fee)
+    {
         // What's the fee on that currency that we should deduct?
         amountReceived = destinationAmount;
 
         // Get the exchange fee rate
-        uint256 exchangeFeeRate = feePool().getExchangeFeeRate();
+        uint256 exchangeFeeRate = feePool().exchangeFeeRate();
 
         amountReceived = destinationAmount.multiplyDecimal(
             SafeDecimalMath.unit().sub(exchangeFeeRate)
