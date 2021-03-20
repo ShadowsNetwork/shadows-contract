@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract AddressResolver is Ownable {
     mapping(bytes32 => address) public repository;
 
-    constructor(address _owner) public {}
-
     function importAddresses(bytes32[] calldata names, address[] calldata destinations) public onlyOwner {
         require(names.length == destinations.length, "Input lengths must match");
 
