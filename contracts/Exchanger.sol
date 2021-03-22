@@ -66,10 +66,7 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
             remitFee(_oracle, _shadows, fee, destinationCurrencyKey);
         }
 
-        // Nothing changes as far as issuance data goes because the total value in the system hasn't changed.
-
-        // Let the DApps know there was a Synth exchange
-        _shadows.emitSynthExchange(
+        emit SynthExchanged(
             from,
             sourceCurrencyKey,
             sourceAmount,
@@ -118,7 +115,7 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         return
             IOracle(
                 resolver.requireAndGetAddress(
-                    "IOracle",
+                    "Oracle",
                     "Missing Oracle address"
                 )
             );
@@ -153,4 +150,13 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         );
         _;
     }
+
+    event SynthExchanged(
+        address indexed account,
+        bytes32 fromCurrencyKey,
+        uint256 fromAmount,
+        bytes32 toCurrencyKey,
+        uint256 toAmount,
+        address toAddress
+    );
 }
