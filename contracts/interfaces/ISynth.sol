@@ -2,14 +2,18 @@
 pragma solidity 0.6.11;
 
 
-interface ISynth {
-    function burn(address account, uint amount) external;
+abstract contract ISynth {
+    bytes32 public currencyKey;
 
-    function issue(address account, uint amount) external;
+    function totalSupply() virtual external view returns (uint256);
 
-    function transfer(address to, uint value) external returns (bool);
+    function burn(address account, uint amount) virtual external;
 
-    function transferFrom(address from, address to, uint value) external returns (bool);
+    function issue(address account, uint amount) virtual external;
 
-    function balanceOf(address owner) external view returns (uint);
+    function transfer(address to, uint value) virtual external returns (bool);
+
+    function transferFrom(address from, address to, uint value) virtual external returns (bool);
+
+    function balanceOf(address owner) virtual external view returns (uint);
 }
