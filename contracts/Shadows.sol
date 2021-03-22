@@ -6,8 +6,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "./library/AddressResolverUpgradeable.sol";
 import "./library/SafeDecimalMath.sol";
-import "./Synth.sol";
+import "./interfaces/ISynth.sol";
 import "./interfaces/IOracle.sol";
+import "./interfaces/IExchanger.sol";
+import "./interfaces/IFeePool.sol";
 
 contract Shadows is
     Initializable,
@@ -21,8 +23,8 @@ contract Shadows is
     bytes32 constant xUSD = "xUSD";
     uint256 public issuanceRatio = SafeDecimalMath.unit() / 5;
 
-    Synth[] public availableSynths;
-    mapping(bytes32 => Synth) public synths;
+    ISynth[] public availableSynths;
+    mapping(bytes32 => ISynth) public synths;
     mapping(address => bytes32) public synthsByAddress;
 
     struct IssuanceData {
@@ -92,10 +94,10 @@ contract Shadows is
         return availableSynths.length;
     }
 
-    function addSynth(Synth synth) external onlyOwner {
+    function addSynth(ISynth synth) external onlyOwner {
         bytes32 currencyKey = synth.currencyKey();
 
-        require(synths[currencyKey] == Synth(0), "Synth already exists");
+        require(synths[currencyKey] == ISynth(0), "Synth already exists");
         require(
             synthsByAddress[address(synth)] == bytes32(0),
             "Synth address already exists"
@@ -138,7 +140,7 @@ contract Shadows is
         delete synths[currencyKey];
     }
 
-    function issueSynths(address from, uint256 amount) public {
+    function issueSynthsFrom(address from, uint256 amount) public {
         (uint256 maxIssuable, uint256 existingDebt) =
             remainingIssuableSynths(from);
         require(amount <= maxIssuable, "Amount too large");
@@ -150,10 +152,14 @@ contract Shadows is
         _appendAccountIssuanceRecord(from);
     }
 
+    function issueSynths(uint amount) external {
+        return issueSynthsFrom(_msgSender(), amount);
+    }
+
     function issueMaxSynths(address from) external {
         (uint256 maxIssuable, ) = remainingIssuableSynths(from);
 
-        return issueSynths(from, maxIssuable);
+        return issueSynthsFrom(from, maxIssuable);
     }
 
     function burnSynths(address from, uint256 amount) external {
@@ -391,7 +397,7 @@ contract Shadows is
     function _appendDebtLedgerValue(uint256 value) internal {
         debtLedger.push(value);
     }
-
+    
     function setIssuanceRatio(uint256 _issuanceRatio) external onlyOwner {
         require(
             _issuanceRatio <= SafeDecimalMath.unit(),
@@ -415,7 +421,7 @@ contract Shadows is
         return
             IOracle(
                 resolver.requireAndGetAddress(
-                    "IOracle",
+                    "Oracle",
                     "Missing Oracle address"
                 )
             );
