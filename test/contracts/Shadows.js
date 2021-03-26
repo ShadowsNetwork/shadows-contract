@@ -6,10 +6,10 @@ const Exchanger = artifacts.require("Exchanger");
 const SafeDecimalMath = artifacts.require("SafeDecimalMath");
 const AddressResolver = artifacts.require("AddressResolver");
 const Synth = artifacts.require("Synth");
-const { toBytes32, toUnit, ZERO_ADDRESS } = require("../testUtils");
+const { toBytes32, toUnit, ZERO_ADDRESS, fastForward, currentTime, divideDecimal } = require("../testUtils");
 
 contract("Shadows", async (accounts) => {
-  let shadows, oracle, feePool, exchanger, addressResolver, safeDecimalMath;
+  let shadows, oracle, feePool, exchanger, addressResolver, safeDecimalMath, timestamp;
 
   const [
     deployerAccount,
@@ -38,6 +38,7 @@ contract("Shadows", async (accounts) => {
   });
 
   beforeEach(async () => {
+    timestamp = await currentTime();
     addressResolver = await AddressResolver.new();
 
     shadows = await Shadows.new();
@@ -93,6 +94,17 @@ contract("Shadows", async (accounts) => {
       { from: owner }
     );
     await shadows.addSynth(xUSDSynth.address, { from: owner });
+
+    //add xEUR
+    const xEURSynth = await Synth.new();
+    await xEURSynth.initialize(
+      "Synth xEUR",
+      "xEUR",
+      xEUR,
+      addressResolver.address,
+      { from: owner }
+    );
+    await shadows.addSynth(xEURSynth.address, { from: owner });
   });
 
   describe("constructor", () => {
@@ -218,5 +230,126 @@ contract("Shadows", async (accounts) => {
       // Assert that we can't remove the synth now
       await assert.revert(shadows.removeSynth(xAUD, { from: owner }));
     });
+
+    it('should disallow removing a Synth contract when requested by a non-owner', async () => {
+			await assert.revert(shadows.removeSynth(xEUR, { from: account1 }));
+		});
+
+		it('should revert when requesting to remove a non-existent synth', async () => {
+			const currencyKey = toBytes32('NOPE');
+			await assert.revert(shadows.removeSynth(currencyKey, { from: owner }));
+		});
   });
+
+  describe('totalIssuedSynths()', () => {
+		it('should correctly calculate the total issued synths in a single currency', async () => {
+			// Two people issue 10 xUSD each. Assert that total issued value is 20 xUSD.
+
+			// Send a price update to guarantee we're not depending on values from outside this test.
+
+			await oracle.updateRates(
+				[xAUD, xEUR, DOWS],
+				['0.5', '1.25', '0.1'].map(toUnit),
+				timestamp,
+				{ from: oracleAccount }
+			);
+
+			// Give some DOWS to account1 and account2
+			await shadows.transfer(account1, toUnit('1000'), { from: owner });
+			await shadows.transfer(account2, toUnit('1000'), { from: owner });
+
+			// Issue 10 xUSD each
+			await shadows.issueSynths(toUnit('10'), { from: account1 });
+			await shadows.issueSynths(toUnit('10'), { from: account2 });
+
+			// Assert that there's 20 xUSD of value in the system
+			assert.bnEqual(await shadows.totalIssuedSynths(xUSD), toUnit('20'));
+		});
+
+		it('should correctly calculate the total issued synths in multiple currencies', async () => {
+			// Alice issues 10 xUSD. Bob issues 20 xAUD. Assert that total issued value is 20 xUSD, and 40 xAUD.
+
+			// Send a price update to guarantee we're not depending on values from outside this test.
+
+			await oracle.updateRates(
+				[xAUD, xEUR, DOWS],
+				['0.5', '1.25', '0.1'].map(toUnit),
+				timestamp,
+				{ from: oracleAccount }
+			);
+
+			// Give some DOWS to account1 and account2
+			await shadows.transfer(account1, toUnit('1000'), { from: owner });
+			await shadows.transfer(account2, toUnit('1000'), { from: owner });
+
+			// Issue 10 xUSD each
+			await shadows.issueSynths(toUnit('10'), { from: account1 });
+			await shadows.issueSynths(toUnit('20'), { from: account2 });
+
+			await shadows.exchange(xUSD, toUnit('20'), xAUD, { from: account2 });
+
+			// Assert that there's 30 xUSD of value in the system
+			assert.bnEqual(await shadows.totalIssuedSynths(xUSD), toUnit('30'));
+
+			// And that there's 60 xAUD (minus fees) of value in the system
+			assert.bnEqual(await shadows.totalIssuedSynths(xAUD), toUnit('60'));
+		});
+
+		it('should return the correct value for the different quantity of total issued synths', async () => {
+			// Send a price update to guarantee we're not depending on values from outside this test.
+
+			const rates = ['0.5', '1.25', '0.1'].map(toUnit);
+
+			await oracle.updateRates([xAUD, xEUR, DOWS], rates, timestamp, { from: oracleAccount });
+
+			const aud2usdRate = await oracle.rateForCurrency(xAUD);
+			// const eur2usdRate = await oracle.rateForCurrency(xEUR);
+
+			// Give some DOWS to account1 and account2
+			await shadows.transfer(account1, toUnit('100000'), {
+				from: owner,
+			});
+			await shadows.transfer(account2, toUnit('100000'), {
+				from: owner,
+			});
+
+			const issueAmountUSD = toUnit('100');
+			const exchangeAmountToAUD = toUnit('95');
+			const exchangeAmountToEUR = toUnit('5');
+
+			// Issue
+			await shadows.issueSynths(issueAmountUSD, { from: account1 });
+			await shadows.issueSynths(issueAmountUSD, { from: account2 });
+
+			// Exchange
+			await shadows.exchange(xUSD, exchangeAmountToEUR, xEUR, { from: account1 });
+			await shadows.exchange(xUSD, exchangeAmountToEUR, xEUR, { from: account2 });
+
+			await shadows.exchange(xUSD, exchangeAmountToAUD, xAUD, { from: account1 });
+			await shadows.exchange(xUSD, exchangeAmountToAUD, xAUD, { from: account2 });
+
+			const totalIssuedAUD = await shadows.totalIssuedSynths(xAUD);
+
+			assert.bnClose(totalIssuedAUD, divideDecimal(toUnit('200'), aud2usdRate));
+		});
+
+		it('should not allow checking total issued synths when a rate other than the priced currency is stale', async () => {
+			await fastForward((await oracle.rateStalePeriod()).add(web3.utils.toBN('300')));
+
+			await oracle.updateRates([DOWS, xAUD], ['0.1', '0.78'].map(toUnit), timestamp, {
+				from: oracleAccount,
+			});
+			await assert.revert(shadows.totalIssuedSynths(xAUD));
+		});
+
+		it('should not allow checking total issued synths when the priced currency is stale', async () => {
+			await fastForward((await oracle.rateStalePeriod()).add(web3.utils.toBN('300')));
+
+			await oracle.updateRates([DOWS, xEUR], ['0.1', '1.25'].map(toUnit), timestamp, {
+				from: oracleAccount,
+			});
+			await assert.revert(shadows.totalIssuedSynths(xAUD));
+		});
+	});
+
 });
