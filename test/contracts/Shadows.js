@@ -555,8 +555,8 @@ contract("Shadows", async (accounts) => {
     });
 
     it("should not be possible to transfer locked shadows", async () => {
-      const issuedShadowss = web3.utils.toBN("200000");
-      await shadows.transfer(account1, toUnit(issuedShadowss), {
+      const issuedShadows = web3.utils.toBN("200000");
+      await shadows.transfer(account1, toUnit(issuedShadows), {
         from: owner,
       });
 
@@ -565,7 +565,7 @@ contract("Shadows", async (accounts) => {
       await shadows.issueSynths(amountIssued, { from: account1 });
 
       await assert.revert(
-        shadows.transfer(account2, toUnit(issuedShadowss), {
+        shadows.transfer(account2, toUnit(issuedShadows), {
           from: account1,
         })
       );
@@ -578,11 +578,11 @@ contract("Shadows", async (accounts) => {
         from: oracleAccount,
       });
 
-      const issuedShadowss = web3.utils.toBN("200000");
-      await shadows.transfer(account1, toUnit(issuedShadowss), {
+      const issuedShadows = web3.utils.toBN("200000");
+      await shadows.transfer(account1, toUnit(issuedShadows), {
         from: owner,
       });
-      await shadows.transfer(account2, toUnit(issuedShadowss), {
+      await shadows.transfer(account2, toUnit(issuedShadows), {
         from: owner,
       });
 
@@ -626,8 +626,8 @@ contract("Shadows", async (accounts) => {
         from: oracleAccount,
       });
 
-      const issuedShadowss = web3.utils.toBN("200000");
-      await shadows.transfer(account1, toUnit(issuedShadowss), {
+      const issuedShadows = web3.utils.toBN("200000");
+      await shadows.transfer(account1, toUnit(issuedShadows), {
         from: owner,
       });
 
@@ -746,4 +746,114 @@ contract("Shadows", async (accounts) => {
       assert.bnEqual(debt, issuedSynths);
     });
   });
+
+  describe('maxIssuableSynths()', () => {
+		it("should correctly calculate a user's maximum issuable synths without prior issuance", async () => {
+			const rate = await oracle.rateForCurrency(toBytes32('DOWS'));
+			const issuedShadows = web3.utils.toBN('200000');
+			await shadows.transfer(account1, toUnit(issuedShadows), {
+				from: owner,
+			});
+			const issuanceRatio = await shadows.issuanceRatio();
+
+			const expectedIssuableSynths = multiplyDecimal(
+				toUnit(issuedShadows),
+				multiplyDecimal(rate, issuanceRatio)
+			);
+			const maxIssuableSynths = await shadows.maxIssuableSynths(account1);
+
+			assert.bnEqual(expectedIssuableSynths, maxIssuableSynths);
+		});
+
+		it("should correctly calculate a user's maximum issuable synths without any DOWS", async () => {
+			const maxIssuableSynths = await shadows.maxIssuableSynths(account1);
+			assert.bnEqual(0, maxIssuableSynths);
+		});
+
+		it("should correctly calculate a user's maximum issuable synths with prior issuance", async () => {
+			const dows2usdRate = await oracle.rateForCurrency(DOWS);
+
+			const issuedShadows = web3.utils.toBN('320001');
+			await shadows.transfer(account1, toUnit(issuedShadows), {
+				from: owner,
+			});
+
+			const issuanceRatio = await shadows.issuanceRatio();
+			const amountIssued = web3.utils.toBN('1234');
+			await shadows.issueSynths(toUnit(amountIssued), { from: account1 });
+
+			const expectedIssuableSynths = multiplyDecimal(
+				toUnit(issuedShadows),
+				multiplyDecimal(dows2usdRate, issuanceRatio)
+			);
+
+			const maxIssuableSynths = await shadows.maxIssuableSynths(account1);
+			assert.bnEqual(expectedIssuableSynths, maxIssuableSynths);
+		});
+
+		it('should error when calculating maximum issuance when the DOWS rate is stale', async () => {
+			// Add stale period to the time to ensure we go stale.
+			await fastForward((await oracle.rateStalePeriod()) + 1);
+
+			await oracle.updateRates([xAUD, xEUR], ['0.5', '1.25'].map(toUnit), timestamp, {
+				from: oracleAccount,
+			});
+
+			await assert.revert(shadows.maxIssuableSynths(account1));
+		});
+
+		it('should error when calculating maximum issuance when the currency rate is stale', async () => {
+			// Add stale period to the time to ensure we go stale.
+			await fastForward((await oracle.rateStalePeriod()) + 1);
+
+			await oracle.updateRates([xEUR, DOWS], ['1.25', '0.12'].map(toUnit), timestamp, {
+				from: oracleAccount,
+			});
+
+			await assert.revert(shadows.maxIssuableSynths(account1));
+		});
+	});
+
+  describe('remainingIssuableSynths()', () => {
+		it("should correctly calculate a user's remaining issuable synths with prior issuance", async () => {
+			const dows2usdRate = await oracle.rateForCurrency(DOWS);
+			const issuanceRatio = await shadows.issuanceRatio();
+
+			const issuedShadows = web3.utils.toBN('200012');
+			await shadows.transfer(account1, toUnit(issuedShadows), {
+				from: owner,
+			});
+
+			// Issue
+			const amountIssued = toUnit('2011');
+			await shadows.issueSynths(amountIssued, { from: account1 });
+
+			const expectedIssuableSynths = multiplyDecimal(
+				toUnit(issuedShadows),
+				multiplyDecimal(dows2usdRate, issuanceRatio)
+			).sub(amountIssued);
+
+			const remainingIssuable = await getRemainingIssuableSynths(account1);
+			assert.bnEqual(remainingIssuable, expectedIssuableSynths);
+		});
+
+		it("should correctly calculate a user's remaining issuable synths without prior issuance", async () => {
+			const dows2usdRate = await oracle.rateForCurrency(DOWS);
+			const issuanceRatio = await shadows.issuanceRatio();
+
+			const issuedShadows = web3.utils.toBN('20');
+			await shadows.transfer(account1, toUnit(issuedShadows), {
+				from: owner,
+			});
+
+			const expectedIssuableSynths = multiplyDecimal(
+				toUnit(issuedShadows),
+				multiplyDecimal(dows2usdRate, issuanceRatio)
+			);
+
+			const remainingIssuable = await getRemainingIssuableSynths(account1);
+			assert.bnEqual(remainingIssuable, expectedIssuableSynths);
+		});
+	});
+
 });
