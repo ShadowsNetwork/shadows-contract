@@ -352,4 +352,303 @@ contract("Shadows", async (accounts) => {
 		});
 	});
 
+  describe('transfer()', () => {
+		it('should transfer using the ERC20 transfer function', async () => {
+			// Ensure our environment is set up correctly for our assumptions
+			// e.g. owner owns all DOWS.
+
+			assert.bnEqual(await shadows.totalSupply(), await shadows.balanceOf(owner));
+
+			const transaction = await shadows.transfer(account1, toUnit('10'), { from: owner });
+			assert.eventEqual(transaction, 'Transfer', {
+				from: owner,
+				to: account1,
+				value: toUnit('10'),
+			});
+
+			assert.bnEqual(await shadows.balanceOf(account1), toUnit('10'));
+		});
+
+		it('should revert when exceeding locked shadows and calling the ERC20 transfer function', async () => {
+			// Ensure our environment is set up correctly for our assumptions
+			// e.g. owner owns all DOWS.
+			assert.bnEqual(await shadows.totalSupply(), await shadows.balanceOf(owner));
+
+			// Issue max synths.
+			await shadows.issueMaxSynths({ from: owner });
+
+			// Try to transfer 0.000000000000000001 DOWS
+			await assert.revert(shadows.transfer(account1, '1', { from: owner }));
+		});
+
+		it('should transfer using the ERC20 transferFrom function', async () => {
+			// Ensure our environment is set up correctly for our assumptions
+			// e.g. owner owns all DOWS.
+			const previousOwnerBalance = await shadows.balanceOf(owner);
+			assert.bnEqual(await shadows.totalSupply(), previousOwnerBalance);
+
+			// Approve account1 to act on our behalf for 10 DOWS.
+			let transaction = await shadows.approve(account1, toUnit('10'), { from: owner });
+			assert.eventEqual(transaction, 'Approval', {
+				owner: owner,
+				spender: account1,
+				value: toUnit('10'),
+			});
+
+			// Assert that transferFrom works.
+			transaction = await shadows.transferFrom(owner, account2, toUnit('10'), { from: account1 });
+			assert.eventEqual(transaction, 'Transfer', {
+				from: owner,
+				to: account2,
+				value: toUnit('10'),
+			});
+
+			// Assert that account2 has 10 DOWS and owner has 10 less DOWS
+			assert.bnEqual(await shadows.balanceOf(account2), toUnit('10'));
+			assert.bnEqual(await shadows.balanceOf(owner), previousOwnerBalance.sub(toUnit('10')));
+
+			// Assert that we can't transfer more even though there's a balance for owner.
+			await assert.revert(
+				shadows.transferFrom(owner, account2, '1', {
+					from: account1,
+				})
+			);
+		});
+
+		it('should revert when exceeding locked shadows and calling the ERC20 transferFrom function', async () => {
+			// Ensure our environment is set up correctly for our assumptions
+			// e.g. owner owns all DOWS.
+			assert.bnEqual(await shadows.totalSupply(), await shadows.balanceOf(owner));
+
+			// Send a price update to guarantee we're not depending on values from outside this test.
+
+			await oracle.updateRates(
+				[xAUD, xEUR, DOWS],
+				['0.5', '1.25', '0.1'].map(toUnit),
+				timestamp,
+				{ from: oracle }
+			);
+
+			// Approve account1 to act on our behalf for 10 DOWS.
+			const transaction = await shadows.approve(account1, toUnit('10'), { from: owner });
+			assert.eventEqual(transaction, 'Approval', {
+				owner: owner,
+				spender: account1,
+				value: toUnit('10'),
+			});
+
+			// Issue max synths
+			await shadows.issueMaxSynths({ from: owner });
+
+			// Assert that transferFrom fails even for the smallest amount of DOWS.
+			await assert.revert(
+				shadows.transferFrom(owner, account2, '1', {
+					from: account1,
+				})
+			);
+		});
+
+		it('should not allow transfer if the exchange rate for shadows is stale', async () => {
+			// Give some DOWS to account1 & account2
+			const value = toUnit('300');
+			await shadows.transfer(account1, toUnit('10000'), {
+				from: owner,
+			});
+			await shadows.transfer(account2, toUnit('10000'), {
+				from: owner,
+			});
+
+			// Ensure that we can do a successful transfer before rates go stale
+			await shadows.transfer(account2, value, { from: account1 });
+
+			await shadows.approve(account3, value, { from: account2 });
+			await shadows.transferFrom(account2, account1, value, {
+				from: account3,
+			});
+
+			// Now jump forward in time so the rates are stale
+			await fastForward((await oracle.rateStalePeriod()) + 1);
+
+			// Send a price update to guarantee we're not depending on values from outside this test.
+
+			await oracle.updateRates([xAUD, xEUR], ['0.5', '1.25'].map(toUnit), timestamp, {
+				from: oracleAccount,
+			});
+
+			// Subsequent transfers fail
+			await assert.revert(shadows.transfer(account2, value, { from: account1 }));
+
+			await shadows.approve(account3, value, { from: account2 });
+			await assert.revert(
+				shadows.transferFrom(account2, account1, value, {
+					from: account3,
+				})
+			);
+		});
+
+		it('should not be possible to transfer locked shadows', async () => {
+			const issuedShadowss = web3.utils.toBN('200000');
+			await shadows.transfer(account1, toUnit(issuedShadowss), {
+				from: owner,
+			});
+
+			// Issue
+			const amountIssued = toUnit('2000');
+			await shadows.issueSynths(amountIssued, { from: account1 });
+
+			await assert.revert(
+				shadows.transfer(account2, toUnit(issuedShadowss), {
+					from: account1,
+				})
+			);
+		});
+
+		it("should lock newly received shadows if the user's collaterisation is too high", async () => {
+			// Set xEUR for purposes of this test
+			const timestamp1 = await currentTime();
+			await oracle.updateRates([xEUR], [toUnit('0.75')], timestamp1, { from: oracleAccount });
+
+			const issuedShadowss = web3.utils.toBN('200000');
+			await shadows.transfer(account1, toUnit(issuedShadowss), {
+				from: owner,
+			});
+			await shadows.transfer(account2, toUnit(issuedShadowss), {
+				from: owner,
+			});
+
+			const maxIssuableSynths = await shadows.maxIssuableSynths(account1);
+
+			// Issue
+			await shadows.issueSynths(maxIssuableSynths, { from: account1 });
+
+			// Exchange into xEUR
+			await shadows.exchange(xUSD, maxIssuableSynths, xEUR, { from: account1 });
+
+			// Ensure that we can transfer in and out of the account successfully
+			await shadows.transfer(account1, toUnit('10000'), {
+				from: account2,
+			});
+			await shadows.transfer(account2, toUnit('10000'), {
+				from: account1,
+			});
+
+			// Increase the value of xEUR relative to shadows
+			const timestamp2 = await currentTime();
+			await oracle.updateRates([xEUR], [toUnit('2.10')], timestamp2, { from: oracleAccount });
+
+			// Ensure that the new shadows account1 receives cannot be transferred out.
+			await shadows.transfer(account1, toUnit('10000'), {
+				from: account2,
+			});
+			await assert.revert(shadows.transfer(account2, toUnit('10000'), { from: account1 }));
+		});
+
+		it('should unlock shadows when collaterisation ratio changes', async () => {
+			// Set xAUD for purposes of this test
+			const timestamp1 = await currentTime();
+			const aud2usdrate = toUnit('2');
+
+			await oracle.updateRates([xAUD], [aud2usdrate], timestamp1, { from: oracleAccount });
+
+			const issuedShadowss = web3.utils.toBN('200000');
+			await shadows.transfer(account1, toUnit(issuedShadowss), {
+				from: owner,
+			});
+
+			// Issue
+			const issuedSynths = await shadows.maxIssuableSynths(account1);
+			await shadows.issueSynths(issuedSynths, { from: account1 });
+			const remainingIssuable = await getRemainingIssuableSynths(account1);
+			assert.bnClose(remainingIssuable, '0');
+
+			const transferable1 = await shadows.transferableShadows(account1);
+			assert.bnEqual(transferable1, '0');
+
+			// Exchange into xAUD
+			await shadows.exchange(xUSD, issuedSynths, xAUD, { from: account1 });
+
+			// Increase the value of xAUD relative to shadows
+			const timestamp2 = await currentTime();
+			const newAUDExchangeRate = toUnit('1');
+			await oracle.updateRates([xAUD], [newAUDExchangeRate], timestamp2, { from: oracleAccount });
+
+			const transferable2 = await shadows.transferableShadows(account1);
+			assert.equal(transferable2.gt(toUnit('1000')), true);
+		});
+	});
+
+	describe('debtBalance()', () => {
+		it('should not change debt balance % if exchange rates change', async () => {
+			let newAUDRate = toUnit('0.5');
+			let timestamp = await currentTime();
+			await oracle.updateRates([xAUD], [newAUDRate], timestamp, { from: oracleAccount });
+
+			await shadows.transfer(account1, toUnit('20000'), {
+				from: owner,
+			});
+			await shadows.transfer(account2, toUnit('20000'), {
+				from: owner,
+			});
+
+			const amountIssuedAcc1 = toUnit('30');
+			const amountIssuedAcc2 = toUnit('50');
+			await shadows.issueSynths(amountIssuedAcc1, { from: account1 });
+			await shadows.issueSynths(amountIssuedAcc2, { from: account2 });
+			await shadows.exchange(xUSD, amountIssuedAcc2, xAUD, { from: account2 });
+
+			const PRECISE_UNIT = web3.utils.toWei(web3.utils.toBN('1'), 'gether');
+			let totalIssuedSynthxUSD = await shadows.totalIssuedSynths(xUSD);
+			const account1DebtRatio = divideDecimal(amountIssuedAcc1, totalIssuedSynthxUSD, PRECISE_UNIT);
+			const account2DebtRatio = divideDecimal(amountIssuedAcc2, totalIssuedSynthxUSD, PRECISE_UNIT);
+
+			timestamp = await currentTime();
+			newAUDRate = toUnit('1.85');
+			await oracle.updateRates([xAUD], [newAUDRate], timestamp, { from: oracleAccount });
+
+			totalIssuedSynthxUSD = await shadows.totalIssuedSynths(xUSD);
+			const conversionFactor = web3.utils.toBN(1000000000);
+			const expectedDebtAccount1 = multiplyDecimal(
+				account1DebtRatio,
+				totalIssuedSynthxUSD.mul(conversionFactor),
+				PRECISE_UNIT
+			).div(conversionFactor);
+			const expectedDebtAccount2 = multiplyDecimal(
+				account2DebtRatio,
+				totalIssuedSynthxUSD.mul(conversionFactor),
+				PRECISE_UNIT
+			).div(conversionFactor);
+
+			assert.bnClose(await shadows.debtBalanceOf(account1, xUSD), expectedDebtAccount1);
+			assert.bnClose(await shadows.debtBalanceOf(account2, xUSD), expectedDebtAccount2);
+		});
+
+		it("should correctly calculate a user's debt balance without prior issuance", async () => {
+			await shadows.transfer(account1, toUnit('200000'), {
+				from: owner,
+			});
+			await shadows.transfer(account2, toUnit('10000'), {
+				from: owner,
+			});
+
+			const debt1 = await shadows.debtBalanceOf(account1, toBytes32('xUSD'));
+			const debt2 = await shadows.debtBalanceOf(account2, toBytes32('xUSD'));
+			assert.bnEqual(debt1, 0);
+			assert.bnEqual(debt2, 0);
+		});
+
+		it("should correctly calculate a user's debt balance with prior issuance", async () => {
+			// Give some DOWS to account1
+			await shadows.transfer(account1, toUnit('200000'), {
+				from: owner,
+			});
+
+			// Issue
+			const issuedSynths = toUnit('1001');
+			await shadows.issueSynths(issuedSynths, { from: account1 });
+
+			const debt = await shadows.debtBalanceOf(account1, toBytes32('xUSD'));
+			assert.bnEqual(debt, issuedSynths);
+		});
+	});
+
 });
