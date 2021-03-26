@@ -260,6 +260,18 @@ contract Shadows is
             );
     }
 
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override {
+        require(
+            amount <= transferableShadows(_msgSender()),
+            "Cannot transfer staked or escrowed DOWS"
+        );
+        super._beforeTokenTransfer(from, to, amount);
+    }
+
     function transferableShadows(address account)
         public
         view
