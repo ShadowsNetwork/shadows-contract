@@ -10,6 +10,7 @@ import "./interfaces/ISynth.sol";
 import "./interfaces/IOracle.sol";
 import "./interfaces/IExchanger.sol";
 import "./interfaces/IFeePool.sol";
+import "./interfaces/IRewardEscrow.sol";
 
 contract Shadows is
     Initializable,
@@ -152,7 +153,7 @@ contract Shadows is
         _appendAccountIssuanceRecord(from);
     }
 
-    function issueSynths(uint amount) external {
+    function issueSynths(uint256 amount) external {
         return issueSynthsFrom(_msgSender(), amount);
     }
 
@@ -168,7 +169,7 @@ contract Shadows is
 
         require(existingDebt > 0, "No debt to forgive");
 
-        uint amountToRemove = existingDebt < amount ? existingDebt : amount;
+        uint256 amountToRemove = existingDebt < amount ? existingDebt : amount;
 
         _removeFromDebtRegister(from, amountToRemove, existingDebt);
 
@@ -246,8 +247,14 @@ contract Shadows is
         return debtBalance.divideDecimalRound(totalOwnedShadows);
     }
 
-    function collateral(address account) public view returns (uint) {
-        return balanceOf(account);
+    function collateral(address account) public view returns (uint256) {
+        uint balance = balanceOf(account);
+
+        if (rewardEscrow() != address(0)) {
+            balance = balance.add(rewardEscrow().balanceOf(account));
+        }
+
+        return balance;
     }
 
     function exchange(
@@ -265,12 +272,16 @@ contract Shadows is
             );
     }
 
-    function _transfer(address sender, address recipient, uint256 amount) internal override {
+    function _transfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal override {
         require(
             amount <= transferableShadows(sender),
             "Cannot transfer staked DOWS"
         );
-        return super._transfer(sender,recipient,amount);
+        return super._transfer(sender, recipient, amount);
     }
 
     function transferableShadows(address account)
@@ -410,7 +421,7 @@ contract Shadows is
     function _appendDebtLedgerValue(uint256 value) internal {
         debtLedger.push(value);
     }
-    
+
     function setIssuanceRatio(uint256 _issuanceRatio) external onlyOwner {
         require(
             _issuanceRatio <= SafeDecimalMath.unit(),
@@ -446,6 +457,16 @@ contract Shadows is
                 resolver.requireAndGetAddress(
                     "FeePool",
                     "Missing FeePool address"
+                )
+            );
+    }
+
+    function rewardEscrow() internal view returns (IRewardEscrow) {
+        return
+            IRewardEscrow(
+                resolver.requireAndGetAddress(
+                    "RewardEscrow",
+                    "Missing RewardEscrow address"
                 )
             );
     }
