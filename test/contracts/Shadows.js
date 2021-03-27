@@ -5,6 +5,7 @@ const FeePool = artifacts.require("FeePool");
 const Exchanger = artifacts.require("Exchanger");
 const SafeDecimalMath = artifacts.require("SafeDecimalMath");
 const AddressResolver = artifacts.require("AddressResolver");
+const RewardEscrow = artifacts.require("RewardEscrow");
 const Synth = artifacts.require("Synth");
 const {
   toBytes32,
@@ -23,6 +24,7 @@ contract("Shadows", async (accounts) => {
     feePool,
     exchanger,
     addressResolver,
+    rewardEscrow,
     safeDecimalMath,
     xUSDContract,
     timestamp;
@@ -82,14 +84,24 @@ contract("Shadows", async (accounts) => {
     exchanger = await Exchanger.new();
     exchanger.initialize(addressResolver.address, { from: owner });
 
+    rewardEscrow = await RewardEscrow.new();
+    rewardEscrow.initialize(addressResolver.address, { from: owner });
+
     await addressResolver.importAddresses(
       [
         toBytes32("Shadows"),
         toBytes32("Oracle"),
         toBytes32("FeePool"),
         toBytes32("Exchanger"),
+        toBytes32("RewardEscrow"),
       ],
-      [shadows.address, oracle.address, feePool.address, exchanger.address]
+      [
+        shadows.address,
+        oracle.address,
+        feePool.address,
+        exchanger.address,
+        rewardEscrow.address,
+      ]
     );
 
     //add xAUD
@@ -1527,8 +1539,8 @@ contract("Shadows", async (accounts) => {
   });
 
   it("should calculate a user's remaining issuable synths", async () => {
-    const transferredShadowss = toUnit("60000");
-    await shadows.transfer(account1, transferredShadowss, {
+    const transferredShadows = toUnit("60000");
+    await shadows.transfer(account1, transferredShadows, {
       from: owner,
     });
 
@@ -1721,6 +1733,99 @@ contract("Shadows", async (accounts) => {
 
     await assert.revert(shadows.issueSynths(issuedSynths1, { from: account1 }));
   });
+
+  it("should include escrowed reward shadows when calculating a user's collaterisation ratio", async () => {
+    const dows2usdRate = await oracle.rateForCurrency(DOWS);
+    const transferredShadows = toUnit("60000");
+    await shadows.transfer(account1, transferredShadows, {
+      from: owner,
+    });
+
+    await addressResolver.importAddresses([toBytes32("FeePool")], [account2]);
+
+    const escrowedShadows = toUnit("30000");
+    await shadows.transfer(rewardEscrow.address, escrowedShadows, {
+      from: owner,
+    });
+    await rewardEscrow.appendVestingEntry(account1, escrowedShadows, {
+      from: account2,
+    });
+
+    await addressResolver.importAddresses(
+      [toBytes32("FeePool")],
+      [feePool.address]
+    );
+    // Issue
+    const maxIssuable = await shadows.maxIssuableSynths(account1);
+    await shadows.issueSynths(maxIssuable, { from: account1 });
+
+    // Compare
+    const collaterisationRatio = await shadows.collateralisationRatio(account1);
+    const expectedCollaterisationRatio = divideDecimal(
+      maxIssuable,
+      multiplyDecimal(escrowedShadows.add(transferredShadows), dows2usdRate)
+    );
+    assert.bnEqual(collaterisationRatio, expectedCollaterisationRatio);
+  });
+
+  it("should permit user to issue xUSD debt with only escrowed DOWS as collateral (no DOWS in wallet)", async () => {
+    // Send a price update to guarantee we're not depending on values from outside this test.
+    await oracle.updateRates(
+      [xAUD, xEUR, DOWS],
+      ["0.5", "1.25", "0.1"].map(toUnit),
+      timestamp,
+      { from: oracleAccount }
+    );
+
+    // ensure collateral of account1 is empty
+    let collateral = await shadows.collateral(account1, { from: account1 });
+    assert.bnEqual(collateral, 0);
+
+    // ensure account1 has no DOWS balance
+    const dowsBalance = await shadows.balanceOf(account1);
+    assert.bnEqual(dowsBalance, 0);
+
+    // Append escrow amount to account1
+    const escrowedAmount = toUnit("15000");
+    await shadows.transfer(rewardEscrow.address, escrowedAmount, {
+      from: owner,
+    });
+    await addressResolver.importAddresses([toBytes32("FeePool")], [owner]);
+    await rewardEscrow.appendVestingEntry(account1, escrowedAmount, {
+      from: owner,
+    });
+    await addressResolver.importAddresses(
+      [toBytes32("FeePool")],
+      [feePool.address]
+    );
+
+    // collateral should include escrowed amount
+    collateral = await shadows.collateral(account1, { from: account1 });
+    assert.bnEqual(collateral, escrowedAmount);
+
+    // Issue max synths. (300 xUSD)
+    await shadows.issueMaxSynths({ from: account1 });
+
+    // There should be 300 xUSD of value for account1
+    assert.bnEqual(await shadows.debtBalanceOf(account1, xUSD), toUnit("300"));
+  });
+
+  it("should include escrowed shadows when checking a user's collateral", async () => {
+    const escrowedAmount = toUnit("15000");
+    await shadows.transfer(rewardEscrow.address, escrowedAmount, {
+      from: owner,
+    });
+    await addressResolver.importAddresses([toBytes32("FeePool")], [owner]);
+    await rewardEscrow.appendVestingEntry(account1, escrowedAmount, {
+      from: owner,
+    });
+
+    const amount = toUnit("60000");
+    await shadows.transfer(account1, amount, { from: owner });
+    const collateral = await shadows.collateral(account1, { from: account2 });
+    assert.bnEqual(collateral, amount.add(escrowedAmount));
+  });
+
   /**
 describe('burnSynths() after exchange()', () => {
   describe('given the waiting period is set to 60s', () => {

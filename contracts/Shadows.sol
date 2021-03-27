@@ -229,7 +229,7 @@ contract Shadows is
     function maxIssuableSynths(address _issuer) public view returns (uint256) {
         // What is the value of their DOWS balance in the destination currency?
         uint256 destinationValue =
-            oracle().effectiveValue("DOWS", balanceOf(_issuer), xUSD);
+            oracle().effectiveValue("DOWS", collateral(_issuer), xUSD);
 
         // They're allowed to issue up to issuanceRatio of that value
         return destinationValue.multiplyDecimal(issuanceRatio);
@@ -250,7 +250,7 @@ contract Shadows is
     function collateral(address account) public view returns (uint256) {
         uint balance = balanceOf(account);
 
-        if (rewardEscrow() != address(0)) {
+        if (address(rewardEscrow()) != address(0)) {
             balance = balance.add(rewardEscrow().balanceOf(account));
         }
 
