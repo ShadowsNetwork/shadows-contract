@@ -156,18 +156,19 @@ contract Shadows is
         return issueSynthsFrom(_msgSender(), amount);
     }
 
-    function issueMaxSynths(address from) external {
-        (uint256 maxIssuable, ) = remainingIssuableSynths(from);
+    function issueMaxSynths() external {
+        (uint256 maxIssuable, ) = remainingIssuableSynths(_msgSender());
 
-        return issueSynthsFrom(from, maxIssuable);
+        return issueSynthsFrom(_msgSender(), maxIssuable);
     }
 
-    function burnSynths(address from, uint256 amount) external {
+    function burnSynths(uint256 amount) external {
+        address from = _msgSender();
         uint256 existingDebt = debtBalanceOf(from, xUSD);
 
         require(existingDebt > 0, "No debt to forgive");
 
-        uint256 amountToRemove = amount;
+        uint amountToRemove = existingDebt < amount ? existingDebt : amount;
 
         _removeFromDebtRegister(from, amountToRemove, existingDebt);
 
@@ -238,11 +239,15 @@ contract Shadows is
         view
         returns (uint256)
     {
-        uint256 totalOwnedShadows = balanceOf(_issuer);
+        uint256 totalOwnedShadows = collateral(_issuer);
         if (totalOwnedShadows == 0) return 0;
 
         uint256 debtBalance = debtBalanceOf(_issuer, "DOWS");
         return debtBalance.divideDecimalRound(totalOwnedShadows);
+    }
+
+    function collateral(address account) public view returns (uint) {
+        return balanceOf(account);
     }
 
     function exchange(
