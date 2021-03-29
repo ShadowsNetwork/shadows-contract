@@ -3,6 +3,8 @@ require('hardhat-deploy');
 require('@openzeppelin/hardhat-upgrades');
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-truffle5");
+require("@nomiclabs/hardhat-web3");
+
 const mnemonic = process.env.MNEMONIC;
 const infuraKey = process.env.INFURAKEY;
 

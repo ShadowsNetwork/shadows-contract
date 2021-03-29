@@ -1,9 +1,9 @@
 {
   "manifestVersion": "3.1",
   "impls": {
-    "f0e16f15733d3b06d7a263162423fd380ab802ec1d669f61e4d3a1d2b88b7b8b": {
-      "address": "0x0bEef6374b2ED0038a4dA46a15a627c37B84a071",
-      "txHash": "0xf0ca0eeb268cceac4d55ee3d29b9f3636e6dac95a4f92ecac49298f818f0ef81",
+    "bd4223f896d092e50ee3413ce6213a06bc58d51efdcbbb14520b0590a9ce09b6": {
+      "address": "0x7cf9E90a9622534FcFe4FDddb0B35bb6fa2826b7",
+      "txHash": "0x6591a99d06c36f327a0894673b9dd9786cfa8b960060db8c061a70a146ab14dd",
       "layout": {
         "storage": [
           {
@@ -37,103 +37,146 @@
             "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:74"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_balances",
+            "contract": "AddressResolverUpgradeable",
+            "label": "resolver",
+            "type": "t_contract(AddressResolver)4288",
+            "src": "contracts/library/AddressResolverUpgradeable.sol:10"
+          },
+          {
+            "contract": "FeePool",
+            "label": "feePool",
+            "type": "t_address",
+            "src": "contracts/FeePool.sol:19"
+          },
+          {
+            "contract": "FeePool",
+            "label": "lastFeeWithdrawalStorage",
             "type": "t_mapping(t_address,t_uint256)",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:37"
+            "src": "contracts/FeePool.sol:29"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_allowances",
-            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:39"
+            "contract": "FeePool",
+            "label": "accountIssuanceLedger",
+            "type": "t_mapping(t_address,t_array(t_struct(IssuanceData)1963_storage)3_storage)",
+            "src": "contracts/FeePool.sol:32"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_totalSupply",
+            "contract": "FeePool",
+            "label": "exchangeFeeRate",
             "type": "t_uint256",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:41"
+            "src": "contracts/FeePool.sol:35"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_name",
-            "type": "t_string_storage",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:43"
+            "contract": "FeePool",
+            "label": "_recentFeePeriods",
+            "type": "t_array(t_struct(FeePeriod)1999_storage)3_storage",
+            "src": "contracts/FeePool.sol:53"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_symbol",
-            "type": "t_string_storage",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:44"
+            "contract": "FeePool",
+            "label": "_currentFeePeriod",
+            "type": "t_uint256",
+            "src": "contracts/FeePool.sol:54"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_decimals",
-            "type": "t_uint8",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:45"
+            "contract": "FeePool",
+            "label": "feePeriodDuration",
+            "type": "t_uint256",
+            "src": "contracts/FeePool.sol:56"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)44_storage",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:312"
-          },
-          {
-            "contract": "PausableUpgradeable",
-            "label": "_paused",
-            "type": "t_bool",
-            "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:28"
-          },
-          {
-            "contract": "PausableUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)49_storage",
-            "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:96"
-          },
-          {
-            "contract": "ERC20PausableUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20PausableUpgradeable.sol:37"
+            "contract": "FeePool",
+            "label": "targetThreshold",
+            "type": "t_uint256",
+            "src": "contracts/FeePool.sol:63"
           }
         ],
         "types": {
-          "t_array(t_uint256)50_storage": {
-            "label": "uint256[50]"
-          },
-          "t_uint256": {
-            "label": "uint256"
-          },
-          "t_bool": {
-            "label": "bool"
-          },
-          "t_array(t_uint256)49_storage": {
-            "label": "uint256[49]"
+          "t_address": {
+            "label": "address"
           },
           "t_mapping(t_address,t_uint256)": {
             "label": "mapping(address => uint256)"
           },
-          "t_address": {
-            "label": "address"
+          "t_uint256": {
+            "label": "uint256"
           },
-          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
-            "label": "mapping(address => mapping(address => uint256))"
+          "t_mapping(t_address,t_array(t_struct(IssuanceData)1963_storage)3_storage)": {
+            "label": "mapping(address => struct FeePool.IssuanceData[3])"
           },
-          "t_string_storage": {
-            "label": "string"
+          "t_array(t_struct(IssuanceData)1963_storage)3_storage": {
+            "label": "struct FeePool.IssuanceData[3]"
           },
-          "t_uint8": {
-            "label": "uint8"
+          "t_struct(IssuanceData)1963_storage": {
+            "label": "struct FeePool.IssuanceData",
+            "members": [
+              {
+                "label": "debtPercentage",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debtEntryIndex",
+                "type": "t_uint256"
+              }
+            ]
           },
-          "t_array(t_uint256)44_storage": {
-            "label": "uint256[44]"
+          "t_array(t_struct(FeePeriod)1999_storage)3_storage": {
+            "label": "struct FeePool.FeePeriod[3]"
+          },
+          "t_struct(FeePeriod)1999_storage": {
+            "label": "struct FeePool.FeePeriod",
+            "members": [
+              {
+                "label": "feePeriodId",
+                "type": "t_uint64"
+              },
+              {
+                "label": "startingDebtIndex",
+                "type": "t_uint64"
+              },
+              {
+                "label": "startTime",
+                "type": "t_uint64"
+              },
+              {
+                "label": "feesToDistribute",
+                "type": "t_uint256"
+              },
+              {
+                "label": "feesClaimed",
+                "type": "t_uint256"
+              },
+              {
+                "label": "rewardsToDistribute",
+                "type": "t_uint256"
+              },
+              {
+                "label": "rewardsClaimed",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_contract(AddressResolver)4288": {
+            "label": "contract AddressResolver"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
           }
         }
       }
     },
-    "ac8dd8754de444c8aa0eba3a453620f7de2e25acf27b03566c61ab6013d88478": {
-      "address": "0xfE8298c5b3480Fd17069C2013547B21158748C67",
-      "txHash": "0x07191380e28b7dc6b94749038219949e735596cb7bc5156a47d9c889d6357329",
+    "20d18c80e2da0866da8f66f5b5823835ef845ee114c0f50eae81cc0f62c46ea4": {
+      "address": "0x9d9D6017A8713C1543D3d37711dFe7FE06de74b1",
+      "txHash": "0x8075016b4b02249e9aeb2f821ee666d78505698432c00a4478536fc165ac1c51",
       "layout": {
         "storage": [
           {
@@ -167,103 +210,277 @@
             "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:74"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_balances",
+            "contract": "AddressResolverUpgradeable",
+            "label": "resolver",
+            "type": "t_contract(AddressResolver)4291",
+            "src": "contracts/library/AddressResolverUpgradeable.sol:10"
+          },
+          {
+            "contract": "FeePool",
+            "label": "feePool",
+            "type": "t_address",
+            "src": "contracts/FeePool.sol:19"
+          },
+          {
+            "contract": "FeePool",
+            "label": "lastFeeWithdrawalStorage",
             "type": "t_mapping(t_address,t_uint256)",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:37"
+            "src": "contracts/FeePool.sol:31"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_allowances",
-            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:39"
+            "contract": "FeePool",
+            "label": "accountIssuanceLedger",
+            "type": "t_mapping(t_address,t_array(t_struct(IssuanceData)1963_storage)3_storage)",
+            "src": "contracts/FeePool.sol:34"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_totalSupply",
+            "contract": "FeePool",
+            "label": "exchangeFeeRate",
             "type": "t_uint256",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:41"
+            "src": "contracts/FeePool.sol:37"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_name",
-            "type": "t_string_storage",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:43"
+            "contract": "FeePool",
+            "label": "_recentFeePeriods",
+            "type": "t_array(t_struct(FeePeriod)2002_storage)3_storage",
+            "src": "contracts/FeePool.sol:55"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_symbol",
-            "type": "t_string_storage",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:44"
+            "contract": "FeePool",
+            "label": "_currentFeePeriod",
+            "type": "t_uint256",
+            "src": "contracts/FeePool.sol:56"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "_decimals",
-            "type": "t_uint8",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:45"
+            "contract": "FeePool",
+            "label": "feePeriodDuration",
+            "type": "t_uint256",
+            "src": "contracts/FeePool.sol:58"
           },
           {
-            "contract": "ERC20Upgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)44_storage",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:312"
-          },
-          {
-            "contract": "PausableUpgradeable",
-            "label": "_paused",
-            "type": "t_bool",
-            "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:28"
-          },
-          {
-            "contract": "PausableUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)49_storage",
-            "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:96"
-          },
-          {
-            "contract": "ERC20PausableUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20PausableUpgradeable.sol:37"
+            "contract": "FeePool",
+            "label": "targetThreshold",
+            "type": "t_uint256",
+            "src": "contracts/FeePool.sol:65"
           }
         ],
         "types": {
-          "t_array(t_uint256)50_storage": {
-            "label": "uint256[50]"
-          },
-          "t_uint256": {
-            "label": "uint256"
-          },
-          "t_bool": {
-            "label": "bool"
-          },
-          "t_array(t_uint256)49_storage": {
-            "label": "uint256[49]"
+          "t_address": {
+            "label": "address"
           },
           "t_mapping(t_address,t_uint256)": {
             "label": "mapping(address => uint256)"
           },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_array(t_struct(IssuanceData)1963_storage)3_storage)": {
+            "label": "mapping(address => struct FeePool.IssuanceData[3])"
+          },
+          "t_array(t_struct(IssuanceData)1963_storage)3_storage": {
+            "label": "struct FeePool.IssuanceData[3]"
+          },
+          "t_struct(IssuanceData)1963_storage": {
+            "label": "struct FeePool.IssuanceData",
+            "members": [
+              {
+                "label": "debtPercentage",
+                "type": "t_uint256"
+              },
+              {
+                "label": "debtEntryIndex",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_array(t_struct(FeePeriod)2002_storage)3_storage": {
+            "label": "struct FeePool.FeePeriod[3]"
+          },
+          "t_struct(FeePeriod)2002_storage": {
+            "label": "struct FeePool.FeePeriod",
+            "members": [
+              {
+                "label": "feePeriodId",
+                "type": "t_uint64"
+              },
+              {
+                "label": "startingDebtIndex",
+                "type": "t_uint64"
+              },
+              {
+                "label": "startTime",
+                "type": "t_uint64"
+              },
+              {
+                "label": "feesToDistribute",
+                "type": "t_uint256"
+              },
+              {
+                "label": "feesClaimed",
+                "type": "t_uint256"
+              },
+              {
+                "label": "rewardsToDistribute",
+                "type": "t_uint256"
+              },
+              {
+                "label": "rewardsClaimed",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_contract(AddressResolver)4291": {
+            "label": "contract AddressResolver"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "588cf7e886d9e89b62cf823b9905ba0ebd53973aeb76a552328720834098a92a": {
+      "address": "0xA3310FF59fD574D68ba40CE640C1620066Ea3479",
+      "txHash": "0x065901ed1bb3b3f0745ea2ee14ce9ebafbfe8f7f5a891b4708f46bbcf1fe72f8",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol:25"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol:30"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:20"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:74"
+          },
+          {
+            "contract": "Oracle",
+            "label": "_rates",
+            "type": "t_mapping(t_bytes32,t_mapping(t_uint256,t_struct(RateAndUpdatedTime)965_storage))",
+            "src": "contracts/Oracle.sol:20"
+          },
+          {
+            "contract": "Oracle",
+            "label": "oracle",
+            "type": "t_address",
+            "src": "contracts/Oracle.sol:23"
+          },
+          {
+            "contract": "Oracle",
+            "label": "aggregators",
+            "type": "t_mapping(t_bytes32,t_contract(AggregatorV2V3Interface)56)",
+            "src": "contracts/Oracle.sol:26"
+          },
+          {
+            "contract": "Oracle",
+            "label": "aggregatorKeys",
+            "type": "t_array(t_bytes32)dyn_storage",
+            "src": "contracts/Oracle.sol:29"
+          },
+          {
+            "contract": "Oracle",
+            "label": "rateStalePeriod",
+            "type": "t_uint256",
+            "src": "contracts/Oracle.sol:35"
+          },
+          {
+            "contract": "Oracle",
+            "label": "currentRoundForRate",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "src": "contracts/Oracle.sol:37"
+          }
+        ],
+        "types": {
+          "t_mapping(t_bytes32,t_mapping(t_uint256,t_struct(RateAndUpdatedTime)965_storage))": {
+            "label": "mapping(bytes32 => mapping(uint256 => struct Oracle.RateAndUpdatedTime))"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_mapping(t_uint256,t_struct(RateAndUpdatedTime)965_storage)": {
+            "label": "mapping(uint256 => struct Oracle.RateAndUpdatedTime)"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_struct(RateAndUpdatedTime)965_storage": {
+            "label": "struct Oracle.RateAndUpdatedTime",
+            "members": [
+              {
+                "label": "rate",
+                "type": "t_uint216"
+              },
+              {
+                "label": "time",
+                "type": "t_uint40"
+              }
+            ]
+          },
+          "t_uint216": {
+            "label": "uint216"
+          },
+          "t_uint40": {
+            "label": "uint40"
+          },
           "t_address": {
             "label": "address"
           },
-          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
-            "label": "mapping(address => mapping(address => uint256))"
+          "t_mapping(t_bytes32,t_contract(AggregatorV2V3Interface)56)": {
+            "label": "mapping(bytes32 => contract AggregatorV2V3Interface)"
           },
-          "t_string_storage": {
-            "label": "string"
+          "t_contract(AggregatorV2V3Interface)56": {
+            "label": "contract AggregatorV2V3Interface"
           },
-          "t_uint8": {
-            "label": "uint8"
+          "t_array(t_bytes32)dyn_storage": {
+            "label": "bytes32[]"
           },
-          "t_array(t_uint256)44_storage": {
-            "label": "uint256[44]"
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
           }
         }
       }
     }
   },
   "admin": {
-    "address": "0x43e2aF442945464D004968a1ee027497FA061fcc",
-    "txHash": "0x0f6815565d9bdd9a8f391d3f5cf0a6783ac91164b0e069e7f07e61b2f76753ca"
+    "address": "0x982dc66F6ab97893BFe196bd86d8Cf059e4517E0",
+    "txHash": "0xfbca06fe9289c1a0bbbbd3dc43b342abde58e28be7be7c87d1df6b0a5ff8c391"
   }
 }
