@@ -32,7 +32,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
     uint private constant ORACLE_FUTURE_LIMIT = 10 minutes;
 
     // How long will the contract assume the rate of any asset is correct
-    uint public rateStalePeriod = 3 hours;
+    uint public rateStalePeriod;
 
     mapping(bytes32 => uint) currentRoundForRate;
 
@@ -50,6 +50,8 @@ contract Oracle is Initializable, OwnableUpgradeable {
         _setRate("xUSD", SafeDecimalMath.unit(), now);
 
         internalUpdateRates(_currencyKeys, _newRates, now);
+
+        rateStalePeriod = 3 hours;
     }
 
     function updateRates(bytes32[] calldata currencyKeys, uint[] calldata newRates, uint timeSent) external onlyOracle returns (bool) {
