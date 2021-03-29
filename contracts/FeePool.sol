@@ -37,7 +37,7 @@ contract FeePool is
     address public constant FEE_ADDRESS =
         0x43707C6Bb6202a5E1007356539a925C052EA9767;
 
-    bytes32 private xUSD = "xUSD";
+    bytes32 private constant xUSD = "xUSD";
 
     // This struct represents the issuance activity that's happened in a fee period.
     struct FeePeriod {
@@ -53,14 +53,14 @@ contract FeePool is
     FeePeriod[FEE_PERIOD_LENGTH] private _recentFeePeriods;
     uint256 private _currentFeePeriod;
 
-    uint256 public feePeriodDuration = 1 weeks;
+    uint256 public feePeriodDuration;
 
     // The fee period must be between 1 day and 60 days.
     uint256 public constant MIN_FEE_PERIOD_DURATION = 1 days;
     uint256 public constant MAX_FEE_PERIOD_DURATION = 60 days;
 
     // Users are unable to claim fees if their collateralisation ratio drifts out of target treshold
-    uint256 public targetThreshold = (1 * SafeDecimalMath.unit()) / 100;
+    uint256 public targetThreshold;
 
     function initialize(uint256 _exchangeFeeRate, address _resolver)
         external
@@ -68,6 +68,8 @@ contract FeePool is
     {
         __Ownable_init();
         __AddressResolver_init(_resolver);
+        feePeriodDuration = 1 weeks;
+        feePeriodDuration = (1 * SafeDecimalMath.unit()) / 100;
         exchangeFeeRate = _exchangeFeeRate;
     }
 
@@ -79,10 +81,7 @@ contract FeePool is
         exchangeFeeRate = _exchangeFeeRate;
     }
 
-    function setFeePeriodDuration(uint256 _feePeriodDuration)
-        external
-        onlyOwner
-    {
+    function setFeePeriodDuration(uint256 _feePeriodDuration) public onlyOwner {
         require(
             _feePeriodDuration >= MIN_FEE_PERIOD_DURATION,
             "value < MIN_FEE_PERIOD_DURATION"
@@ -97,7 +96,7 @@ contract FeePool is
         emit FeePeriodDurationUpdated(_feePeriodDuration);
     }
 
-    function setTargetThreshold(uint256 _percent) external onlyOwner {
+    function setTargetThreshold(uint256 _percent) public onlyOwner {
         require(_percent >= 0, "Threshold should be positive");
         require(_percent <= 50, "Threshold too high");
         targetThreshold = _percent.mul(SafeDecimalMath.unit()).div(100);
