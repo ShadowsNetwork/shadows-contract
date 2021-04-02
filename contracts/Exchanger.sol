@@ -125,8 +125,8 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         return
             ISynthesizer(
                 resolver.requireAndGetAddress(
-                    "Shadows",
-                    "Missing Shadows address"
+                    "Synthesizer",
+                    "Missing Synthesizer address"
                 )
             );
     }
@@ -146,7 +146,7 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         require(
             msg.sender == address(_synthesizer) ||
                 _synthesizer.synthsByAddress(msg.sender) != bytes32(0),
-            "Exchanger: Only shadows or a synth contract can perform this action"
+            "Exchanger: Only Synthesizer or a synth contract can perform this action"
         );
         _;
     }

@@ -17,8 +17,8 @@ contract Synthesizer is
     OwnableUpgradeable,
     AddressResolverUpgradeable
 {
-    using SafeMath for uint256;
-    using SafeDecimalMath for uint256;
+    using SafeMath for uint;
+    using SafeDecimalMath for uint;
 
     bytes32 constant xUSD = "xUSD";
     uint256 public issuanceRatio = SafeDecimalMath.unit() / 5;

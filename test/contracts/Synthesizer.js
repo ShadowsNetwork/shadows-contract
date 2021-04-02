@@ -1,6 +1,7 @@
 require(".");
 const Oracle = artifacts.require("Oracle");
 const Shadows = artifacts.require("Shadows");
+const Synthesizer = artifacts.require("Synthesizer");
 const FeePool = artifacts.require("FeePool");
 const Exchanger = artifacts.require("Exchanger");
 const SafeDecimalMath = artifacts.require("SafeDecimalMath");
@@ -18,7 +19,7 @@ const {
   onlyGivenAddressCanInvoke,
 } = require("../testUtils");
 
-contract("Shadows", async (accounts) => {
+contract("Synthesizer", async (accounts) => {
   let shadows,
     oracle,
     feePool,
@@ -48,11 +49,11 @@ contract("Shadows", async (accounts) => {
   ].map(toBytes32);
 
   const getRemainingIssuableSynths = async (account) =>
-    (await shadows.remainingIssuableSynths(account))[0];
+    (await synthesizer.remainingIssuableSynths(account))[0];
 
   before(async () => {
     safeDecimalMath = await SafeDecimalMath.new();
-    await Shadows.link(safeDecimalMath);
+    await Synthesizer.link(safeDecimalMath);
     await Oracle.link(safeDecimalMath);
     await FeePool.link(safeDecimalMath);
     await Exchanger.link(safeDecimalMath);
@@ -62,12 +63,17 @@ contract("Shadows", async (accounts) => {
     timestamp = await currentTime();
     addressResolver = await AddressResolver.new();
 
+    synthesizer = await Synthesizer.new();
+    await synthesizer.initialize(addressResolver.address, { from: owner });
+
     shadows = await Shadows.new();
-    shadows.initialize(addressResolver.address, { from: owner });
+    await shadows.initialize({ from: owner });
+    console.log(synthesizer.address);
+    await shadows.setSynthesizer(synthesizer.address, { from: owner });
 
     //oracle
     oracle = await Oracle.new();
-    oracle.initialize(
+    await oracle.initialize(
       oracleAccount,
       [xAUD, xEUR, DOWS, xBTC],
       ["0.5", "1.25", "0.1", "5000"].map(toUnit),
@@ -77,15 +83,15 @@ contract("Shadows", async (accounts) => {
     );
 
     feePool = await FeePool.new();
-    feePool.initialize(toUnit("0.0030"), addressResolver.address, {
+    await feePool.initialize(toUnit("0.0030"), addressResolver.address, {
       from: owner,
     });
 
     exchanger = await Exchanger.new();
-    exchanger.initialize(addressResolver.address, { from: owner });
+    await exchanger.initialize(addressResolver.address, { from: owner });
 
     rewardEscrow = await RewardEscrow.new();
-    rewardEscrow.initialize(addressResolver.address, { from: owner });
+    await rewardEscrow.initialize(addressResolver.address, { from: owner });
 
     await addressResolver.importAddresses(
       [
@@ -94,6 +100,7 @@ contract("Shadows", async (accounts) => {
         toBytes32("FeePool"),
         toBytes32("Exchanger"),
         toBytes32("RewardEscrow"),
+        toBytes32("Synthesizer"),
       ],
       [
         shadows.address,
@@ -101,6 +108,7 @@ contract("Shadows", async (accounts) => {
         feePool.address,
         exchanger.address,
         rewardEscrow.address,
+        synthesizer.address,
       ]
     );
 
@@ -113,7 +121,7 @@ contract("Shadows", async (accounts) => {
       addressResolver.address,
       { from: owner }
     );
-    await shadows.addSynth(xAUDSynth.address, { from: owner });
+    await synthesizer.addSynth(xAUDSynth.address, { from: owner });
 
     //add xUSD
     const xUSDSynth = await Synth.new();
@@ -124,8 +132,8 @@ contract("Shadows", async (accounts) => {
       addressResolver.address,
       { from: owner }
     );
-    await shadows.addSynth(xUSDSynth.address, { from: owner });
-    xUSDContract = await Synth.at(await shadows.synths(xUSD));
+    await synthesizer.addSynth(xUSDSynth.address, { from: owner });
+    xUSDContract = await Synth.at(await synthesizer.synths(xUSD));
 
     //add xEUR
     const xEURSynth = await Synth.new();
@@ -136,21 +144,19 @@ contract("Shadows", async (accounts) => {
       addressResolver.address,
       { from: owner }
     );
-    await shadows.addSynth(xEURSynth.address, { from: owner });
+    await synthesizer.addSynth(xEURSynth.address, { from: owner });
   });
 
   describe("constructor", () => {
     it("should set params on initialize", async () => {
-      assert.equal(await shadows.name(), "Shadows Network Token");
-      assert.equal(await shadows.symbol(), "DOWS");
-      assert.equal(await shadows.owner(), owner);
-      assert.equal(await shadows.resolver(), addressResolver.address);
+      assert.equal(await synthesizer.owner(), owner);
+      assert.equal(await synthesizer.resolver(), addressResolver.address);
     });
   });
 
   describe("adding and removing synths", () => {
     it("should allow adding a Synth contract", async () => {
-      const previousSynthCount = await shadows.availableSynthCount();
+      const previousSynthCount = await synthesizer.availableSynthCount();
       const synth = await Synth.new();
       await synth.initialize(
         "Synth TEST1",
@@ -162,20 +168,20 @@ contract("Shadows", async (accounts) => {
 
       assert.bnEqual(await synth.owner(), owner);
 
-      await shadows.addSynth(synth.address, { from: owner });
+      await synthesizer.addSynth(synth.address, { from: owner });
 
       // Assert that we've successfully added a Synth
       assert.bnEqual(
-        await shadows.availableSynthCount(),
+        await synthesizer.availableSynthCount(),
         previousSynthCount.add(web3.utils.toBN(1))
       );
       // Assert that it's at the end of the array
       assert.equal(
-        await shadows.availableSynths(previousSynthCount),
+        await synthesizer.availableSynths(previousSynthCount),
         synth.address
       );
       // Assert that it's retrievable by its currencyKey
-      assert.equal(await shadows.synths(toBytes32("xTEST")), synth.address);
+      assert.equal(await synthesizer.synths(toBytes32("xTEST")), synth.address);
     });
 
     it("should disallow adding a Synth contract when the user is not the owner", async () => {
@@ -188,7 +194,9 @@ contract("Shadows", async (accounts) => {
         { from: owner }
       );
 
-      await assert.revert(shadows.addSynth(synth.address, { from: account1 }));
+      await assert.revert(
+        synthesizer.addSynth(synth.address, { from: account1 })
+      );
     });
 
     it("should disallow double adding a Synth contract with the same address", async () => {
@@ -201,8 +209,8 @@ contract("Shadows", async (accounts) => {
         { from: owner }
       );
 
-      await shadows.addSynth(synth.address, { from: owner });
-      await assert.revert(shadows.addSynth(synth.address, { from: owner }));
+      await synthesizer.addSynth(synth.address, { from: owner });
+      await assert.revert(synthesizer.addSynth(synth.address, { from: owner }));
     });
 
     it("should disallow double adding a Synth contract with the same currencyKey", async () => {
@@ -224,52 +232,56 @@ contract("Shadows", async (accounts) => {
         { from: owner }
       );
 
-      await shadows.addSynth(synth.address, { from: owner });
-      await assert.revert(shadows.addSynth(synth2.address, { from: owner }));
+      await synthesizer.addSynth(synth.address, { from: owner });
+      await assert.revert(
+        synthesizer.addSynth(synth2.address, { from: owner })
+      );
     });
 
     it("should allow removing a Synth contract when it has no issued balance", async () => {
       // without balances and we just remove one.
       const currencyKey = xAUD;
-      const synthCount = await shadows.availableSynthCount();
+      const synthCount = await synthesizer.availableSynthCount();
 
-      assert.notEqual(await shadows.synths(currencyKey), ZERO_ADDRESS);
+      assert.notEqual(await synthesizer.synths(currencyKey), ZERO_ADDRESS);
 
-      await shadows.removeSynth(currencyKey, { from: owner });
+      await synthesizer.removeSynth(currencyKey, { from: owner });
 
       // Assert that we have one less synth, and that the specific currency key is gone.
       assert.bnEqual(
-        await shadows.availableSynthCount(),
+        await synthesizer.availableSynthCount(),
         synthCount.sub(web3.utils.toBN(1))
       );
-      assert.equal(await shadows.synths(currencyKey), ZERO_ADDRESS);
+      assert.equal(await synthesizer.synths(currencyKey), ZERO_ADDRESS);
     });
 
     it("should disallow removing a Synth contract when it has an issued balance", async () => {
       // without balances
-      const xAUDContractAddress = await shadows.synths(xAUD);
+      const xAUDContractAddress = await synthesizer.synths(xAUD);
 
       // Assert that we can remove the synth and add it back in before we do anything.
-      await shadows.removeSynth(xAUD, { from: owner });
-      await shadows.addSynth(xAUDContractAddress, { from: owner });
+      await synthesizer.removeSynth(xAUD, { from: owner });
+      await synthesizer.addSynth(xAUDContractAddress, { from: owner });
 
       // Issue one sUSd
-      await shadows.issueSynths(toUnit("1"), { from: owner });
+      await synthesizer.issueSynths(toUnit("1"), { from: owner });
 
       // exchange to xAUD
-      await shadows.exchange(xUSD, toUnit("1"), xAUD, { from: owner });
+      await synthesizer.exchange(xUSD, toUnit("1"), xAUD, { from: owner });
 
       // Assert that we can't remove the synth now
-      await assert.revert(shadows.removeSynth(xAUD, { from: owner }));
+      await assert.revert(synthesizer.removeSynth(xAUD, { from: owner }));
     });
 
     it("should disallow removing a Synth contract when requested by a non-owner", async () => {
-      await assert.revert(shadows.removeSynth(xEUR, { from: account1 }));
+      await assert.revert(synthesizer.removeSynth(xEUR, { from: account1 }));
     });
 
     it("should revert when requesting to remove a non-existent synth", async () => {
       const currencyKey = toBytes32("NOPE");
-      await assert.revert(shadows.removeSynth(currencyKey, { from: owner }));
+      await assert.revert(
+        synthesizer.removeSynth(currencyKey, { from: owner })
+      );
     });
   });
 
@@ -291,11 +303,11 @@ contract("Shadows", async (accounts) => {
       await shadows.transfer(account2, toUnit("1000"), { from: owner });
 
       // Issue 10 xUSD each
-      await shadows.issueSynths(toUnit("10"), { from: account1 });
-      await shadows.issueSynths(toUnit("10"), { from: account2 });
+      await synthesizer.issueSynths(toUnit("10"), { from: account1 });
+      await synthesizer.issueSynths(toUnit("10"), { from: account2 });
 
       // Assert that there's 20 xUSD of value in the system
-      assert.bnEqual(await shadows.totalIssuedSynths(xUSD), toUnit("20"));
+      assert.bnEqual(await synthesizer.totalIssuedSynths(xUSD), toUnit("20"));
     });
 
     it("should correctly calculate the total issued synths in multiple currencies", async () => {
@@ -315,16 +327,16 @@ contract("Shadows", async (accounts) => {
       await shadows.transfer(account2, toUnit("1000"), { from: owner });
 
       // Issue 10 xUSD each
-      await shadows.issueSynths(toUnit("10"), { from: account1 });
-      await shadows.issueSynths(toUnit("20"), { from: account2 });
+      await synthesizer.issueSynths(toUnit("10"), { from: account1 });
+      await synthesizer.issueSynths(toUnit("20"), { from: account2 });
 
-      await shadows.exchange(xUSD, toUnit("20"), xAUD, { from: account2 });
+      await synthesizer.exchange(xUSD, toUnit("20"), xAUD, { from: account2 });
 
       // Assert that there's 30 xUSD of value in the system
-      assert.bnEqual(await shadows.totalIssuedSynths(xUSD), toUnit("30"));
+      assert.bnEqual(await synthesizer.totalIssuedSynths(xUSD), toUnit("30"));
 
       // And that there's 60 xAUD (minus fees) of value in the system
-      assert.bnEqual(await shadows.totalIssuedSynths(xAUD), toUnit("60"));
+      assert.bnEqual(await synthesizer.totalIssuedSynths(xAUD), toUnit("60"));
     });
 
     it("should return the correct value for the different quantity of total issued synths", async () => {
@@ -352,25 +364,25 @@ contract("Shadows", async (accounts) => {
       const exchangeAmountToEUR = toUnit("5");
 
       // Issue
-      await shadows.issueSynths(issueAmountUSD, { from: account1 });
-      await shadows.issueSynths(issueAmountUSD, { from: account2 });
+      await synthesizer.issueSynths(issueAmountUSD, { from: account1 });
+      await synthesizer.issueSynths(issueAmountUSD, { from: account2 });
 
       // Exchange
-      await shadows.exchange(xUSD, exchangeAmountToEUR, xEUR, {
+      await synthesizer.exchange(xUSD, exchangeAmountToEUR, xEUR, {
         from: account1,
       });
-      await shadows.exchange(xUSD, exchangeAmountToEUR, xEUR, {
+      await synthesizer.exchange(xUSD, exchangeAmountToEUR, xEUR, {
         from: account2,
       });
 
-      await shadows.exchange(xUSD, exchangeAmountToAUD, xAUD, {
+      await synthesizer.exchange(xUSD, exchangeAmountToAUD, xAUD, {
         from: account1,
       });
-      await shadows.exchange(xUSD, exchangeAmountToAUD, xAUD, {
+      await synthesizer.exchange(xUSD, exchangeAmountToAUD, xAUD, {
         from: account2,
       });
 
-      const totalIssuedAUD = await shadows.totalIssuedSynths(xAUD);
+      const totalIssuedAUD = await synthesizer.totalIssuedSynths(xAUD);
 
       assert.bnClose(totalIssuedAUD, divideDecimal(toUnit("200"), aud2usdRate));
     });
@@ -388,7 +400,7 @@ contract("Shadows", async (accounts) => {
           from: oracleAccount,
         }
       );
-      await assert.revert(shadows.totalIssuedSynths(xAUD));
+      await assert.revert(synthesizer.totalIssuedSynths(xAUD));
     });
 
     it("should not allow checking total issued synths when the priced currency is stale", async () => {
@@ -404,7 +416,7 @@ contract("Shadows", async (accounts) => {
           from: oracleAccount,
         }
       );
-      await assert.revert(shadows.totalIssuedSynths(xAUD));
+      await assert.revert(synthesizer.totalIssuedSynths(xAUD));
     });
   });
 
@@ -439,7 +451,7 @@ contract("Shadows", async (accounts) => {
       );
 
       // Issue max synths.
-      await shadows.issueMaxSynths({ from: owner });
+      await synthesizer.issueMaxSynths({ from: owner });
 
       // Try to transfer 0.000000000000000001 DOWS
       await assert.revert(shadows.transfer(account1, "1", { from: owner }));
@@ -514,7 +526,7 @@ contract("Shadows", async (accounts) => {
       });
 
       // Issue max synths
-      await shadows.issueMaxSynths({ from: owner });
+      await synthesizer.issueMaxSynths({ from: owner });
 
       // Assert that transferFrom fails even for the smallest amount of DOWS.
       await assert.revert(
@@ -577,7 +589,7 @@ contract("Shadows", async (accounts) => {
 
       // Issue
       const amountIssued = toUnit("2000");
-      await shadows.issueSynths(amountIssued, { from: account1 });
+      await synthesizer.issueSynths(amountIssued, { from: account1 });
 
       await assert.revert(
         shadows.transfer(account2, toUnit(issuedShadows), {
@@ -601,13 +613,15 @@ contract("Shadows", async (accounts) => {
         from: owner,
       });
 
-      const maxIssuableSynths = await shadows.maxIssuableSynths(account1);
+      const maxIssuableSynths = await synthesizer.maxIssuableSynths(account1);
 
       // Issue
-      await shadows.issueSynths(maxIssuableSynths, { from: account1 });
+      await synthesizer.issueSynths(maxIssuableSynths, { from: account1 });
 
       // Exchange into xEUR
-      await shadows.exchange(xUSD, maxIssuableSynths, xEUR, { from: account1 });
+      await synthesizer.exchange(xUSD, maxIssuableSynths, xEUR, {
+        from: account1,
+      });
 
       // Ensure that we can transfer in and out of the account successfully
       await shadows.transfer(account1, toUnit("10000"), {
@@ -647,25 +661,25 @@ contract("Shadows", async (accounts) => {
       });
 
       // Issue
-      const issuedSynths = await shadows.maxIssuableSynths(account1);
-      await shadows.issueSynths(issuedSynths, { from: account1 });
+      const issuedSynths = await synthesizer.maxIssuableSynths(account1);
+      await synthesizer.issueSynths(issuedSynths, { from: account1 });
       const remainingIssuable = await getRemainingIssuableSynths(account1);
       assert.bnClose(remainingIssuable, "0");
 
-      const transferable1 = await shadows.transferableShadows(account1);
+      const transferable1 = await synthesizer.transferableShadows(account1);
       assert.bnEqual(transferable1, "0");
 
       // Exchange into xAUD
-      await shadows.exchange(xUSD, issuedSynths, xAUD, { from: account1 });
+      await synthesizer.exchange(xUSD, issuedSynths, xAUD, { from: account1 });
 
-      // Increase the value of xAUD relative to shadows
+      // Increase the value of xAUD relative to synthesizer
       const timestamp2 = await currentTime();
       const newAUDExchangeRate = toUnit("1");
       await oracle.updateRates([xAUD], [newAUDExchangeRate], timestamp2, {
         from: oracleAccount,
       });
 
-      const transferable2 = await shadows.transferableShadows(account1);
+      const transferable2 = await synthesizer.transferableShadows(account1);
       assert.equal(transferable2.gt(toUnit("1000")), true);
     });
   });
@@ -687,12 +701,14 @@ contract("Shadows", async (accounts) => {
 
       const amountIssuedAcc1 = toUnit("30");
       const amountIssuedAcc2 = toUnit("50");
-      await shadows.issueSynths(amountIssuedAcc1, { from: account1 });
-      await shadows.issueSynths(amountIssuedAcc2, { from: account2 });
-      await shadows.exchange(xUSD, amountIssuedAcc2, xAUD, { from: account2 });
+      await synthesizer.issueSynths(amountIssuedAcc1, { from: account1 });
+      await synthesizer.issueSynths(amountIssuedAcc2, { from: account2 });
+      await synthesizer.exchange(xUSD, amountIssuedAcc2, xAUD, {
+        from: account2,
+      });
 
       const PRECISE_UNIT = web3.utils.toWei(web3.utils.toBN("1"), "gether");
-      let totalIssuedSynthxUSD = await shadows.totalIssuedSynths(xUSD);
+      let totalIssuedSynthxUSD = await synthesizer.totalIssuedSynths(xUSD);
       const account1DebtRatio = divideDecimal(
         amountIssuedAcc1,
         totalIssuedSynthxUSD,
@@ -710,7 +726,7 @@ contract("Shadows", async (accounts) => {
         from: oracleAccount,
       });
 
-      totalIssuedSynthxUSD = await shadows.totalIssuedSynths(xUSD);
+      totalIssuedSynthxUSD = await synthesizer.totalIssuedSynths(xUSD);
       const conversionFactor = web3.utils.toBN(1000000000);
       const expectedDebtAccount1 = multiplyDecimal(
         account1DebtRatio,
@@ -724,11 +740,11 @@ contract("Shadows", async (accounts) => {
       ).div(conversionFactor);
 
       assert.bnClose(
-        await shadows.debtBalanceOf(account1, xUSD),
+        await synthesizer.debtBalanceOf(account1, xUSD),
         expectedDebtAccount1
       );
       assert.bnClose(
-        await shadows.debtBalanceOf(account2, xUSD),
+        await synthesizer.debtBalanceOf(account2, xUSD),
         expectedDebtAccount2
       );
     });
@@ -741,8 +757,14 @@ contract("Shadows", async (accounts) => {
         from: owner,
       });
 
-      const debt1 = await shadows.debtBalanceOf(account1, toBytes32("xUSD"));
-      const debt2 = await shadows.debtBalanceOf(account2, toBytes32("xUSD"));
+      const debt1 = await synthesizer.debtBalanceOf(
+        account1,
+        toBytes32("xUSD")
+      );
+      const debt2 = await synthesizer.debtBalanceOf(
+        account2,
+        toBytes32("xUSD")
+      );
       assert.bnEqual(debt1, 0);
       assert.bnEqual(debt2, 0);
     });
@@ -755,9 +777,9 @@ contract("Shadows", async (accounts) => {
 
       // Issue
       const issuedSynths = toUnit("1001");
-      await shadows.issueSynths(issuedSynths, { from: account1 });
+      await synthesizer.issueSynths(issuedSynths, { from: account1 });
 
-      const debt = await shadows.debtBalanceOf(account1, toBytes32("xUSD"));
+      const debt = await synthesizer.debtBalanceOf(account1, toBytes32("xUSD"));
       assert.bnEqual(debt, issuedSynths);
     });
   });
@@ -769,19 +791,19 @@ contract("Shadows", async (accounts) => {
       await shadows.transfer(account1, toUnit(issuedShadows), {
         from: owner,
       });
-      const issuanceRatio = await shadows.issuanceRatio();
+      const issuanceRatio = await synthesizer.issuanceRatio();
 
       const expectedIssuableSynths = multiplyDecimal(
         toUnit(issuedShadows),
         multiplyDecimal(rate, issuanceRatio)
       );
-      const maxIssuableSynths = await shadows.maxIssuableSynths(account1);
+      const maxIssuableSynths = await synthesizer.maxIssuableSynths(account1);
 
       assert.bnEqual(expectedIssuableSynths, maxIssuableSynths);
     });
 
     it("should correctly calculate a user's maximum issuable synths without any DOWS", async () => {
-      const maxIssuableSynths = await shadows.maxIssuableSynths(account1);
+      const maxIssuableSynths = await synthesizer.maxIssuableSynths(account1);
       assert.bnEqual(0, maxIssuableSynths);
     });
 
@@ -793,16 +815,16 @@ contract("Shadows", async (accounts) => {
         from: owner,
       });
 
-      const issuanceRatio = await shadows.issuanceRatio();
+      const issuanceRatio = await synthesizer.issuanceRatio();
       const amountIssued = web3.utils.toBN("1234");
-      await shadows.issueSynths(toUnit(amountIssued), { from: account1 });
+      await synthesizer.issueSynths(toUnit(amountIssued), { from: account1 });
 
       const expectedIssuableSynths = multiplyDecimal(
         toUnit(issuedShadows),
         multiplyDecimal(dows2usdRate, issuanceRatio)
       );
 
-      const maxIssuableSynths = await shadows.maxIssuableSynths(account1);
+      const maxIssuableSynths = await synthesizer.maxIssuableSynths(account1);
       assert.bnEqual(expectedIssuableSynths, maxIssuableSynths);
     });
 
@@ -819,7 +841,7 @@ contract("Shadows", async (accounts) => {
         }
       );
 
-      await assert.revert(shadows.maxIssuableSynths(account1));
+      await assert.revert(synthesizer.maxIssuableSynths(account1));
     });
 
     it("should error when calculating maximum issuance when the currency rate is stale", async () => {
@@ -835,14 +857,14 @@ contract("Shadows", async (accounts) => {
         }
       );
 
-      await assert.revert(shadows.maxIssuableSynths(account1));
+      await assert.revert(synthesizer.maxIssuableSynths(account1));
     });
   });
 
   describe("remainingIssuableSynths()", () => {
     it("should correctly calculate a user's remaining issuable synths with prior issuance", async () => {
       const dows2usdRate = await oracle.rateForCurrency(DOWS);
-      const issuanceRatio = await shadows.issuanceRatio();
+      const issuanceRatio = await synthesizer.issuanceRatio();
 
       const issuedShadows = web3.utils.toBN("200012");
       await shadows.transfer(account1, toUnit(issuedShadows), {
@@ -851,7 +873,7 @@ contract("Shadows", async (accounts) => {
 
       // Issue
       const amountIssued = toUnit("2011");
-      await shadows.issueSynths(amountIssued, { from: account1 });
+      await synthesizer.issueSynths(amountIssued, { from: account1 });
 
       const expectedIssuableSynths = multiplyDecimal(
         toUnit(issuedShadows),
@@ -864,7 +886,7 @@ contract("Shadows", async (accounts) => {
 
     it("should correctly calculate a user's remaining issuable synths without prior issuance", async () => {
       const dows2usdRate = await oracle.rateForCurrency(DOWS);
-      const issuanceRatio = await shadows.issuanceRatio();
+      const issuanceRatio = await synthesizer.issuanceRatio();
 
       const issuedShadows = web3.utils.toBN("20");
       await shadows.transfer(account1, toUnit(issuedShadows), {
@@ -884,7 +906,7 @@ contract("Shadows", async (accounts) => {
   it("should allow the owner to set the issuance ratio", async () => {
     const ratio = toUnit("0.2");
 
-    const transaction = await shadows.setIssuanceRatio(ratio, {
+    const transaction = await synthesizer.setIssuanceRatio(ratio, {
       from: owner,
     });
 
@@ -895,7 +917,7 @@ contract("Shadows", async (accounts) => {
     const ratio = toUnit("0.2");
 
     await assert.revert(
-      shadows.setIssuanceRatio(ratio, {
+      synthesizer.setIssuanceRatio(ratio, {
         from: account1,
       })
     );
@@ -905,30 +927,33 @@ contract("Shadows", async (accounts) => {
     const max = toUnit("1");
 
     // It should succeed when setting it to max
-    const transaction = await shadows.setIssuanceRatio(max, {
+    const transaction = await synthesizer.setIssuanceRatio(max, {
       from: owner,
     });
     assert.eventEqual(transaction, "IssuanceRatioUpdated", { newRatio: max });
 
     // But max + 1 should fail
     await assert.revert(
-      shadows.setIssuanceRatio(web3.utils.toBN(max).add(web3.utils.toBN("1")), {
-        from: account1,
-      })
+      synthesizer.setIssuanceRatio(
+        web3.utils.toBN(max).add(web3.utils.toBN("1")),
+        {
+          from: account1,
+        }
+      )
     );
   });
 
   it("should correctly report hasIssued for an address", async () => {
-    assert.equal(await shadows.hasIssued(owner), false);
+    assert.equal(await synthesizer.hasIssued(owner), false);
 
-    await shadows.issueMaxSynths({ from: owner });
+    await synthesizer.issueMaxSynths({ from: owner });
     const synthBalance = await xUSDContract.balanceOf(owner);
 
-    assert.equal(await shadows.hasIssued(owner), true);
+    assert.equal(await synthesizer.hasIssued(owner), true);
 
-    await shadows.burnSynths(synthBalance, { from: owner });
+    await synthesizer.burnSynths(synthBalance, { from: owner });
 
-    assert.equal(await shadows.hasIssued(owner), false);
+    assert.equal(await synthesizer.hasIssued(owner), false);
   });
 
   it("should allow the issuance of a small amount of synths", async () => {
@@ -940,17 +965,17 @@ contract("Shadows", async (accounts) => {
     // rounded to 0 in the debt register. This will revert. As such, there is a minimum
     // number of synths that need to be issued each time issue is invoked. The exact
     // amount depends on the Synth exchange rate and the total supply.
-    await shadows.issueSynths(web3.utils.toBN("5"), { from: account1 });
+    await synthesizer.issueSynths(web3.utils.toBN("5"), { from: account1 });
   });
 
   it("should be possible to issue the maximum amount of synths via issueSynths", async () => {
     // Give some DOWS to account1
     await shadows.transfer(account1, toUnit("1000"), { from: owner });
 
-    const maxSynths = await shadows.maxIssuableSynths(account1);
+    const maxSynths = await synthesizer.maxIssuableSynths(account1);
 
     // account1 should be able to issue
-    await shadows.issueSynths(maxSynths, { from: account1 });
+    await synthesizer.issueSynths(maxSynths, { from: account1 });
   });
 
   it("should allow an issuer to issue synths in one flavour", async () => {
@@ -965,13 +990,16 @@ contract("Shadows", async (accounts) => {
     await shadows.transfer(account1, toUnit("1000"), { from: owner });
 
     // account1 should be able to issue
-    await shadows.issueSynths(toUnit("10"), { from: account1 });
+    await synthesizer.issueSynths(toUnit("10"), { from: account1 });
 
     // There should be 10 xUSD of value in the system
-    assert.bnEqual(await shadows.totalIssuedSynths(xUSD), toUnit("10"));
+    assert.bnEqual(await synthesizer.totalIssuedSynths(xUSD), toUnit("10"));
 
     // And account1 should own 100% of the debt.
-    assert.bnEqual(await shadows.debtBalanceOf(account1, xUSD), toUnit("10"));
+    assert.bnEqual(
+      await synthesizer.debtBalanceOf(account1, xUSD),
+      toUnit("10")
+    );
   });
 
   it("should allow two issuers to issue synths in one flavour", async () => {
@@ -991,18 +1019,24 @@ contract("Shadows", async (accounts) => {
     });
 
     // Issue
-    await shadows.issueSynths(toUnit("10"), { from: account1 });
-    await shadows.issueSynths(toUnit("20"), { from: account2 });
+    await synthesizer.issueSynths(toUnit("10"), { from: account1 });
+    await synthesizer.issueSynths(toUnit("20"), { from: account2 });
 
     // There should be 30xUSD of value in the system
-    assert.bnEqual(await shadows.totalIssuedSynths(xUSD), toUnit("30"));
+    assert.bnEqual(await synthesizer.totalIssuedSynths(xUSD), toUnit("30"));
 
     // And the debt should be split 50/50.
     // But there's a small rounding error.
     // This is ok, as when the last person exits the system, their debt percentage is always 100% so
     // these rounding errors don't cause the system to be out of balance.
-    assert.bnClose(await shadows.debtBalanceOf(account1, xUSD), toUnit("10"));
-    assert.bnClose(await shadows.debtBalanceOf(account2, xUSD), toUnit("20"));
+    assert.bnClose(
+      await synthesizer.debtBalanceOf(account1, xUSD),
+      toUnit("10")
+    );
+    assert.bnClose(
+      await synthesizer.debtBalanceOf(account2, xUSD),
+      toUnit("20")
+    );
   });
 
   it("should allow multi-issuance in one flavour", async () => {
@@ -1022,19 +1056,25 @@ contract("Shadows", async (accounts) => {
     });
 
     // Issue
-    await shadows.issueSynths(toUnit("10"), { from: account1 });
-    await shadows.issueSynths(toUnit("20"), { from: account2 });
-    await shadows.issueSynths(toUnit("10"), { from: account1 });
+    await synthesizer.issueSynths(toUnit("10"), { from: account1 });
+    await synthesizer.issueSynths(toUnit("20"), { from: account2 });
+    await synthesizer.issueSynths(toUnit("10"), { from: account1 });
 
     // There should be 40 xUSD of value in the system
-    assert.bnEqual(await shadows.totalIssuedSynths(xUSD), toUnit("40"));
+    assert.bnEqual(await synthesizer.totalIssuedSynths(xUSD), toUnit("40"));
 
     // And the debt should be split 50/50.
     // But there's a small rounding error.
     // This is ok, as when the last person exits the system, their debt percentage is always 100% so
     // these rounding errors don't cause the system to be out of balance.
-    assert.bnClose(await shadows.debtBalanceOf(account1, xUSD), toUnit("20"));
-    assert.bnClose(await shadows.debtBalanceOf(account2, xUSD), toUnit("20"));
+    assert.bnClose(
+      await synthesizer.debtBalanceOf(account1, xUSD),
+      toUnit("20")
+    );
+    assert.bnClose(
+      await synthesizer.debtBalanceOf(account2, xUSD),
+      toUnit("20")
+    );
   });
 
   it("should allow an issuer to issue max synths via the standard issue call", async () => {
@@ -1053,16 +1093,19 @@ contract("Shadows", async (accounts) => {
     });
 
     // Determine maximum amount that can be issued.
-    const maxIssuable = await shadows.maxIssuableSynths(account1);
+    const maxIssuable = await synthesizer.maxIssuableSynths(account1);
 
     // Issue
-    await shadows.issueSynths(maxIssuable, { from: account1 });
+    await synthesizer.issueSynths(maxIssuable, { from: account1 });
 
     // There should be 200 xUSD of value in the system
-    assert.bnEqual(await shadows.totalIssuedSynths(xUSD), toUnit("200"));
+    assert.bnEqual(await synthesizer.totalIssuedSynths(xUSD), toUnit("200"));
 
     // And account1 should own all of it.
-    assert.bnEqual(await shadows.debtBalanceOf(account1, xUSD), toUnit("200"));
+    assert.bnEqual(
+      await synthesizer.debtBalanceOf(account1, xUSD),
+      toUnit("200")
+    );
   });
 
   it("should disallow an issuer from issuing synths beyond their remainingIssuableSynths", async () => {
@@ -1085,13 +1128,13 @@ contract("Shadows", async (accounts) => {
     assert.bnEqual(issuableSynths, toUnit("200"));
 
     // Issue that amount.
-    await shadows.issueSynths(issuableSynths, { from: account1 });
+    await synthesizer.issueSynths(issuableSynths, { from: account1 });
 
     // They should now have 0 issuable synths.
     assert.bnEqual(await getRemainingIssuableSynths(account1), "0");
 
     // And trying to issue the smallest possible unit of one should fail.
-    await assert.revert(shadows.issueSynths("1", { from: account1 }));
+    await assert.revert(synthesizer.issueSynths("1", { from: account1 }));
   });
 
   it("should allow an issuer with outstanding debt to burn synths and decrease debt", async () => {
@@ -1110,16 +1153,22 @@ contract("Shadows", async (accounts) => {
     });
 
     // Issue
-    await shadows.issueMaxSynths({ from: account1 });
+    await synthesizer.issueMaxSynths({ from: account1 });
 
     // account1 should now have 200 xUSD of debt.
-    assert.bnEqual(await shadows.debtBalanceOf(account1, xUSD), toUnit("200"));
+    assert.bnEqual(
+      await synthesizer.debtBalanceOf(account1, xUSD),
+      toUnit("200")
+    );
 
     // Burn 100 xUSD
-    await shadows.burnSynths(toUnit("100"), { from: account1 });
+    await synthesizer.burnSynths(toUnit("100"), { from: account1 });
 
     // account1 should now have 100 xUSD of debt.
-    assert.bnEqual(await shadows.debtBalanceOf(account1, xUSD), toUnit("100"));
+    assert.bnEqual(
+      await synthesizer.debtBalanceOf(account1, xUSD),
+      toUnit("100")
+    );
   });
 
   it("should disallow an issuer without outstanding debt from burning synths", async () => {
@@ -1137,16 +1186,20 @@ contract("Shadows", async (accounts) => {
     });
 
     // Issue
-    await shadows.issueMaxSynths({ from: account1 });
+    await synthesizer.issueMaxSynths({ from: account1 });
 
     // account2 should not have anything and can't burn.
-    await assert.revert(shadows.burnSynths(toUnit("10"), { from: account2 }));
+    await assert.revert(
+      synthesizer.burnSynths(toUnit("10"), { from: account2 })
+    );
 
     // And even when we give account2 synths, it should not be able to burn.
     await xUSDContract.transfer(account2, toUnit("100"), {
       from: account1,
     });
-    await assert.revert(shadows.burnSynths(toUnit("10"), { from: account2 }));
+    await assert.revert(
+      synthesizer.burnSynths(toUnit("10"), { from: account2 })
+    );
   });
 
   it("should burn 0 when trying to burn synths that do not exist", async () => {
@@ -1163,18 +1216,18 @@ contract("Shadows", async (accounts) => {
     });
 
     // Issue
-    await shadows.issueMaxSynths({ from: account1 });
+    await synthesizer.issueMaxSynths({ from: account1 });
 
     // Transfer all newly issued synths to account2
     await xUSDContract.transfer(account2, toUnit("200"), {
       from: account1,
     });
 
-    const debtBefore = await shadows.debtBalanceOf(account1, xUSD);
+    const debtBefore = await synthesizer.debtBalanceOf(account1, xUSD);
     assert.ok(!debtBefore.isNeg());
     // Burning any amount of xUSD will reduce the amount down to the current supply, which is 0
-    await assert.revert(shadows.burnSynths("1", { from: account1 }));
-    const debtAfter = await shadows.debtBalanceOf(account1, xUSD);
+    await assert.revert(synthesizer.burnSynths("1", { from: account1 }));
+    const debtAfter = await synthesizer.debtBalanceOf(account1, xUSD);
     // So assert their debt balabce is unchanged from the burn of 0
     assert.bnEqual(debtBefore, debtAfter);
   });
@@ -1199,8 +1252,8 @@ contract("Shadows", async (accounts) => {
     const fullAmount = toUnit("210");
     const account1Payment = toUnit("10");
     const account2Payment = fullAmount.sub(account1Payment);
-    await shadows.issueSynths(account1Payment, { from: account1 });
-    await shadows.issueSynths(account2Payment, { from: account2 });
+    await synthesizer.issueSynths(account1Payment, { from: account1 });
+    await synthesizer.issueSynths(account2Payment, { from: account2 });
 
     // Transfer all of account2's synths to account1
     await xUSDContract.transfer(account1, toUnit("200"), {
@@ -1213,7 +1266,7 @@ contract("Shadows", async (accounts) => {
     const balanceOfAccount1 = await xUSDContract.balanceOf(account1);
 
     // Then try to burn them all. Only 10 synths (and fees) should be gone.
-    await shadows.burnSynths(balanceOfAccount1, { from: account1 });
+    await synthesizer.burnSynths(balanceOfAccount1, { from: account1 });
     const balanceOfAccount1AfterBurn = await xUSDContract.balanceOf(account1);
 
     // Recording debts in the debt ledger reduces accuracy.
@@ -1233,11 +1286,11 @@ contract("Shadows", async (accounts) => {
     // Issue
     const issuedSynthsPt1 = toUnit("2000");
     const issuedSynthsPt2 = toUnit("2000");
-    await shadows.issueSynths(issuedSynthsPt1, { from: account1 });
-    await shadows.issueSynths(issuedSynthsPt2, { from: account1 });
-    await shadows.issueSynths(toUnit("1000"), { from: account2 });
+    await synthesizer.issueSynths(issuedSynthsPt1, { from: account1 });
+    await synthesizer.issueSynths(issuedSynthsPt2, { from: account1 });
+    await synthesizer.issueSynths(toUnit("1000"), { from: account2 });
 
-    const debt = await shadows.debtBalanceOf(account1, xUSD);
+    const debt = await synthesizer.debtBalanceOf(account1, xUSD);
     assert.bnClose(debt, toUnit("4000"));
   });
 
@@ -1256,15 +1309,15 @@ contract("Shadows", async (accounts) => {
     const issuedSynthsPt2 = toUnit("1600");
     const burntSynthsPt2 = toUnit("500");
 
-    await shadows.issueSynths(issuedSynthsPt1, { from: account1 });
-    await shadows.burnSynths(burntSynthsPt1, { from: account1 });
-    await shadows.issueSynths(issuedSynthsPt2, { from: account1 });
+    await synthesizer.issueSynths(issuedSynthsPt1, { from: account1 });
+    await synthesizer.burnSynths(burntSynthsPt1, { from: account1 });
+    await synthesizer.issueSynths(issuedSynthsPt2, { from: account1 });
 
-    await shadows.issueSynths(toUnit("100"), { from: account2 });
-    await shadows.issueSynths(toUnit("51"), { from: account2 });
-    await shadows.burnSynths(burntSynthsPt2, { from: account1 });
+    await synthesizer.issueSynths(toUnit("100"), { from: account2 });
+    await synthesizer.issueSynths(toUnit("51"), { from: account2 });
+    await synthesizer.burnSynths(burntSynthsPt2, { from: account1 });
 
-    const debt = await shadows.debtBalanceOf(account1, toBytes32("xUSD"));
+    const debt = await synthesizer.debtBalanceOf(account1, toBytes32("xUSD"));
     const expectedDebt = issuedSynthsPt1
       .add(issuedSynthsPt2)
       .sub(burntSynthsPt1)
@@ -1286,21 +1339,21 @@ contract("Shadows", async (accounts) => {
     }); // Issue a small amount to account2
 
     // Issue from account1
-    const account1AmountToIssue = await shadows.maxIssuableSynths(account1);
-    await shadows.issueMaxSynths({ from: account1 });
-    const debtBalance1 = await shadows.debtBalanceOf(account1, xUSD);
+    const account1AmountToIssue = await synthesizer.maxIssuableSynths(account1);
+    await synthesizer.issueMaxSynths({ from: account1 });
+    const debtBalance1 = await synthesizer.debtBalanceOf(account1, xUSD);
     assert.bnClose(debtBalance1, account1AmountToIssue);
 
     // Issue and burn from account 2 all debt
-    await shadows.issueSynths(toUnit("43"), { from: account2 });
-    let debt = await shadows.debtBalanceOf(account2, xUSD);
-    await shadows.burnSynths(toUnit("43"), { from: account2 });
-    debt = await shadows.debtBalanceOf(account2, xUSD);
+    await synthesizer.issueSynths(toUnit("43"), { from: account2 });
+    let debt = await synthesizer.debtBalanceOf(account2, xUSD);
+    await synthesizer.burnSynths(toUnit("43"), { from: account2 });
+    debt = await synthesizer.debtBalanceOf(account2, xUSD);
 
     assert.bnEqual(debt, 0);
 
     // Should set user issuanceData to 0 debtOwnership and retain debtEntryIndex of last action
-    assert.deepEqual(await shadows.issuanceData(account2), {
+    assert.deepEqual(await synthesizer.issuanceData(account2), {
       initialDebtOwnership: 0,
       debtEntryIndex: 2,
     });
@@ -1322,9 +1375,11 @@ contract("Shadows", async (accounts) => {
         from: owner,
       }); // Issue a small amount to account2
 
-      const account1AmountToIssue = await shadows.maxIssuableSynths(account1);
-      await shadows.issueMaxSynths({ from: account1 });
-      const debtBalance1 = await shadows.debtBalanceOf(account1, xUSD);
+      const account1AmountToIssue = await synthesizer.maxIssuableSynths(
+        account1
+      );
+      await synthesizer.issueMaxSynths({ from: account1 });
+      const debtBalance1 = await synthesizer.debtBalanceOf(account1, xUSD);
       assert.bnClose(debtBalance1, account1AmountToIssue);
 
       let expectedDebtForAccount2 = web3.utils.toBN("0");
@@ -1332,7 +1387,7 @@ contract("Shadows", async (accounts) => {
       for (let i = 0; i < totalTimesToIssue; i++) {
         // Seems that in this case, issuing 43 each time leads to increasing the variance regularly each time.
         const amount = toUnit("43");
-        await shadows.issueSynths(amount, { from: account2 });
+        await synthesizer.issueSynths(amount, { from: account2 });
         expectedDebtForAccount2 = expectedDebtForAccount2.add(amount);
 
         const desiredAmountToBurn = toUnit(
@@ -1341,10 +1396,10 @@ contract("Shadows", async (accounts) => {
         const amountToBurn = desiredAmountToBurn.lte(expectedDebtForAccount2)
           ? desiredAmountToBurn
           : expectedDebtForAccount2;
-        await shadows.burnSynths(amountToBurn, { from: account2 });
+        await synthesizer.burnSynths(amountToBurn, { from: account2 });
         expectedDebtForAccount2 = expectedDebtForAccount2.sub(amountToBurn);
       }
-      const debtBalance = await shadows.debtBalanceOf(account2, xUSD);
+      const debtBalance = await synthesizer.debtBalanceOf(account2, xUSD);
 
       // Here we make the variance a calculation of the number of times we issue/burn.
       // This is less than ideal, but is the result of calculating the debt based on
@@ -1371,9 +1426,11 @@ contract("Shadows", async (accounts) => {
         from: owner,
       }); // Issue a small amount to account2
 
-      const account1AmountToIssue = await shadows.maxIssuableSynths(account1);
-      await shadows.issueMaxSynths({ from: account1 });
-      const debtBalance1 = await shadows.debtBalanceOf(account1, xUSD);
+      const account1AmountToIssue = await synthesizer.maxIssuableSynths(
+        account1
+      );
+      await synthesizer.issueMaxSynths({ from: account1 });
+      const debtBalance1 = await synthesizer.debtBalanceOf(account1, xUSD);
       assert.bnClose(debtBalance1, account1AmountToIssue);
 
       let expectedDebtForAccount2 = web3.utils.toBN("0");
@@ -1381,7 +1438,7 @@ contract("Shadows", async (accounts) => {
       for (let i = 0; i < totalTimesToIssue; i++) {
         // Seems that in this case, issuing 43 each time leads to increasing the variance regularly each time.
         const amount = toUnit(web3.utils.toBN(getRandomInt(40, 49)));
-        await shadows.issueSynths(amount, { from: account2 });
+        await synthesizer.issueSynths(amount, { from: account2 });
         expectedDebtForAccount2 = expectedDebtForAccount2.add(amount);
 
         const desiredAmountToBurn = toUnit(
@@ -1390,17 +1447,17 @@ contract("Shadows", async (accounts) => {
         const amountToBurn = desiredAmountToBurn.lte(expectedDebtForAccount2)
           ? desiredAmountToBurn
           : expectedDebtForAccount2;
-        await shadows.burnSynths(amountToBurn, { from: account2 });
+        await synthesizer.burnSynths(amountToBurn, { from: account2 });
         expectedDebtForAccount2 = expectedDebtForAccount2.sub(amountToBurn);
 
         // Useful debug logging
-        // const db = await shadows.debtBalanceOf(account2, xUSD);
+        // const db = await synthesizer.debtBalanceOf(account2, xUSD);
         // const variance = fromUnit(expectedDebtForAccount2.sub(db));
         // console.log(
         // 	`#### debtBalance: ${db}\t\t expectedDebtForAccount2: ${expectedDebtForAccount2}\t\tvariance: ${variance}`
         // );
       }
-      const debtBalance = await shadows.debtBalanceOf(account2, xUSD);
+      const debtBalance = await synthesizer.debtBalanceOf(account2, xUSD);
 
       // Here we make the variance a calculation of the number of times we issue/burn.
       // This is less than ideal, but is the result of calculating the debt based on
@@ -1427,19 +1484,21 @@ contract("Shadows", async (accounts) => {
         from: owner,
       }); // Issue a small amount to account2
 
-      const account1AmountToIssue = await shadows.maxIssuableSynths(account1);
-      await shadows.issueMaxSynths({ from: account1 });
-      const debtBalance1 = await shadows.debtBalanceOf(account1, xUSD);
+      const account1AmountToIssue = await synthesizer.maxIssuableSynths(
+        account1
+      );
+      await synthesizer.issueMaxSynths({ from: account1 });
+      const debtBalance1 = await synthesizer.debtBalanceOf(account1, xUSD);
       assert.bnEqual(debtBalance1, account1AmountToIssue);
 
       let expectedDebtForAccount2 = web3.utils.toBN("0");
       const totalTimesToIssue = 40;
       for (let i = 0; i < totalTimesToIssue; i++) {
         const amount = toUnit("0.000000000000000002");
-        await shadows.issueSynths(amount, { from: account2 });
+        await synthesizer.issueSynths(amount, { from: account2 });
         expectedDebtForAccount2 = expectedDebtForAccount2.add(amount);
       }
-      const debtBalance2 = await shadows.debtBalanceOf(account2, xUSD);
+      const debtBalance2 = await synthesizer.debtBalanceOf(account2, xUSD);
 
       // Here we make the variance a calculation of the number of times we issue/burn.
       // This is less than ideal, but is the result of calculating the debt based on
@@ -1462,28 +1521,28 @@ contract("Shadows", async (accounts) => {
       from: owner,
     });
 
-    const maxIssuableSynths = await shadows.maxIssuableSynths(account1);
+    const maxIssuableSynths = await synthesizer.maxIssuableSynths(account1);
 
     // Issue
     const synthsToNotIssueYet = web3.utils.toBN("2000");
     const issuedSynths = maxIssuableSynths.sub(synthsToNotIssueYet);
-    await shadows.issueSynths(issuedSynths, { from: account1 });
+    await synthesizer.issueSynths(issuedSynths, { from: account1 });
 
     // exchange into xEUR
-    await shadows.exchange(xUSD, issuedSynths, xEUR, { from: account1 });
+    await synthesizer.exchange(xUSD, issuedSynths, xEUR, { from: account1 });
 
-    // Increase the value of xEUR relative to shadows
+    // Increase the value of xEUR relative to synthesizer
     const timestamp2 = await currentTime();
     await oracle.updateRates([xEUR], [toUnit("1.10")], timestamp2, {
       from: oracleAccount,
     });
 
     await assert.revert(
-      shadows.issueSynths(synthsToNotIssueYet, { from: account1 })
+      synthesizer.issueSynths(synthsToNotIssueYet, { from: account1 })
     );
   });
-  it("should return 0 if user has no shadows when checking the collaterisation ratio", async () => {
-    const ratio = await shadows.collateralisationRatio(account1);
+  it("should return 0 if user has no synthesizer when checking the collaterisation ratio", async () => {
+    const ratio = await synthesizer.collateralisationRatio(account1);
     assert.bnEqual(ratio, new web3.utils.BN(0));
   });
 
@@ -1495,9 +1554,9 @@ contract("Shadows", async (accounts) => {
 
     // Issue
     const issuedSynths = toUnit(web3.utils.toBN("6400"));
-    await shadows.issueSynths(issuedSynths, { from: account1 });
+    await synthesizer.issueSynths(issuedSynths, { from: account1 });
 
-    await shadows.collateralisationRatio(account1, { from: account2 });
+    await synthesizer.collateralisationRatio(account1, { from: account2 });
   });
 
   it("should be able to read collaterisation ratio for a user with shadows but no debt", async () => {
@@ -1506,11 +1565,11 @@ contract("Shadows", async (accounts) => {
       from: owner,
     });
 
-    const ratio = await shadows.collateralisationRatio(account1);
+    const ratio = await synthesizer.collateralisationRatio(account1);
     assert.bnEqual(ratio, new web3.utils.BN(0));
   });
 
-  it("should be able to read collaterisation ratio for a user with shadows and debt", async () => {
+  it("should be able to read collaterisation ratio for a user with synthesizer and debt", async () => {
     const issuedShadows = web3.utils.toBN("320000");
     await shadows.transfer(account1, toUnit(issuedShadows), {
       from: owner,
@@ -1518,9 +1577,9 @@ contract("Shadows", async (accounts) => {
 
     // Issue
     const issuedSynths = toUnit(web3.utils.toBN("6400"));
-    await shadows.issueSynths(issuedSynths, { from: account1 });
+    await synthesizer.issueSynths(issuedSynths, { from: account1 });
 
-    const ratio = await shadows.collateralisationRatio(account1, {
+    const ratio = await synthesizer.collateralisationRatio(account1, {
       from: account2,
     });
     assert.unitEqual(ratio, "0.2");
@@ -1529,7 +1588,9 @@ contract("Shadows", async (accounts) => {
   it("should permit anyone checking another user's collateral", async () => {
     const amount = toUnit("60000");
     await shadows.transfer(account1, amount, { from: owner });
-    const collateral = await shadows.collateral(account1, { from: account2 });
+    const collateral = await synthesizer.collateral(account1, {
+      from: account2,
+    });
     assert.bnEqual(collateral, amount);
   });
 
@@ -1545,9 +1606,9 @@ contract("Shadows", async (accounts) => {
     });
 
     // Issue
-    const maxIssuable = await shadows.maxIssuableSynths(account1);
+    const maxIssuable = await synthesizer.maxIssuableSynths(account1);
     const issued = maxIssuable.div(web3.utils.toBN(3));
-    await shadows.issueSynths(issued, { from: account1 });
+    await synthesizer.issueSynths(issued, { from: account1 });
     const expectedRemaining = maxIssuable.sub(issued);
     const remaining = await getRemainingIssuableSynths(account1);
     assert.bnEqual(expectedRemaining, remaining);
@@ -1566,10 +1627,10 @@ contract("Shadows", async (accounts) => {
     });
 
     // Issue
-    await shadows.issueSynths(toUnit("199"), { from: account1 });
+    await synthesizer.issueSynths(toUnit("199"), { from: account1 });
 
     // Then try to burn them all. Only 10 synths (and fees) should be gone.
-    await shadows.burnSynths(await xUSDContract.balanceOf(account1), {
+    await synthesizer.burnSynths(await xUSDContract.balanceOf(account1), {
       from: account1,
     });
     assert.bnEqual(await xUSDContract.balanceOf(account1), web3.utils.toBN(0));
@@ -1582,10 +1643,10 @@ contract("Shadows", async (accounts) => {
     });
 
     // Issue
-    await shadows.issueSynths(toUnit("3987"), { from: account1 });
+    await synthesizer.issueSynths(toUnit("3987"), { from: account1 });
 
     // Then try to burn some of them. There should be 3000 left.
-    await shadows.burnSynths(toUnit("987"), { from: account1 });
+    await synthesizer.burnSynths(toUnit("987"), { from: account1 });
     assert.bnEqual(await xUSDContract.balanceOf(account1), toUnit("3000"));
   });
 
@@ -1603,7 +1664,7 @@ contract("Shadows", async (accounts) => {
 
     // Issue
     const amountIssued = toUnit("2000");
-    await shadows.issueSynths(amountIssued, { from: account1 });
+    await synthesizer.issueSynths(amountIssued, { from: account1 });
 
     // Transfer account1's synths to account2 and back
     const amountToTransfer = toUnit("1800");
@@ -1632,14 +1693,14 @@ contract("Shadows", async (accounts) => {
     );
 
     // Now burn 1000 and check we end up with the right amount
-    await shadows.burnSynths(toUnit("1000"), { from: account1 });
+    await synthesizer.burnSynths(toUnit("1000"), { from: account1 });
     assert.bnEqual(
       await xUSDContract.balanceOf(account1),
       amountExpectedToBeLeftInWallet.sub(toUnit("1000"))
     );
   });
 
-  it("should allow the last user in the system to burn all their synths to release their shadows", async () => {
+  it("should allow the last user in the system to burn all their synths to release their synthesizer", async () => {
     // Give some DOWS to account1
     await shadows.transfer(account1, toUnit("500000"), {
       from: owner,
@@ -1659,17 +1720,17 @@ contract("Shadows", async (accounts) => {
     // Send more than their synth balance to burn all
     const burnAllSynths = toUnit("2050");
 
-    await shadows.issueSynths(issuedSynths1, { from: account1 });
-    await shadows.issueSynths(issuedSynths2, { from: account2 });
-    await shadows.issueSynths(issuedSynths3, { from: account3 });
+    await synthesizer.issueSynths(issuedSynths1, { from: account1 });
+    await synthesizer.issueSynths(issuedSynths2, { from: account2 });
+    await synthesizer.issueSynths(issuedSynths3, { from: account3 });
 
-    await shadows.burnSynths(burnAllSynths, { from: account1 });
-    await shadows.burnSynths(burnAllSynths, { from: account2 });
-    await shadows.burnSynths(burnAllSynths, { from: account3 });
+    await synthesizer.burnSynths(burnAllSynths, { from: account1 });
+    await synthesizer.burnSynths(burnAllSynths, { from: account2 });
+    await synthesizer.burnSynths(burnAllSynths, { from: account3 });
 
-    const debtBalance1After = await shadows.debtBalanceOf(account1, xUSD);
-    const debtBalance2After = await shadows.debtBalanceOf(account2, xUSD);
-    const debtBalance3After = await shadows.debtBalanceOf(account3, xUSD);
+    const debtBalance1After = await synthesizer.debtBalanceOf(account1, xUSD);
+    const debtBalance2After = await synthesizer.debtBalanceOf(account2, xUSD);
+    const debtBalance3After = await synthesizer.debtBalanceOf(account3, xUSD);
 
     assert.bnEqual(debtBalance1After, "0");
     assert.bnEqual(debtBalance2After, "0");
@@ -1685,11 +1746,11 @@ contract("Shadows", async (accounts) => {
     // Issue
     const issuedSynths1 = toUnit("10");
 
-    await shadows.issueSynths(issuedSynths1, { from: account1 });
-    await shadows.burnSynths(issuedSynths1.add(toUnit("9000")), {
+    await synthesizer.issueSynths(issuedSynths1, { from: account1 });
+    await synthesizer.burnSynths(issuedSynths1.add(toUnit("9000")), {
       from: account1,
     });
-    const debtBalanceAfter = await shadows.debtBalanceOf(account1, xUSD);
+    const debtBalanceAfter = await synthesizer.debtBalanceOf(account1, xUSD);
 
     assert.bnEqual(debtBalanceAfter, "0");
   });
@@ -1707,21 +1768,21 @@ contract("Shadows", async (accounts) => {
     const issuedSynths1 = toUnit("150000");
     const issuedSynths2 = toUnit("50000");
 
-    await shadows.issueSynths(issuedSynths1, { from: account1 });
-    await shadows.issueSynths(issuedSynths2, { from: account2 });
+    await synthesizer.issueSynths(issuedSynths1, { from: account1 });
+    await synthesizer.issueSynths(issuedSynths2, { from: account2 });
 
-    let debtBalance1After = await shadows.debtBalanceOf(account1, xUSD);
-    let debtBalance2After = await shadows.debtBalanceOf(account2, xUSD);
+    let debtBalance1After = await synthesizer.debtBalanceOf(account1, xUSD);
+    let debtBalance2After = await synthesizer.debtBalanceOf(account2, xUSD);
 
     // debtBalanceOf has rounding error but is within tolerance
     assert.bnClose(debtBalance1After, toUnit("150000"));
     assert.bnClose(debtBalance2After, toUnit("50000"));
 
     // Account 1 burns 100,000
-    await shadows.burnSynths(toUnit("100000"), { from: account1 });
+    await synthesizer.burnSynths(toUnit("100000"), { from: account1 });
 
-    debtBalance1After = await shadows.debtBalanceOf(account1, xUSD);
-    debtBalance2After = await shadows.debtBalanceOf(account2, xUSD);
+    debtBalance1After = await synthesizer.debtBalanceOf(account1, xUSD);
+    debtBalance2After = await synthesizer.debtBalanceOf(account2, xUSD);
 
     assert.bnClose(debtBalance1After, toUnit("50000"));
     assert.bnClose(debtBalance2After, toUnit("50000"));
@@ -1731,7 +1792,9 @@ contract("Shadows", async (accounts) => {
     // Issue 0 amount of synth
     const issuedSynths1 = toUnit("0");
 
-    await assert.revert(shadows.issueSynths(issuedSynths1, { from: account1 }));
+    await assert.revert(
+      synthesizer.issueSynths(issuedSynths1, { from: account1 })
+    );
   });
 
   it("should include escrowed reward shadows when calculating a user's collaterisation ratio", async () => {
@@ -1756,11 +1819,13 @@ contract("Shadows", async (accounts) => {
       [feePool.address]
     );
     // Issue
-    const maxIssuable = await shadows.maxIssuableSynths(account1);
-    await shadows.issueSynths(maxIssuable, { from: account1 });
+    const maxIssuable = await synthesizer.maxIssuableSynths(account1);
+    await synthesizer.issueSynths(maxIssuable, { from: account1 });
 
     // Compare
-    const collaterisationRatio = await shadows.collateralisationRatio(account1);
+    const collaterisationRatio = await synthesizer.collateralisationRatio(
+      account1
+    );
     const expectedCollaterisationRatio = divideDecimal(
       maxIssuable,
       multiplyDecimal(escrowedShadows.add(transferredShadows), dows2usdRate)
@@ -1778,7 +1843,7 @@ contract("Shadows", async (accounts) => {
     );
 
     // ensure collateral of account1 is empty
-    let collateral = await shadows.collateral(account1, { from: account1 });
+    let collateral = await synthesizer.collateral(account1, { from: account1 });
     assert.bnEqual(collateral, 0);
 
     // ensure account1 has no DOWS balance
@@ -1800,17 +1865,20 @@ contract("Shadows", async (accounts) => {
     );
 
     // collateral should include escrowed amount
-    collateral = await shadows.collateral(account1, { from: account1 });
+    collateral = await synthesizer.collateral(account1, { from: account1 });
     assert.bnEqual(collateral, escrowedAmount);
 
     // Issue max synths. (300 xUSD)
-    await shadows.issueMaxSynths({ from: account1 });
+    await synthesizer.issueMaxSynths({ from: account1 });
 
     // There should be 300 xUSD of value for account1
-    assert.bnEqual(await shadows.debtBalanceOf(account1, xUSD), toUnit("300"));
+    assert.bnEqual(
+      await synthesizer.debtBalanceOf(account1, xUSD),
+      toUnit("300")
+    );
   });
 
-  it("should include escrowed shadows when checking a user's collateral", async () => {
+  it("should include escrowed synthesizer when checking a user's collateral", async () => {
     const escrowedAmount = toUnit("15000");
     await shadows.transfer(rewardEscrow.address, escrowedAmount, {
       from: owner,
@@ -1822,157 +1890,9 @@ contract("Shadows", async (accounts) => {
 
     const amount = toUnit("60000");
     await shadows.transfer(account1, amount, { from: owner });
-    const collateral = await shadows.collateral(account1, { from: account2 });
+    const collateral = await synthesizer.collateral(account1, {
+      from: account2,
+    });
     assert.bnEqual(collateral, amount.add(escrowedAmount));
   });
-
-  /**
-describe('burnSynths() after exchange()', () => {
-  describe('given the waiting period is set to 60s', () => {
-    let amount;
-    beforeEach(async () => {
-      amount = toUnit('1250');
-      await setExchangeWaitingPeriod({ owner, secs: 60 });
-      // set the exchange fee to 0 to effectively ignore it
-      await setExchangeFee({ owner, exchangeFeeRate: '0' });
-    });
-    describe('and a user has 1250 xUSD issued', () => {
-      beforeEach(async () => {
-        await shadows.transfer(account1, toUnit('1000000'), { from: owner });
-        await shadows.issueSynths(amount, { from: account1 });
-      });
-      describe('and is has been exchanged into xEUR at a rate of 1.25:1 and the waiting period has expired', () => {
-        beforeEach(async () => {
-          await shadows.exchange(xUSD, amount, xEUR, { from: account1 });
-          await fastForward(90); // make sure the waiting period is expired on this
-        });
-        describe('and they have exchanged all of it back into xUSD', () => {
-          // let xUSDBalanceAfterExchange;
-          beforeEach(async () => {
-            await shadows.exchange(xEUR, toUnit('1000'), xUSD, { from: account1 });
-            // xUSDBalanceAfterExchange = await xUSDContract.balanceOf(account1);
-          });
-          describe('when they attempt to burn the xUSD', () => {
-            it('then it fails as the waiting period is ongoing', async () => {
-              await assert.revert(
-                shadows.burnSynths(amount, { from: account1 }),
-                'Cannot settle during waiting period'
-              );
-            });
-          });
-          describe('and 60s elapses with no change in the xEUR rate', () => {
-            beforeEach(async () => {
-              fastForward(60);
-            });
-            describe('when they attempt to burn the xUSD', () => {
-              let txn;
-              beforeEach(async () => {
-                txn = await shadows.burnSynths(amount, { from: account1 });
-              });
-              it('then it succeeds and burns the entire xUSD amount', async () => {
-                const logs = await getDecodedLogs({ hash: txn.tx });
-                const xUSDProxy = await xUSDContract.proxy();
-
-                decodedEventEqual({
-                  event: 'Burned',
-                  emittedFrom: xUSDProxy,
-                  args: [account1, amount],
-                  log: logs.find(({ name }) => name === 'Burned'),
-                });
-
-                const xUSDBalance = await xUSDContract.balanceOf(account1);
-                assert.equal(xUSDBalance, '0');
-
-                const debtBalance = await shadows.debtBalanceOf(account1, xUSD);
-                assert.equal(debtBalance, '0');
-              });
-            });
-          });
-          describe('and the xEUR price decreases by 20% to 1', () => {
-            beforeEach(async () => {
-              // fastForward(1);
-              // timestamp = await currentTime();
-              await exchangeRates.updateRates([xEUR], ['1'].map(toUnit), timestamp, {
-                from: oracle,
-              });
-            });
-            describe('and 60s elapses', () => {
-              beforeEach(async () => {
-                fastForward(60);
-              });
-              describe('when they attempt to burn the entire amount xUSD', () => {
-                let txn;
-                beforeEach(async () => {
-                  txn = await shadows.burnSynths(amount, { from: account1 });
-                });
-                it('then it succeeds and burns their xUSD minus the reclaim amount from settlement', async () => {
-                  const logs = await getDecodedLogs({ hash: txn.tx });
-                  const xUSDProxy = await xUSDContract.proxy();
-
-                  decodedEventEqual({
-                    event: 'Burned',
-                    emittedFrom: xUSDProxy,
-                    args: [account1, amount.sub(toUnit('250'))],
-                    log: logs
-                      .reverse()
-                      .filter(l => !!l)
-                      .find(({ name }) => name === 'Burned'),
-                  });
-
-                  const xUSDBalance = await xUSDContract.balanceOf(account1);
-                  assert.equal(xUSDBalance, '0');
-                });
-                it('and their debt balance is now 0 because they are the only debt holder in the system', async () => {
-                  // the debt balance remaining is what was reclaimed from the exchange
-                  const debtBalance = await shadows.debtBalanceOf(account1, xUSD);
-                  // because this user is the only one holding debt, when we burn 250 xUSD in a reclaim,
-                  // it removes it from the totalIssuedSynths and
-                  assert.equal(debtBalance, '0');
-                });
-              });
-              describe('when another user also has the same amount of debt', () => {
-                beforeEach(async () => {
-                  await shadows.transfer(account2, toUnit('1000000'), { from: owner });
-                  await shadows.issueSynths(amount, { from: account2 });
-                });
-                describe('when the first user attempts to burn the entire amount xUSD', () => {
-                  let txn;
-                  beforeEach(async () => {
-                    txn = await shadows.burnSynths(amount, { from: account1 });
-                  });
-                  it('then it succeeds and burns their xUSD minus the reclaim amount from settlement', async () => {
-                    const logs = await getDecodedLogs({ hash: txn.tx });
-                    const xUSDProxy = await xUSDContract.proxy();
-
-                    decodedEventEqual({
-                      event: 'Burned',
-                      emittedFrom: xUSDProxy,
-                      args: [account1, amount.sub(toUnit('250'))],
-                      log: logs
-                        .reverse()
-                        .filter(l => !!l)
-                        .find(({ name }) => name === 'Burned'),
-                    });
-
-                    const xUSDBalance = await xUSDContract.balanceOf(account1);
-                    assert.equal(xUSDBalance, '0');
-                  });
-                  it('and their debt balance is now half of the reclaimed balance because they owe half of the pool', async () => {
-                    // the debt balance remaining is what was reclaimed from the exchange
-                    const debtBalance = await shadows.debtBalanceOf(account1, xUSD);
-                    // because this user is holding half the debt, when we burn 250 xUSD in a reclaim,
-                    // it removes it from the totalIssuedSynths and so both users have half of 250
-                    // in owing synths
-                    assert.bnEqual(debtBalance, divideDecimal('250', 2));
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-  });
-});
- */
 });

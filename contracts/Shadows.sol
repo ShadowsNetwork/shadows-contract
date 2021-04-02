@@ -20,10 +20,10 @@ contract Shadows is
         __Ownable_init();
         __ERC20_init("Shadows", "DOWS");
         __ERC20Pausable_init();
-        _mint(_msgSender(), 37000000 ether);
+        _mint(_msgSender(), 100000000 ether);
     }
 
-    function _transfer(
+    function _beforeTokenTransfer(
         address sender,
         address recipient,
         uint256 amount
@@ -34,7 +34,7 @@ contract Shadows is
                 "Cannot transfer staked DOWS"
             );
         }
-        return super._transfer(sender, recipient, amount);
+        return super._beforeTokenTransfer(sender, recipient, amount);
     }
 
     function mint(address account, uint256 amount) external onlyOwner {
@@ -50,4 +50,15 @@ contract Shadows is
 
         super._mint(account, amount);
     }
+
+    function setSynthesizer(ISynthesizer _synthesizer) external onlyOwner {
+        require(
+            address(_synthesizer) != address(0),
+            "synthesizer can not be zero address"
+        );
+        synthesizer = _synthesizer;
+        emit SynthesizerUpdated(_synthesizer);
+    }
+
+    event SynthesizerUpdated(ISynthesizer _synthesizer);
 }

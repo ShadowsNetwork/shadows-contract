@@ -614,7 +614,7 @@ contract FeePool is
         address account,
         uint256 debtRatio,
         uint256 debtEntryIndex
-    ) external onlyShadows {
+    ) external onlySynthesizer {
         _appendAccountIssuanceRecord(
             account,
             debtRatio,
@@ -674,8 +674,8 @@ contract FeePool is
         return
             ISynthesizer(
                 resolver.requireAndGetAddress(
-                    "Shadows",
-                    "Missing Shadows address"
+                    "Synthesizer",
+                    "Missing Synthesizer address"
                 )
             );
     }
@@ -700,7 +700,7 @@ contract FeePool is
             );
     }
 
-    modifier onlyShadows {
+    modifier onlySynthesizer {
         require(
             msg.sender == address(synthesizer()),
             "FeePool: Only Issuer Authorised"
