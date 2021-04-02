@@ -81,4 +81,10 @@ abstract contract ISynthesizer {
         returns (bool);
 
     function debtLedgerLength() external view virtual returns (uint256);
+
+    function transferableShadows(address account)
+        external
+        view
+        virtual
+        returns (uint256);
 }

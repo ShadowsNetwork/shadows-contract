@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.11;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "./library/AddressResolverUpgradeable.sol";
@@ -11,16 +10,16 @@ import "./interfaces/IOracle.sol";
 import "./interfaces/IExchanger.sol";
 import "./interfaces/IFeePool.sol";
 import "./interfaces/IRewardEscrow.sol";
+import "./interfaces/IShadows.sol";
 
 contract Synthesizer is
     Initializable,
     OwnableUpgradeable,
-    ERC20Upgradeable,
     AddressResolverUpgradeable
 {
+    using SafeMath for uint256;
     using SafeDecimalMath for uint256;
 
-    uint256 constant maxTotalSupply = 1e8 ether;
     bytes32 constant xUSD = "xUSD";
     uint256 public issuanceRatio = SafeDecimalMath.unit() / 5;
 
@@ -42,8 +41,6 @@ contract Synthesizer is
 
     function initialize(address _resolver) external initializer {
         __Ownable_init();
-        __ERC20_init("Shadows Network Token", "DOWS");
-        _mint(_msgSender(), 1e8 ether);
         __AddressResolver_init(_resolver);
     }
 
@@ -248,7 +245,7 @@ contract Synthesizer is
     }
 
     function collateral(address account) public view returns (uint256) {
-        uint balance = balanceOf(account);
+        uint256 balance = shadows().balanceOf(account);
 
         if (address(rewardEscrow()) != address(0)) {
             balance = balance.add(rewardEscrow().balanceOf(account));
@@ -272,25 +269,13 @@ contract Synthesizer is
             );
     }
 
-    function _transfer(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) internal override {
-        require(
-            amount <= transferableShadows(sender),
-            "Cannot transfer staked DOWS"
-        );
-        return super._transfer(sender, recipient, amount);
-    }
-
     function transferableShadows(address account)
         public
         view
         rateNotStale("DOWS")
         returns (uint256)
     {
-        uint256 balance = balanceOf(account);
+        uint256 balance = shadows().balanceOf(account);
 
         uint256 lockedShadowsValue =
             debtBalanceOf(account, "DOWS").divideDecimalRound(issuanceRatio);
@@ -467,6 +452,16 @@ contract Synthesizer is
                 resolver.requireAndGetAddress(
                     "RewardEscrow",
                     "Missing RewardEscrow address"
+                )
+            );
+    }
+
+    function shadows() internal view returns (IShadows) {
+        return
+            IShadows(
+                resolver.requireAndGetAddress(
+                    "Shadows",
+                    "Missing Shadows address"
                 )
             );
     }

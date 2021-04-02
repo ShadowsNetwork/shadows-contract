@@ -12,7 +12,11 @@ import "./interfaces/IShadows.sol";
 DOWS rewards are escrowed for 1 year from the claim date and users
 can call vest in 6 months time.
 */
-contract RewardEscrow is Initializable, OwnableUpgradeable, AddressResolverUpgradeable {
+contract RewardEscrow is
+    Initializable,
+    OwnableUpgradeable,
+    AddressResolverUpgradeable
+{
     using SafeMath for uint256;
 
     /* Lists of (timestamp, quantity) pairs per account, sorted in ascending time order.
