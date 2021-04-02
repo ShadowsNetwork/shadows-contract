@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "./library/AddressResolverUpgradeable.sol";
 import "./library/SafeDecimalMath.sol";
-import "./interfaces/IShadows.sol";
+import "./interfaces/ISynthesizer.sol";
 import "./interfaces/IRewardEscrow.sol";
 
 contract FeePool is
@@ -193,7 +193,7 @@ contract FeePool is
             uint256(_recentFeePeriodsStorage(1).feePeriodId).add(1)
         );
         _recentFeePeriodsStorage(0).startingDebtIndex = uint64(
-            shadows().debtLedgerLength()
+            synthesizer().debtLedgerLength()
         );
         _recentFeePeriodsStorage(0).startTime = uint64(now);
 
@@ -250,8 +250,8 @@ contract FeePool is
         // Threshold is calculated from ratio % above the target ratio (issuanceRatio).
         //  0  <  10%:   Claimable
         // 10% > above:  Unable to claim
-        uint256 ratio = shadows().collateralisationRatio(account);
-        uint256 targetRatio = shadows().issuanceRatio();
+        uint256 ratio = synthesizer().collateralisationRatio(account);
+        uint256 targetRatio = synthesizer().issuanceRatio();
 
         if (ratio < targetRatio) {
             return true;
@@ -473,9 +473,9 @@ contract FeePool is
         // Figure out their global debt percentage delta at end of fee Period.
         // This is a high precision integer.
         uint256 feePeriodDebtOwnership =
-            shadows()
+            synthesizer()
                 .debtLedger(closingDebtIndex)
-                .divideDecimalRoundPrecise(shadows().debtLedger(debtEntryIndex))
+                .divideDecimalRoundPrecise(synthesizer().debtLedger(debtEntryIndex))
                 .multiplyDecimalRoundPrecise(ownershipPercentage);
 
         return feePeriodDebtOwnership;
@@ -529,12 +529,12 @@ contract FeePool is
         require(
             account != address(0) ||
                 account != address(this) ||
-                account != address(shadows()),
+                account != address(synthesizer()),
             "Can't send fees to this address"
         );
 
         // Grab the xUSD Synth
-        Synth xUSDSynth = shadows().synths(xUSD);
+        Synth xUSDSynth = synthesizer().synths(xUSD);
 
         // NOTE: we do not control the FEE_ADDRESS so it is not possible to do an
         // ERC20.approve() transaction to allow this feePool to call ERC20.transferFrom
@@ -599,7 +599,7 @@ contract FeePool is
     {
         require(account != address(0), "Account can't be 0");
         require(account != address(this), "Can't send rewards to fee pool");
-        require(account != address(shadows()), "Can't send rewards to shadows");
+        require(account != address(synthesizer()), "Can't send rewards to shadows");
 
         // Record vesting entry for claiming address and amount
         // DOWS already minted to rewardEscrow balance
@@ -664,15 +664,15 @@ contract FeePool is
 
     modifier onlyExchangerOrSynth {
         bool isExchanger = msg.sender == address(exchanger());
-        bool isSynth = shadows().synthsByAddress(msg.sender) != bytes32(0);
+        bool isSynth = synthesizer().synthsByAddress(msg.sender) != bytes32(0);
 
         require(isExchanger || isSynth, "Only Exchanger, Synths Authorised");
         _;
     }
 
-    function shadows() internal view returns (IShadows) {
+    function synthesizer() internal view returns (ISynthesizer) {
         return
-            IShadows(
+            ISynthesizer(
                 resolver.requireAndGetAddress(
                     "Shadows",
                     "Missing Shadows address"
@@ -702,7 +702,7 @@ contract FeePool is
 
     modifier onlyShadows {
         require(
-            msg.sender == address(shadows()),
+            msg.sender == address(synthesizer()),
             "FeePool: Only Issuer Authorised"
         );
         _;

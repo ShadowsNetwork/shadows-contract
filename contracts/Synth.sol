@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "./library/AddressResolverUpgradeable.sol";
 import "./interfaces/IFeePool.sol";
-import "./interfaces/IShadows.sol";
+import "./interfaces/ISynthesizer.sol";
 import "./interfaces/IExchanger.sol";
 
 contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressResolverUpgradeable {
@@ -71,8 +71,8 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
         return;
     }
 
-    function shadows() internal view returns (IShadows) {
-        return IShadows(resolver.requireAndGetAddress("Shadows", "Missing Shadows address"));
+    function synthesizer() internal view returns (ISynthesizer) {
+        return ISynthesizer(resolver.requireAndGetAddress("Synthesizer", "Missing Synthesizer address"));
     }
 
     function feePool() internal view returns (IFeePool) {
@@ -84,13 +84,13 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
     }
 
     modifier onlyInternalContracts() {
-        bool isShadows = msg.sender == address(shadows());
+        bool isSynthesizer = msg.sender == address(synthesizer());
         bool isFeePool = msg.sender == address(feePool());
         bool isExchanger = msg.sender == address(exchanger());
 
         require(
-            isShadows || isFeePool || isExchanger,
-            "Only Shadows, FeePool, Exchanger or Issuer contracts allowed"
+            isSynthesizer || isFeePool || isExchanger,
+            "Only Synthesizer, FeePool, Exchanger or Issuer contracts allowed"
         );
         _;
     }

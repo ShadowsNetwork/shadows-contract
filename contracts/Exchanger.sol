@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "./library/SafeDecimalMath.sol";
 import "./library/AddressResolverUpgradeable.sol";
 import "./interfaces/IOracle.sol";
-import "./interfaces/IShadows.sol";
+import "./interfaces/ISynthesizer.sol";
 import "./interfaces/IFeePool.sol";
 
 contract Exchanger is Initializable, AddressResolverUpgradeable {
@@ -29,7 +29,7 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         uint256 sourceAmount,
         bytes32 destinationCurrencyKey,
         address destinationAddress
-    ) external onlyShadowsorSynth returns (uint256 amountReceived) {
+    ) external onlySynthesizerOrSynth returns (uint256 amountReceived) {
         require(
             sourceCurrencyKey != destinationCurrencyKey,
             "Can't be same synth"
@@ -37,10 +37,10 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         require(sourceAmount > 0, "Zero amount");
         require(exchangeEnabled, "Exchanging is disabled");
 
-        IShadows _shadows = shadows();
+        ISynthesizer _synthesizer = synthesizer();
         IOracle _oracle = oracle();
 
-        _shadows.synths(sourceCurrencyKey).burn(from, sourceAmount);
+        _synthesizer.synths(sourceCurrencyKey).burn(from, sourceAmount);
 
         uint256 destinationAmount =
             _oracle.effectiveValue(
@@ -56,14 +56,14 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         );
 
         // // Issue their new synths
-        _shadows.synths(destinationCurrencyKey).issue(
+        _synthesizer.synths(destinationCurrencyKey).issue(
             destinationAddress,
             amountReceived
         );
 
         // Remit the fee if required
         if (fee > 0) {
-            remitFee(_oracle, _shadows, fee, destinationCurrencyKey);
+            remitFee(_oracle, _synthesizer, fee, destinationCurrencyKey);
         }
 
         emit SynthExchanged(
@@ -78,13 +78,13 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
 
     function remitFee(
         IOracle _oracle,
-        IShadows _shadows,
+        ISynthesizer _synthesizer,
         uint256 fee,
         bytes32 currencyKey
     ) internal {
         // Remit the fee in xUSDs
         uint256 usdFeeAmount = _oracle.effectiveValue(currencyKey, fee, xUSD);
-        _shadows.synths(xUSD).issue(feePool().FEE_ADDRESS(), usdFeeAmount);
+        _synthesizer.synths(xUSD).issue(feePool().FEE_ADDRESS(), usdFeeAmount);
         // Tell the fee pool about this.
         feePool().recordFeePaid(usdFeeAmount);
     }
@@ -121,9 +121,9 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
             );
     }
 
-    function shadows() internal view returns (IShadows) {
+    function synthesizer() internal view returns (ISynthesizer) {
         return
-            IShadows(
+            ISynthesizer(
                 resolver.requireAndGetAddress(
                     "Shadows",
                     "Missing Shadows address"
@@ -141,11 +141,11 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
             );
     }
 
-    modifier onlyShadowsorSynth() {
-        IShadows _shadows = shadows();
+    modifier onlySynthesizerOrSynth() {
+        ISynthesizer _synthesizer = synthesizer();
         require(
-            msg.sender == address(_shadows) ||
-                _shadows.synthsByAddress(msg.sender) != bytes32(0),
+            msg.sender == address(_synthesizer) ||
+                _synthesizer.synthsByAddress(msg.sender) != bytes32(0),
             "Exchanger: Only shadows or a synth contract can perform this action"
         );
         _;
