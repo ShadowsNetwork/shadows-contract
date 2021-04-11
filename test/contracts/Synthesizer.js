@@ -68,7 +68,6 @@ contract("Synthesizer", async (accounts) => {
 
     shadows = await Shadows.new();
     await shadows.initialize({ from: owner });
-    console.log(synthesizer.address);
     await shadows.setSynthesizer(synthesizer.address, { from: owner });
 
     //oracle
