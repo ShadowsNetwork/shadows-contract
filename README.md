@@ -1,6 +1,6 @@
 ## deploy contract
 ```
-npx hardhat run scripts/shadows-token-script.js --network bsctestnet --show-stack-traces --verbose
+npx hardhat run scripts/deploy.js --network bsctestnet --show-stack-traces --verbose
 ```
 
 ##  verify contract

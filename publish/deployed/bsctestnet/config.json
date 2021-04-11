@@ -9,6 +9,11 @@
 		"proxyMode": true,
 		"needUpgrade": false
 	},
+	"Synthesizer": {
+		"deploy": true,
+		"proxyMode": true,
+		"needUpgrade": false
+	},
 	"Exchanger": {
 		"deploy": true
 	},

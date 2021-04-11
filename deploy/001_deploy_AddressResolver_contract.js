@@ -1,9 +1,8 @@
 module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
     const {deploy} = deployments;
     const {deployer, shadowsOwner} = await getNamedAccounts();
-    console.log(deployer)
-    await deploy('Shadows', {
+    await deploy('AddressResolver', {
       from: deployer,
-      proxy: true,
+      log: true,
     });
 };

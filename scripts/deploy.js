@@ -200,6 +200,12 @@ async function main() {
   });
 
   await deployContract({
+    name: "Synthesizer",
+    safeDecimalMathAddress: safeDecimalMathAddress,
+    args: [addressResolverAddress],
+  });
+
+  await deployContract({
     name: "FeePool",
     safeDecimalMathAddress: safeDecimalMathAddress,
     args: [toUnit("0.0030").toString(), addressResolverAddress],
