@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+pragma solidity >=0.6.0 <0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
@@ -154,7 +154,7 @@ contract FeePool is
      */
     function closeCurrentFeePeriod() external {
         require(
-            _recentFeePeriodsStorage(0).startTime <= (now - feePeriodDuration),
+            _recentFeePeriodsStorage(0).startTime <= (block.timestamp - feePeriodDuration),
             "Too early to close fee period"
         );
 
@@ -195,7 +195,7 @@ contract FeePool is
         _recentFeePeriodsStorage(0).startingDebtIndex = uint64(
             synthesizer().debtLedgerLength()
         );
-        _recentFeePeriodsStorage(0).startTime = uint64(now);
+        _recentFeePeriodsStorage(0).startTime = uint64(block.timestamp);
 
         emit FeePeriodClosed(_recentFeePeriodsStorage(1).feePeriodId);
     }

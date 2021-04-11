@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+pragma solidity >=0.6.0 <0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -44,7 +44,7 @@ contract Shadows is
     function _mint(address account, uint256 amount) internal override {
         uint256 totalSupply = super.totalSupply();
         require(
-            maxTotalSupply >= totalSupply.add(amount),
+            maxTotalSupply >= totalSupply + amount,
             "Max total supply over"
         );
 

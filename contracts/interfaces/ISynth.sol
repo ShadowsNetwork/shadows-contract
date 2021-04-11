@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MI
-pragma solidity 0.6.11;
+pragma solidity >=0.6.0 <0.8.0;
 
 
 abstract contract ISynth {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+pragma solidity >=0.6.0 <0.8.0;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -47,9 +47,9 @@ contract Oracle is Initializable, OwnableUpgradeable {
         oracle = _oracle;
 
         // The xUSD rate is always 1 and is never stale.
-        _setRate("xUSD", SafeDecimalMath.unit(), now);
+        _setRate("xUSD", SafeDecimalMath.unit(), block.timestamp);
 
-        internalUpdateRates(_currencyKeys, _newRates, now);
+        internalUpdateRates(_currencyKeys, _newRates, block.timestamp);
 
         rateStalePeriod = 3 hours;
     }
@@ -196,7 +196,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
             RateAndUpdatedTime memory rateAndUpdateTime = getRateAndUpdatedTime(currencyKeys[i]);
             _localRates[i] = uint256(rateAndUpdateTime.rate);
             if (!anyRateStale) {
-                anyRateStale = (currencyKeys[i] != "xUSD" && uint256(rateAndUpdateTime.time).add(period) < now);
+                anyRateStale = (currencyKeys[i] != "xUSD" && uint256(rateAndUpdateTime.time).add(period) < block.timestamp);
             }
         }
 
@@ -207,7 +207,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
         // xUSD is a special case and is never stale.
         if (currencyKey == "xUSD") return false;
 
-        return lastRateUpdateTimes(currencyKey).add(rateStalePeriod) < now;
+        return lastRateUpdateTimes(currencyKey).add(rateStalePeriod) < block.timestamp;
     }
 
     function anyRateIsStale(bytes32[] calldata currencyKeys) external view returns (bool) {
@@ -216,7 +216,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
 
         while (i < currencyKeys.length) {
             // xUSD is a special case and is never false
-            if (currencyKeys[i] != "xUSD" && lastRateUpdateTimes(currencyKeys[i]).add(rateStalePeriod) < now) {
+            if (currencyKeys[i] != "xUSD" && lastRateUpdateTimes(currencyKeys[i]).add(rateStalePeriod) < block.timestamp) {
                 return true;
             }
             i += 1;
@@ -237,7 +237,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
 
     function internalUpdateRates(bytes32[] calldata currencyKeys, uint[] calldata newRates, uint timeSent) internal returns (bool) {
         require(currencyKeys.length == newRates.length, "Currency key array length must match rates array length.");
-        require(timeSent < (now + ORACLE_FUTURE_LIMIT), "Time is too far into the future");
+        require(timeSent < (block.timestamp + ORACLE_FUTURE_LIMIT), "Time is too far into the future");
 
         // Loop through each key and perform update.
         for (uint i = 0; i < currencyKeys.length; i++) {

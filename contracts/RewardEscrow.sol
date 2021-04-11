@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+pragma solidity >=0.6.0 <0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
@@ -197,7 +197,7 @@ contract RewardEscrow is
         );
 
         /* Escrow the tokens for 1 year. */
-        uint256 time = now + 52 weeks;
+        uint256 time = block.timestamp + 52 weeks;
 
         if (scheduleLength == 0) {
             totalEscrowedAccountBalance[account] = quantity;
@@ -216,7 +216,7 @@ contract RewardEscrow is
 
         vestingSchedules[account].push([time, quantity]);
 
-        emit VestingEntryCreated(account, now, quantity);
+        emit VestingEntryCreated(account, block.timestamp, quantity);
     }
 
     /**
@@ -228,7 +228,7 @@ contract RewardEscrow is
         for (uint256 i = 0; i < numEntries; i++) {
             uint256 time = getVestingTime(msg.sender, i);
             /* The list is sorted; when we reach the first future time, bail out. */
-            if (time > now) {
+            if (time > block.timestamp) {
                 break;
             }
             uint256 qty = getVestingQuantity(msg.sender, i);
@@ -250,7 +250,7 @@ contract RewardEscrow is
             ]
                 .add(total);
             shadows().transfer(msg.sender, total);
-            emit Vested(msg.sender, now, total);
+            emit Vested(msg.sender, block.timestamp, total);
         }
     }
 
