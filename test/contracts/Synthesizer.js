@@ -17,7 +17,7 @@ const {
   divideDecimal,
   multiplyDecimal,
   onlyGivenAddressCanInvoke,
-} = require("../testUtils");
+} = require("../../utils");
 
 contract("Synthesizer", async (accounts) => {
   let shadows,

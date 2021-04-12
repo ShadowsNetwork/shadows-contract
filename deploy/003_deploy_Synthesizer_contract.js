@@ -1,5 +1,5 @@
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
-  const { deploy, get } = deployments;
+  const { deploy, get, execute } = deployments;
   const { deployer, shadowsOwner } = await getNamedAccounts();
 
   const safeDecimalMath = await get("SafeDecimalMath");
@@ -8,8 +8,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   await deploy("Synthesizer", {
     from: deployer,
     proxy: {
-      methodName: 'initialize',
-      proxyContract: 'OptimizedTransparentProxy',
+      methodName: "initialize",
+      proxyContract: "OptimizedTransparentProxy",
     },
     args: [addressResolver.address],
     log: true,
