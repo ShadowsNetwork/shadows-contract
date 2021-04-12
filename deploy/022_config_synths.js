@@ -8,20 +8,12 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const addressResolver = await get("AddressResolver");
 
   for (const synth of synths) {
-    await deploy(synth.symbol, {
-      contract: "Synth",
-      from: deployer,
-      proxy: {
-        methodName: "initialize",
-        proxyContract: "OptimizedTransparentProxy",
-      },
-      args: [
-        synth.name,
-        synth.symbol,
-        toBytes32(synth.symbol),
-        addressResolver.address,
-      ],
-      log: true,
-    });
+    const instance =  await get(synth.symbol);
+    await execute(
+      "Synthesizer",
+      { from: deployer },
+      "addSynth",
+      instance.address
+    );
   }
 };
