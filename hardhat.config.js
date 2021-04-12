@@ -1,9 +1,10 @@
 require('dotenv').config();
-require('hardhat-deploy');
+require('shadows-hardhat-deploy');
 require('@openzeppelin/hardhat-upgrades');
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-truffle5");
 require("@nomiclabs/hardhat-web3");
+const we3utils = require('web3-utils');
 
 const mnemonic = process.env.MNEMONIC;
 const infuraKey = process.env.INFURAKEY;
@@ -60,7 +61,7 @@ module.exports = {
       url: process.env.BSC_TESTNET_PROVIDER_URL,
       accounts: {mnemonic: mnemonic},
       loggingEnabled: true,
-      gas: 'auto'
+      gasPrice: parseInt(we3utils.toWei("20", "gwei")),
     }
   },
   namedAccounts: {
