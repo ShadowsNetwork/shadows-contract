@@ -1,6 +1,3 @@
-const { toWei, toBN } = require("web3-utils")
-const toUnit = (amount) => toBN(toWei(amount.toString(), "ether"));
-
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deploy, get } = deployments;
   const { deployer, shadowsOwner } = await getNamedAccounts();
@@ -8,14 +5,15 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const safeDecimalMath = await get("SafeDecimalMath");
   const addressResolver = await get("AddressResolver");
 
-  await deploy("FeePool", {
+  await deploy("Exchanger", {
     from: deployer,
     proxy: {
       methodName: 'initialize',
       proxyContract: 'OptimizedTransparentProxy',
     },
-    args: [toUnit("0.0030").toString(), addressResolver.address],
+    args: [addressResolver.address],
     log: true,
     libraries: { SafeDecimalMath: safeDecimalMath.address },
   });
 };
+module.exports.tags = ['Exchanger']

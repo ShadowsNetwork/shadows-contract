@@ -17,3 +17,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     );
   }
 };
+module.exports.tags = ['InitSynth','Config'];

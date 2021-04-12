@@ -25,3 +25,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     });
   }
 };
+module.exports.tags = ['Shadows','Token']

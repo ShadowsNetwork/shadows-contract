@@ -32,11 +32,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
       synthesizer.address,
     ]
   );
-
-  await execute(
-    "Shadows",
-    { from: deployer },
-    "setSynthesizer",
-    synthesizer.address
-  );
 };
+module.exports.tags = ['InitAddressResolver','Config'];
+module.exports.dependencies = ['AddressResolver','Shadows','Oracle','FeePool','Exchanger','RewardEscrow','Synthesizer'];
