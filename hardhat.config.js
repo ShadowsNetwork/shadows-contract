@@ -52,6 +52,11 @@ module.exports = {
     }
   },
   networks: {
+    ropsten: {
+      url: `https://ropsten.infura.io/v3/${infuraKey}`,
+      accounts: {mnemonic: mnemonic},
+      loggingEnabled: true
+    },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${infuraKey}`,
       accounts: {mnemonic: mnemonic},

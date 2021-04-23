@@ -20,7 +20,7 @@ contract Shadows is
         __Ownable_init();
         __ERC20_init("Shadows", "DOWS");
         __ERC20Pausable_init();
-        _mint(_msgSender(), 100000000 ether);
+        _mint(_msgSender(), 37000000 ether);
     }
 
     function _beforeTokenTransfer(

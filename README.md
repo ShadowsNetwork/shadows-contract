@@ -1,9 +1,16 @@
 ## deploy contract
 ```
-npx hardhat run scripts/deploy.js --network bsctestnet --show-stack-traces --verbose
+yarn hardhat deploy --network ropsten  --tags Shadows
 ```
 
 ##  verify contract
 ```
-npx hardhat verify --network rinkeby 0xf888798ef5B0C3658242E53B00c7a9999205ccd4 
+yarn hardhat --network ropsten  etherscan-verify
+//or
+yarn hardhat --network bsctestnet etherscan-verify --api-key apikey
+```
+
+## export
+```
+yarn hardhat export  --network ropsten --export  ./deployments/ropsten.json
 ```
