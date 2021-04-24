@@ -67,14 +67,20 @@ module.exports = {
       accounts: {mnemonic: mnemonic},
       loggingEnabled: true,
       gasPrice: parseInt(we3utils.toWei("20", "gwei")),
+    },
+    bsc: {
+      url: process.env.BSC_MAINNET_PROVIDER_URL,
+      accounts: {mnemonic: mnemonic},
+      loggingEnabled: true,
+      gasPrice: parseInt(we3utils.toWei("5", "gwei")),
+      chainId: 56
     }
   },
   namedAccounts: {
     deployer: {
         default: 0, // here this will by default take the first account as deployer
-        shadowsOwner: 1
     },
-    feeCollector:{
+    owner:{
         default: 1, // here this will by default take the second account as feeCollector (so in the test this will be a different account than the deployer)
     }
   }

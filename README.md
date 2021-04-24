@@ -14,3 +14,9 @@ yarn hardhat --network bsctestnet etherscan-verify --api-key apikey
 ```
 yarn hardhat export  --network ropsten --export  ./deployments/ropsten.json
 ```
+
+## run task
+```
+yarn hardhat --network <networkName> run <script>
+//yarn hardhat --network bsctestnet run scripts/mint.js
+```
