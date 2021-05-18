@@ -50,7 +50,7 @@ contract("Synthesizer", async (accounts) => {
 
   const getRemainingIssuableSynths = async (account) =>
     (await synthesizer.remainingIssuableSynths(account))[0];
-
+  
   before(async () => {
     safeDecimalMath = await SafeDecimalMath.new();
     await Synthesizer.link(safeDecimalMath);
@@ -1756,10 +1756,10 @@ contract("Synthesizer", async (accounts) => {
 
   it("should allow users to burn their debt and adjust the debtBalanceOf correctly for remaining users", async () => {
     // Give some DOWS to account1
-    await shadows.transfer(account1, toUnit("40000000"), {
+    await shadows.transfer(account1, toUnit("4000000"), {
       from: owner,
     });
-    await shadows.transfer(account2, toUnit("40000000"), {
+    await shadows.transfer(account2, toUnit("4000000"), {
       from: owner,
     });
 
