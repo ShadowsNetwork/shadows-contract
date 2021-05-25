@@ -1,3 +1,4 @@
+const { toBN } = require('web3-utils');
 const { toBytes32, bytesToString, fromUnit, toUnit } = require("../utils");
 const { synths } = require("../config/synths")
 
@@ -37,13 +38,13 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   // }
 
   // set Issuance Ratio
-  console.log(await read('Synthesizer', 'issuanceRatio'));
-  // await execute(
-  //   'Synthesizer',
-  //   { from: deployer },
-  //   'setIssuanceRatio',
-  //   toUnit('0.03')
-  // );
+  const unit = await read('SafeDecimalMath', 'unit');
+  await execute(
+    'Synthesizer',
+    { from: deployer },
+    'setIssuanceRatio',
+    toBN(10 ** 18 / 5).toString()
+  );
   // console.log((await read('Synthesizer', 'issuanceRatio')).toString());
 };
 module.exports.tags = ['InitSynth', 'Config'];
