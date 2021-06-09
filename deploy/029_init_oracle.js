@@ -11,6 +11,23 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const nowTime = await currentTime();
   const testAccount = account1;
 
+  // update DOWS rates  
+  await execute(
+    'Oracle',
+    { from: deployer },
+    'updateRates',
+    ['xAUD', 'xEUR', 'DOWS'].map(item => toBytes32(item)),
+    [0.5, 1.25, 0.1].map(item => (10 ** 18 * item).toString()),
+    nowTime
+  );
+
+  await execute(
+    'Oracle',
+    { from: deployer },
+    'setRateStalePeriod',
+    86400 * 30
+  );
+
   const oracleConfig = [
     {
       name: 'USDT',
@@ -25,6 +42,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
       address: '0x143db3CEEfbdfe5631aDD3E50f7614B6ba708BA7'
     }
   ];
+
 
 
   const ratesForCurrencies = await read('Oracle', {}, 'ratesForCurrencies', ['USDT', 'BTC', 'ETH', 'xAUD', 'xEUR', 'DOWS'].map(item => toBytes32(item)))

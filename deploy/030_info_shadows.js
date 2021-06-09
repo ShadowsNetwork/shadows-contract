@@ -13,20 +13,21 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const nowTime = await currentTime();
   const testAccount = account1;
 
+  console.log('deployer:', deployer);
   // update DOWS rates  
   await execute(
     'Oracle',
     { from: deployer },
     'updateRates',
-    ['xAUD', 'xEUR', 'DOWS'].map(item => toBytes32(item)),
-    [0.5, 1.25, 0.1].map(item => (10 ** 18 * item).toString()),
+    ['xAUD', 'xEUR', 'DOWS', 'xETH', 'xBTC'].map(item => toBytes32(item)),
+    [0.5, 1.25, 0.1, 2000, 30000].map(item => (toUnit(item)).toString()),
     nowTime
   );
 
 
   console.log(lines);
-  const rates = [0.5, 1.25, 0.1];
-  ['xAUD', 'xEUR', 'DOWS'].map((item, index) => console.log(`${item} Rate: ${rates[index]}`));
+  const rates = [0.5, 1.25, 0.1, 2000, 30000];
+  ['xAUD', 'xEUR', 'DOWS', 'xETH', 'xBTC'].map((item, index) => console.log(`${item} Rate: ${rates[index]}`));
 
 
   console.log(lines);

@@ -11,6 +11,14 @@ const synths = [
     name: "Shadows xEUR",
     symbol: "xEUR",
   },
+  {
+    name: "Shadows xETH",
+    symbol: "xETH",
+  },
+  {
+    name: "Shadows xBTC",
+    symbol: "xBTC",
+  },
 ];
 
 module.exports = { synths };

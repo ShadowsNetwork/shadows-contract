@@ -23,15 +23,15 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   // transfer Dows to some account
   for (const account of accounts) {
     const balance = await read('Shadows', {}, 'balanceOf', account);
-    if (Number(balance.toString()) <= 0) {
+    // if (Number(balance.toString()) <= 0) {
       await execute(
         'Shadows',
         { from: deployer },
         'transfer',
         account,
-        toUnit('6000').toString()
+        toUnit('1000000').toString()
       );
-    }
+    // }
   }
 
   // account3 replace account2 send 100 to account1
