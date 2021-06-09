@@ -16,6 +16,8 @@ abstract contract IFeePool {
 
     function recordFeePaid(uint xUSDAmount) virtual external;
 
+    function recordRewardPaid(uint xUSDAmount) virtual external;
+
     function appendAccountIssuanceRecord(address account, uint lockedAmount, uint debtEntryIndex) virtual external;
 
     function setRewardsToDistribute(uint amount) virtual external;

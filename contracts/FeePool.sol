@@ -26,6 +26,8 @@ contract FeePool is
 
     uint8 public constant FEE_PERIOD_LENGTH = 3;
 
+    uint256 public BONUS_REWARDS = 1;
+
     mapping(address => uint256) lastFeeWithdrawalStorage;
 
     // The IssuanceData activity that's happened in a fee period.
@@ -73,6 +75,10 @@ contract FeePool is
         exchangeFeeRate = _exchangeFeeRate;
     }
 
+    function setRewardsMultiplier(uint256 multiplierNumber) public onlyOwner {
+        BONUS_REWARDS = multiplierNumber;
+    }
+
     function setExchangeFeeRate(uint256 _exchangeFeeRate) external onlyOwner {
         require(
             _exchangeFeeRate < SafeDecimalMath.unit() / 10,
@@ -111,17 +117,13 @@ contract FeePool is
             .add(amount);
     }
 
-    function setRewardsToDistribute(uint256 amount) external {
-        address rewardsAuthority = resolver.getAddress("RewardsDistribution");
-        require(
-            _msgSender() == rewardsAuthority || msg.sender == rewardsAuthority,
-            "Caller is not rewardsAuthority"
-        );
-        // Add the amount of DOWS rewards to distribute on top of any rolling unclaimed amount
-        _recentFeePeriodsStorage(0)
-            .rewardsToDistribute = _recentFeePeriodsStorage(0)
+    function recordRewardPaid(uint256 amount) external onlyExchangerOrSynth {
+        // Keep track off fees in xUSD in the open fee pool period.
+        _recentFeePeriodsStorage(0).rewardsToDistribute = _recentFeePeriodsStorage(
+            0
+        )
             .rewardsToDistribute
-            .add(amount);
+            .add(amount.mul(BONUS_REWARDS));
     }
 
     function recentFeePeriods(uint256 index)

@@ -65,6 +65,7 @@ contract("Synthesizer", async (accounts) => {
 
     synthesizer = await Synthesizer.new();
     await synthesizer.initialize(addressResolver.address, { from: owner });
+    await synthesizer.setIssuanceRatio('200000000000000000', { from: owner });
 
     shadows = await Shadows.new();
     await shadows.initialize({ from: owner });
@@ -1764,8 +1765,8 @@ contract("Synthesizer", async (accounts) => {
     });
 
     // Issue
-    const issuedSynths1 = toUnit("150000");
-    const issuedSynths2 = toUnit("50000");
+    const issuedSynths1 = toUnit("15000");
+    const issuedSynths2 = toUnit("5000");
 
     await synthesizer.issueSynths(issuedSynths1, { from: account1 });
     await synthesizer.issueSynths(issuedSynths2, { from: account2 });
@@ -1774,17 +1775,17 @@ contract("Synthesizer", async (accounts) => {
     let debtBalance2After = await synthesizer.debtBalanceOf(account2, xUSD);
 
     // debtBalanceOf has rounding error but is within tolerance
-    assert.bnClose(debtBalance1After, toUnit("150000"));
-    assert.bnClose(debtBalance2After, toUnit("50000"));
+    assert.bnClose(debtBalance1After, toUnit("15000"));
+    assert.bnClose(debtBalance2After, toUnit("5000"));
 
     // Account 1 burns 100,000
-    await synthesizer.burnSynths(toUnit("100000"), { from: account1 });
+    await synthesizer.burnSynths(toUnit("10000"), { from: account1 });
 
     debtBalance1After = await synthesizer.debtBalanceOf(account1, xUSD);
     debtBalance2After = await synthesizer.debtBalanceOf(account2, xUSD);
 
-    assert.bnClose(debtBalance1After, toUnit("50000"));
-    assert.bnClose(debtBalance2After, toUnit("50000"));
+    assert.bnClose(debtBalance1After, toUnit("5000"));
+    assert.bnClose(debtBalance2After, toUnit("5000"));
   });
 
   it("should revert if sender tries to issue synths with 0 amount", async () => {

@@ -21,7 +21,7 @@ contract Synthesizer is
     using SafeDecimalMath for uint;
 
     bytes32 constant xUSD = "xUSD";
-    uint256 public issuanceRatio = SafeDecimalMath.unit() / 5;
+    uint256 public issuanceRatio;
 
     ISynth[] public availableSynths;
     mapping(bytes32 => ISynth) public synths;
@@ -42,6 +42,7 @@ contract Synthesizer is
     function initialize(address _resolver) external initializer {
         __Ownable_init();
         __AddressResolver_init(_resolver);
+        issuanceRatio = SafeDecimalMath.unit() / 5;
     }
 
     function debtLedgerLength() public view returns (uint256) {

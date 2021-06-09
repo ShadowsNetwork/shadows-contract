@@ -17,6 +17,8 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
 
     bytes32 private constant xUSD = "xUSD";
 
+    bytes32 private constant DOWS = "DOWS";
+
     function initialize(address _resolver) external initializer {
         __Ownable_init();
         __AddressResolver_init(_resolver);
@@ -87,6 +89,10 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         _synthesizer.synths(xUSD).issue(feePool().FEE_ADDRESS(), usdFeeAmount);
         // Tell the fee pool about this.
         feePool().recordFeePaid(usdFeeAmount);
+
+        // Remit the rewards in DOWS
+        uint256 rewardAmount = _oracle.effectiveValue(currencyKey, fee, DOWS);
+        feePool().recordRewardPaid(rewardAmount);
     }
 
     function calculateExchangeAmountMinusFees(uint256 destinationAmount)
