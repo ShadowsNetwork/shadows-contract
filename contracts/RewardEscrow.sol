@@ -18,6 +18,7 @@ contract RewardEscrow is
     AddressResolverUpgradeable
 {
     using SafeMath for uint256;
+    using SafeDecimalMath for uint256;
 
     /* Lists of (timestamp, quantity) pairs per account, sorted in ascending time order.
      * These are the times at which each given quantity of DOWS vests. */
@@ -46,6 +47,10 @@ contract RewardEscrow is
 
     function balanceOf(address account) public view returns (uint256) {
         return totalEscrowedAccountBalance[account];
+    }
+
+    function vestBalanceOf(address account) public view returns (uint256) {
+        return totalVestedAccountBalance[account];
     }
 
     /**

@@ -608,7 +608,7 @@
       ]
     },
     "Exchanger_Implementation": {
-      "address": "0xb6c7BC74B55e6f7C4F7eB558aD1F5c73fA571f8a",
+      "address": "0xd7cF5856FC519F562531dBAA639d6274d9210325",
       "abi": [
         {
           "anonymous": false,
@@ -1099,6 +1099,19 @@
         },
         {
           "inputs": [],
+          "name": "BONUS_REWARDS",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
           "name": "FEE_ADDRESS",
           "outputs": [
             {
@@ -1435,6 +1448,19 @@
           "type": "function"
         },
         {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "recordRewardPaid",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
           "inputs": [],
           "name": "renounceOwnership",
           "outputs": [],
@@ -1497,11 +1523,11 @@
           "inputs": [
             {
               "internalType": "uint256",
-              "name": "amount",
+              "name": "multiplierNumber",
               "type": "uint256"
             }
           ],
-          "name": "setRewardsToDistribute",
+          "name": "setRewardsMultiplier",
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
@@ -1569,7 +1595,7 @@
       ]
     },
     "FeePool_Implementation": {
-      "address": "0xC3C10246F27d96E4D7d999dB9ae2F8dF9F4DFa51",
+      "address": "0x09D3E8529775E33e3AbcB4cdB63D2aab59ea6AEc",
       "abi": [
         {
           "anonymous": false,
@@ -1674,6 +1700,19 @@
         },
         {
           "inputs": [],
+          "name": "BONUS_REWARDS",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
           "name": "FEE_ADDRESS",
           "outputs": [
             {
@@ -2010,6 +2049,19 @@
           "type": "function"
         },
         {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "recordRewardPaid",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
           "inputs": [],
           "name": "renounceOwnership",
           "outputs": [],
@@ -2072,11 +2124,11 @@
           "inputs": [
             {
               "internalType": "uint256",
-              "name": "amount",
+              "name": "multiplierNumber",
               "type": "uint256"
             }
           ],
-          "name": "setRewardsToDistribute",
+          "name": "setRewardsMultiplier",
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
@@ -4203,6 +4255,25 @@
           "inputs": [
             {
               "internalType": "address",
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "name": "vestBalanceOf",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
               "name": "",
               "type": "address"
             },
@@ -4252,7 +4323,7 @@
       ]
     },
     "RewardEscrow_Implementation": {
-      "address": "0x0D78f4AF07340BF56A1d7f4efdE0E5a3Ed5b9301",
+      "address": "0x097D125D5dd3735bDE59FBE8f85b22a39c7E9af3",
       "abi": [
         {
           "anonymous": false,
@@ -4687,6 +4758,25 @@
           "name": "vest",
           "outputs": [],
           "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "name": "vestBalanceOf",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
           "type": "function"
         },
         {
@@ -5437,7 +5527,7 @@
       ]
     },
     "Shadows_Implementation": {
-      "address": "0x4582604920BC2e39C1F88A4870f07257CB31a01f",
+      "address": "0x4FeD8aB621d8bC9F4606C753a7A0c285d6f702bE",
       "abi": [
         {
           "anonymous": false,
@@ -6638,7 +6728,7 @@
       ]
     },
     "Synthesizer_Implementation": {
-      "address": "0xB7113EB089117Fe6145714288C2d604Be97Ea159",
+      "address": "0x7B3a8AA74430907982b7c428d81b0d5FA820ff2c",
       "abi": [
         {
           "anonymous": false,
@@ -7909,7 +7999,7 @@
       ]
     },
     "xAUD_Implementation": {
-      "address": "0xf5d3d6097969B353C61e88cc7580157bb5B9C5A0",
+      "address": "0xE7789FE7E453AD580669017910b376DDF93f22f3",
       "abi": [
         {
           "anonymous": false,
@@ -9112,7 +9202,7 @@
       ]
     },
     "xBTC_Implementation": {
-      "address": "0xb5cf5c9DBf279adA166c3a47ae7FA281aaB8e9e6",
+      "address": "0xb633da09908E4577d2fC893bb9Dd694e65AB4ebc",
       "abi": [
         {
           "anonymous": false,
@@ -10315,7 +10405,7 @@
       ]
     },
     "xETH_Implementation": {
-      "address": "0x2364C616C4bbAC6c6F3A63eBF74eF7253DA407Ac",
+      "address": "0x5225EfE51a1C8Bf85402F5C21A76eC62F9AC130e",
       "abi": [
         {
           "anonymous": false,
@@ -11518,7 +11608,7 @@
       ]
     },
     "xEUR_Implementation": {
-      "address": "0xc81756C247Fd062b3155a45884531E1596458c82",
+      "address": "0x5595c04ec665d1DE77F86760D9CE952C4d9FFccD",
       "abi": [
         {
           "anonymous": false,
@@ -12721,7 +12811,7 @@
       ]
     },
     "xUSD_Implementation": {
-      "address": "0x13371D5aa51881Fef4A5B0CB3Ea474fa69B6242C",
+      "address": "0x6Aaaa87b304D24Cf531C83178458aF75C8921090",
       "abi": [
         {
           "anonymous": false,

@@ -28,7 +28,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
       'Synthesizer',
       { from: account2 },
       'issueSynths',
-      toUnit('6').toString()
+      toUnit('10000').toString()
     );
   }
 

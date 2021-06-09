@@ -29,15 +29,16 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   // account1 buy xAUD to xUSD
   const value = await read('xAUD', {}, 'balanceOf', account1);
   // if (Number(value.toString()) <= 0) {
+    console.log(accounts);
   console.log(account1, toBytes32('xUSD'),
     toUnit(2).toString(),
     toBytes32('xAUD'));
   await execute(
     'Synthesizer',
-    { from: account1 },
+    { from: account2 },
     'exchange',
     toBytes32('xUSD'),
-    toUnit(10).toString(),
+    toUnit(2).toString(),
     toBytes32('xAUD')
   );
 
