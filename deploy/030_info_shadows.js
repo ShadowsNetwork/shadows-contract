@@ -1,6 +1,5 @@
 const { toBytes32, bytesToString, fromUnit, toUnit, currentTime } = require("../utils");
 const { synths } = require("../config/synths");
-const { red } = require("bn.js");
 
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const lines = '-----------------------------';
