@@ -16,8 +16,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     'Oracle',
     { from: deployer },
     'updateRates',
-    ['xAUD', 'xEUR', 'DOWS', 'xETH', 'xBTC'].map(item => toBytes32(item)),
-    [0.5, 1.25, 0.1, 2000, 30000].map(item => (toUnit(item)).toString()),
+    ['xAUD', 'xEUR', 'xETH', 'xBTC'].map(item => toBytes32(item)),
+    [0.5, 1.25, 2000, 30000].map(item => (toUnit(item)).toString()),
     nowTime
   );
 
@@ -25,7 +25,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     'Oracle',
     { from: deployer },
     'setRateStalePeriod',
-    3600
+    3600 * 3
   );
 
   const oracleConfig = [

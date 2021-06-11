@@ -1,12 +1,13 @@
 const { toBytes32, bytesToString, fromUnit, toUnit } = require("../utils");
-const { synths } = require("../config/synths")
+const { synths } = require("../config/synths");
+const { red } = require("bn.js");
 
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deploy, get, execute, read } = deployments;
 
   const { deployer, ...args } = await getNamedAccounts();
-  const [account1, account2, account3] = await getUnnamedAccounts();
-  const accounts = [account1, account2, account3];
+  const [account1, account2, account3, account4] = await getUnnamedAccounts();
+  const accounts = [account1, account2, account3, account4];
 
   // await execute(
   //   'FeePool',
@@ -32,6 +33,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   // console.log('targetThreshold:', fromUnit((await read('FeePool', {}, 'targetThreshold')).toString()));
   // console.log('exchangeFeeRate:', fromUnit((await read('FeePool', {}, 'exchangeFeeRate')).toString()));
   // console.log('feePeriodDuration:', fromUnit((await read('FeePool', {}, 'feePeriodDuration')).toString()));
+  console.log((await read('FeePool', {}, 'feePeriodDuration')).toString());
 
   const FEE_PERIOD_LENGTH = await read('FeePool', {}, 'FEE_PERIOD_LENGTH');
   const recentFeePeriods = [];
@@ -52,6 +54,18 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     }, {}));
   }
   console.log(recentFeePeriods);
+
+  for (const account of [deployer,account1, account2, account3, account4]) {
+    let result = await read('FeePool', {}, 'feesAvailable', account);
+    result.map(item => {
+      console.log(item.toString());
+    });
+
+    result = await read('FeePool', {},'feesByPeriod',account);
+    result.map(item => {
+      console.log(item.toString());
+    });
+  }
 
 };
 

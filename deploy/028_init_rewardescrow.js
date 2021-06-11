@@ -6,13 +6,17 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   const { deployer, ...args } = await getNamedAccounts();
   const [account1, account2, account3] = await getUnnamedAccounts();
-  const accounts = [account1, account2, account3];
+  const accounts = [account1, account2, account3, deployer];
 
 
   for (const index in accounts) {
     console.log(`account${index} balanceOf:`, (await read('RewardEscrow', {}, 'balanceOf', accounts[index])).toString());
+    console.log(`account${index} vestBalanceOf:`, (await read('RewardEscrow', {}, 'vestBalanceOf', accounts[index])).toString());
     console.log(`account${index} numVestingEntries:`, (await read('RewardEscrow', {}, 'numVestingEntries', accounts[index])).toString());
   }
+
+
+  console.log((await read('RewardEscrow', {},'totalEscrowedBalance')).toString());
 
 };
 

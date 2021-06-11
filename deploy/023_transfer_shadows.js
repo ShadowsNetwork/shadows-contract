@@ -9,6 +9,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const [account1, account2, account3, account4] = await getUnnamedAccounts();
   const accounts = [account1, account2, account3, account4];
   const nowTime = await currentTime();
+
   console.log(accounts);
   // update DOWS rates
   await execute(
