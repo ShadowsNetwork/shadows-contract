@@ -21,12 +21,12 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     nowTime
   );
 
-  await execute(
-    'Oracle',
-    { from: deployer },
-    'setRateStalePeriod',
-    3600 * 3
-  );
+  // await execute(
+  //   'Oracle',
+  //   { from: deployer },
+  //   'setRateStalePeriod',
+  //   3600 * 3
+  // );
 
   const oracleConfig = [
     {
