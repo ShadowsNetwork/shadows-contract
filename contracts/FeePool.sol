@@ -108,6 +108,12 @@ contract FeePool is
         targetThreshold = _percent.mul(SafeDecimalMath.unit()).div(100);
     }
 
+    function initFeePaid() public onlyOwner {
+        for (uint256 i = 0; i < FEE_PERIOD_LENGTH; i++) {
+            delete _recentFeePeriods[i];
+        }
+    }
+
     function recordFeePaid(uint256 amount) external onlyExchangerOrSynth {
         // Keep track off fees in xUSD in the open fee pool period.
         _recentFeePeriodsStorage(0).feesToDistribute = _recentFeePeriodsStorage(
