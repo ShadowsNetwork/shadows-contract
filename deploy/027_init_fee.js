@@ -8,11 +8,11 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const [account1, account2, account3] = await getUnnamedAccounts();
   const accounts = [account1, account2, account3];
 
-  await execute(
-    'FeePool',
-    { from: deployer },
-    'closeCurrentFeePeriod'
-  );
+  // await execute(
+  //   'FeePool',
+  //   { from: deployer },
+  //   'closeCurrentFeePeriod'
+  // );
 
   // for (const account of accounts) {
   //   await execute('FeePool', { from: account }, 'claimFees');

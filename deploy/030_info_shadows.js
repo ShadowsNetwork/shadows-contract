@@ -13,6 +13,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const testAccount = account1;
 
   console.log('deployer:', deployer);
+  console.log('now:', nowTime);
   // update DOWS rates  
   await execute(
     'Oracle',

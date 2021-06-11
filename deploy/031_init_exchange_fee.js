@@ -21,6 +21,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   FEE = await read('FeePool', {}, 'exchangeFeeRate');
   console.log(FEE.toString());
 
+
+  let reta = await read('Oracle', {}, 'rateForCurrency', toBytes32('DOWS'));
+  console.log('DOWS reta:', reta.toString());
 };
 
 module.exports.tags = ['ExchangeFee', 'Config'];

@@ -25,7 +25,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     'Oracle',
     { from: deployer },
     'setRateStalePeriod',
-    86400
+    3600
   );
 
   const oracleConfig = [

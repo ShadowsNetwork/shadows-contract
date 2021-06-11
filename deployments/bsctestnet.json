@@ -608,7 +608,7 @@
       ]
     },
     "Exchanger_Implementation": {
-      "address": "0xd7cF5856FC519F562531dBAA639d6274d9210325",
+      "address": "0xfa6590cffE27386F69694abbE5C2074ea8382551",
       "abi": [
         {
           "anonymous": false,
@@ -1595,7 +1595,7 @@
       ]
     },
     "FeePool_Implementation": {
-      "address": "0x09D3E8529775E33e3AbcB4cdB63D2aab59ea6AEc",
+      "address": "0x70Ba112ed3E6bba8cb3FD29D0A829e620433ac6d",
       "abi": [
         {
           "anonymous": false,
@@ -4323,7 +4323,7 @@
       ]
     },
     "RewardEscrow_Implementation": {
-      "address": "0x097D125D5dd3735bDE59FBE8f85b22a39c7E9af3",
+      "address": "0x0ac44a714ca99178d6deff580c55f04bff22572e",
       "abi": [
         {
           "anonymous": false,
@@ -6728,7 +6728,7 @@
       ]
     },
     "Synthesizer_Implementation": {
-      "address": "0x7B3a8AA74430907982b7c428d81b0d5FA820ff2c",
+      "address": "0x585edF41A1d2AD8c38aE9A42cF41Ed1754f0E6E2",
       "abi": [
         {
           "anonymous": false,
