@@ -26,7 +26,7 @@ contract FeePool is
 
     uint8 public constant FEE_PERIOD_LENGTH = 3;
 
-    uint256 public BONUS_REWARDS = 1;
+    uint256 public BONUS_REWARDS;
 
     mapping(address => uint256) lastFeeWithdrawalStorage;
 
@@ -57,10 +57,6 @@ contract FeePool is
 
     uint256 public feePeriodDuration;
 
-    // The fee period must be between 1 day and 60 days.
-    uint256 public constant MIN_FEE_PERIOD_DURATION = 1 days;
-    uint256 public constant MAX_FEE_PERIOD_DURATION = 60 days;
-
     // Users are unable to claim fees if their collateralisation ratio drifts out of target treshold
     uint256 public targetThreshold;
 
@@ -71,8 +67,8 @@ contract FeePool is
         __Ownable_init();
         __AddressResolver_init(_resolver);
         feePeriodDuration = 1 weeks;
-        feePeriodDuration = (1 * SafeDecimalMath.unit()) / 100;
         exchangeFeeRate = _exchangeFeeRate;
+        BONUS_REWARDS = 1;
     }
 
     function setRewardsMultiplier(uint256 multiplierNumber) public onlyOwner {
@@ -88,17 +84,7 @@ contract FeePool is
     }
 
     function setFeePeriodDuration(uint256 _feePeriodDuration) public onlyOwner {
-        require(
-            _feePeriodDuration >= MIN_FEE_PERIOD_DURATION,
-            "value < MIN_FEE_PERIOD_DURATION"
-        );
-        require(
-            _feePeriodDuration <= MAX_FEE_PERIOD_DURATION,
-            "value > MAX_FEE_PERIOD_DURATION"
-        );
-
         feePeriodDuration = _feePeriodDuration;
-
         emit FeePeriodDurationUpdated(_feePeriodDuration);
     }
 
