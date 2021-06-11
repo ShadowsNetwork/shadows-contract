@@ -4,21 +4,21 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deploy, get, execute, read } = deployments;
 
   const { deployer, ...args } = await getNamedAccounts();
-  const [account1, account2, account3] = await getUnnamedAccounts();
-  const accounts = [account1, account2, account3];
+  const [account1, account2, account3, account4] = await getUnnamedAccounts();
+  const accounts = [account1, account2, account3,account4];
 
   // add issue synth
   // account1 has already ?
   const hasIssueAccount1 = await read('Synthesizer', {}, 'hasIssued', account1);
   // console.log(hasIssueAccount1);
-  if (!hasIssueAccount1) {
+  // if (!hasIssueAccount1) {
     await execute(
       'Synthesizer',
       { from: account1 },
       'issueSynths',
-      toUnit('10000').toString()
+      toUnit('10').toString()
     );
-  }
+  // }
 
   // account2 has already ?
   const hasIssueAccount2 = await read('Synthesizer', {}, 'hasIssued', account2);
@@ -43,6 +43,13 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
       toUnit('12').toString()
     );
   }
+
+  await execute(
+    'Synthesizer',
+    { from: account4 },
+    'issueSynths',
+    toUnit('100').toString()
+  );
 
   // const availableSynthCount = await read('Synthesizer', {}, 'availableSynthCount')
   // console.log('availableSynthCount:', availableSynthCount.toString());

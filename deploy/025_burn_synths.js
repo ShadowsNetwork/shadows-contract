@@ -4,18 +4,18 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deploy, get, execute, read } = deployments;
 
   const { deployer, ...args } = await getNamedAccounts();
-  const [account1, account2, account3] = await getUnnamedAccounts();
+  const [account1, account2, account3, account4] = await getUnnamedAccounts();
   const accounts = [account1];
 
   // add issue synth
   // account1 has already ?
-  const balanceOf = await read('Synthesizer', {}, 'debtBalanceOf', account1, toBytes32('xUSD'));
-
-  const value = fromUnit(balanceOf.toString()) - 30;
+  const balanceOf = await read('Synthesizer', {}, 'debtBalanceOf', account4, toBytes32('xUSD'));
+  console.log(fromUnit(balanceOf.toString()));
+  const value = fromUnit(balanceOf.toString()) - 100;
   if (value > 0) {
     await execute(
       'Synthesizer',
-      { from: account1 },
+      { from: account4 },
       'burnSynths',
       toUnit(value).toString()
     );

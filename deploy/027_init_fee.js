@@ -14,9 +14,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     'closeCurrentFeePeriod'
   );
 
-  for (const account of accounts) {
-    await execute('FeePool', { from: account }, 'claimFees');
-  }
+  // for (const account of accounts) {
+  //   await execute('FeePool', { from: account }, 'claimFees');
+  // }
 
   // console.log('targetThreshold:', fromUnit((await read('FeePool', {}, 'targetThreshold')).toString()));
   // console.log('exchangeFeeRate:', fromUnit((await read('FeePool', {}, 'exchangeFeeRate')).toString()));
