@@ -7,7 +7,10 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   const { deployer, ...args } = await getNamedAccounts();
   const [account1, account2, account3, account4] = await getUnnamedAccounts();
-  const accounts = [account1, account2, account3, account4];
+  const accounts = [account1, account2, account3, account4, deployer];
+
+  console.log((await read('Synthesizer', {}, 'collateralisationRatio', deployer)).toString());
+  console.log((await read('Synthesizer', {}, 'issuanceRatio')).toString());
 
   await execute(
     'FeePool',
@@ -16,24 +19,21 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   );
 
   // for (const account of accounts) {
-  //   await execute('FeePool', { from: account }, 'claimFees');
+  console.log((await read('FeePool', {}, 'feesAvailable', deployer)).toString());
+  console.log((await read('FeePool', {}, 'feesByPeriod', deployer)).toString());
+  await execute('FeePool', { from: deployer }, 'claimFees');
   // }
 
-  // console.log('targetThreshold:', fromUnit((await read('FeePool', {}, 'targetThreshold')).toString()));
-  // console.log('exchangeFeeRate:', fromUnit((await read('FeePool', {}, 'exchangeFeeRate')).toString()));
-  // console.log('feePeriodDuration:', fromUnit((await read('FeePool', {}, 'feePeriodDuration')).toString()));
+  // reset feepaid
+  // await execute('FeePool', { from: deployer }, 'initFeePaid');
 
-  // // set
-  // await execute('FeePool', {}, 'setExchangeFeeRate', toUnit(0.3).toString());
-  // await execute('FeePool', {}, 'setFeePeriodDuration', toUnit(1).toString());
-  // await execute('FeePool', {}, 'setTargetThreshold', toUnit(1).toString());
+  // console.log('feePeriodDuration:', (await read('FeePool', {}, 'feePeriodDuration')).toString());
 
-  // // reset 
+  // await execute('FeePool', { from: deployer }, 'setFeePeriodDuration', 1 * 60 * 10);
 
-  // console.log('targetThreshold:', fromUnit((await read('FeePool', {}, 'targetThreshold')).toString()));
-  // console.log('exchangeFeeRate:', fromUnit((await read('FeePool', {}, 'exchangeFeeRate')).toString()));
-  // console.log('feePeriodDuration:', fromUnit((await read('FeePool', {}, 'feePeriodDuration')).toString()));
-  console.log((await read('FeePool', {}, 'feePeriodDuration')).toString());
+  console.log('feePeriodDuration:', (await read('FeePool', {}, 'feePeriodDuration')).toString());
+
+  console.log('FEE_PERIOD_LENGTH', (await read('FeePool', {}, 'FEE_PERIOD_LENGTH')).toString());
 
   const FEE_PERIOD_LENGTH = await read('FeePool', {}, 'FEE_PERIOD_LENGTH');
   const recentFeePeriods = [];
@@ -55,15 +55,18 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   }
   console.log(recentFeePeriods);
 
-  for (const account of [deployer,account1, account2, account3, account4]) {
+  for (const account of [deployer, account1, account2, account3, account4]) {
+    console.log(`--------${account}--------`)
+    console.log('lastFeeWithdrawalStorage', (await read('FeePool', {}, 'getLastFeeWithdrawal', account)).toString())
+
     let result = await read('FeePool', {}, 'feesAvailable', account);
     result.map(item => {
-      console.log(item.toString());
+      console.log('feesAvailable', item.toString());
     });
 
-    result = await read('FeePool', {},'feesByPeriod',account);
+    result = await read('FeePool', {}, 'feesByPeriod', account);
     result.map(item => {
-      console.log(item.toString());
+      console.log('feesByPeriod', item.map(val => val.toString()));
     });
   }
 

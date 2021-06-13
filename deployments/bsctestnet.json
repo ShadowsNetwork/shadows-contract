@@ -916,7 +916,7 @@
       ]
     },
     "FeePool": {
-      "address": "0xD9849600f921D75DE18994fa90a26664B9f3dc7b",
+      "address": "0x82Ea8a21486ed958d55E3b23E5225bFC86124f63",
       "abi": [
         {
           "anonymous": false,
@@ -1137,32 +1137,6 @@
           "type": "function"
         },
         {
-          "inputs": [],
-          "name": "MAX_FEE_PERIOD_DURATION",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [],
-          "name": "MIN_FEE_PERIOD_DURATION",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
           "inputs": [
             {
               "internalType": "address",
@@ -1333,6 +1307,13 @@
             }
           ],
           "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "initFeePaid",
+          "outputs": [],
+          "stateMutability": "nonpayable",
           "type": "function"
         },
         {
@@ -1595,7 +1576,7 @@
       ]
     },
     "FeePool_Implementation": {
-      "address": "0x70Ba112ed3E6bba8cb3FD29D0A829e620433ac6d",
+      "address": "0x3B9C6678251039EFc6FBecC2360383536b0432a7",
       "abi": [
         {
           "anonymous": false,
@@ -1732,32 +1713,6 @@
               "internalType": "uint8",
               "name": "",
               "type": "uint8"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [],
-          "name": "MAX_FEE_PERIOD_DURATION",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [],
-          "name": "MIN_FEE_PERIOD_DURATION",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "",
-              "type": "uint256"
             }
           ],
           "stateMutability": "view",
@@ -1934,6 +1889,13 @@
             }
           ],
           "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "initFeePaid",
+          "outputs": [],
+          "stateMutability": "nonpayable",
           "type": "function"
         },
         {
@@ -2175,7 +2137,7 @@
       ]
     },
     "FeePool_Proxy": {
-      "address": "0xD9849600f921D75DE18994fa90a26664B9f3dc7b",
+      "address": "0x82Ea8a21486ed958d55E3b23E5225bFC86124f63",
       "abi": [
         {
           "inputs": [
@@ -6728,7 +6690,7 @@
       ]
     },
     "Synthesizer_Implementation": {
-      "address": "0x585edF41A1d2AD8c38aE9A42cF41Ed1754f0E6E2",
+      "address": "0x7951793c857c8748276bb8075ce4687a37427c54",
       "abi": [
         {
           "anonymous": false,
