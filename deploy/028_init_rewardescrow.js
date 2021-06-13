@@ -8,6 +8,13 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const [account1, account2, account3] = await getUnnamedAccounts();
   const accounts = [account1, account2, account3, deployer];
 
+  //setVestingScheduleTime
+  await execute(
+    'RewardEscrow',
+     { from: deployer },
+    'setVestingScheduleTime',
+    '1800', //30 min
+  );
 
   for (const index in accounts) {
     console.log(`account${index} balanceOf:`, (await read('RewardEscrow', {}, 'balanceOf', accounts[index])).toString());
@@ -20,6 +27,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 };
 
-module.exports.tags = ['Rewardescrow', 'Config'];
+module.exports.tags = ['InitRewardescrow', 'Config'];
 
 

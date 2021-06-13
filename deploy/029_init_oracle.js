@@ -24,12 +24,21 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   */
   
 
-  
+  /*
+
   await execute(
     'Oracle',
     { from: deployer },
     'setRateStalePeriod',
     3600 * 3
+  );
+  */
+
+  await execute(
+    'Oracle',
+    { from: deployer },
+    'removeAggregator',
+    toBytes32('xAUD')
   );
 
   const oracleConfig = [
@@ -45,17 +54,21 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 
 
-  const ratesForCurrencies = await read('Oracle', {}, 'ratesForCurrencies', ['USDT', 'BTC', 'ETH', 'xAUD', 'xEUR', 'DOWS'].map(item => toBytes32(item)))
+  const ratesForCurrencies = await read('Oracle', {}, 'ratesForCurrencies', ['xUSD', 'xBTC', 'xETH', 'DOWS'].map(item => toBytes32(item)))
   console.log(ratesForCurrencies.map(item => item.toString()));
 
   for (const item of oracleConfig) {
-    await execute('Oracle', { from: deployer }, 'addAggregator', toBytes32(item.name), item.address);
+    //await execute('Oracle', { from: deployer }, 'addAggregator', toBytes32(item.name), item.address);
 
     const getCurrentRoundId = await read('Oracle', {}, 'getCurrentRoundId', toBytes32(item.name));
 
     const value = await read('Oracle', {}, 'rateAndTimestampAtRound', toBytes32(item.name), getCurrentRoundId);
     console.log(fromUnit(value[0].toString()), value[1].toString());
   }
+
+  const getDowsCurrentRoundId = await read('Oracle', {}, 'getCurrentRoundId', toBytes32('DOWS'));
+  const dowsValue = await read('Oracle', {}, 'rateAndTimestampAtRound', toBytes32('DOWS'), getDowsCurrentRoundId);
+  console.log(fromUnit(dowsValue[0].toString()), dowsValue[1].toString());
 
 };
 

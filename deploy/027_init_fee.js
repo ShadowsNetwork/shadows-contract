@@ -18,10 +18,11 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     'closeCurrentFeePeriod'
   );
 
+  
   // for (const account of accounts) {
   console.log((await read('FeePool', {}, 'feesAvailable', deployer)).toString());
   console.log((await read('FeePool', {}, 'feesByPeriod', deployer)).toString());
-  await execute('FeePool', { from: deployer }, 'claimFees');
+  //await execute('FeePool', { from: deployer }, 'claimFees');
   // }
 
   // reset feepaid

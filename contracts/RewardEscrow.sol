@@ -39,10 +39,16 @@ contract RewardEscrow is
     /* Limit vesting entries to disallow unbounded iteration over vesting schedules.
      * There are 5 years of the supply schedule */
     uint256 public constant MAX_VESTING_ENTRIES = 52 * 5;
+    uint256 public vestingScheduleTime;
 
     function initialize(address _resolver) external initializer {
         __Ownable_init();
         __AddressResolver_init(_resolver);
+        vestingScheduleTime = 52 weeks; // 1 year
+    }
+
+    function setVestingScheduleTime(uint256 _vestingScheduleTime) public onlyOwner {
+        vestingScheduleTime = _vestingScheduleTime;
     }
 
     function balanceOf(address account) public view returns (uint256) {
@@ -202,7 +208,7 @@ contract RewardEscrow is
         );
 
         /* Escrow the tokens for 1 year. */
-        uint256 time = block.timestamp + 52 weeks;
+        uint256 time = block.timestamp + vestingScheduleTime;
 
         if (scheduleLength == 0) {
             totalEscrowedAccountBalance[account] = quantity;
