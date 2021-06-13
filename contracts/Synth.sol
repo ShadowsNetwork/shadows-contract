@@ -41,6 +41,19 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
         emit Burned(account, amount);
     }
 
+    function purge(address[] calldata addresses) external onlyOwner {
+        for (uint i = 0; i < addresses.length; i++) {
+            address holder = addresses[i];
+
+            uint amountHeld = balanceOf(holder);
+
+            if (amountHeld > 0) {
+                exchanger().exchange(holder, currencyKey, amountHeld, "xUSD", holder);
+                emit Purged(holder, amountHeld);
+            }
+        }
+    }
+
     function _transfer(address sender, address recipient, uint256 amount) internal override {
         if (recipient == feePool().FEE_ADDRESS()) {
             return _transferToFeeAddress(sender, amount);
@@ -98,4 +111,6 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
     event Issued(address indexed account, uint value);
 
     event Burned(address indexed account, uint value);
+
+    event Purged(address indexed account, uint value);
 }
