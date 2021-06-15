@@ -11,19 +11,24 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   //setVestingScheduleTime
   await execute(
     'RewardEscrow',
-     { from: deployer },
+    { from: deployer },
     'setVestingScheduleTime',
     '1800', //30 min
   );
 
   for (const index in accounts) {
-    console.log(`account${index} balanceOf:`, (await read('RewardEscrow', {}, 'balanceOf', accounts[index])).toString());
+    console.log(`----------${accounts[index]}----------`)
+    console.log(`account${index} balanceOf:`, fromUnit((await read('RewardEscrow', {}, 'balanceOf', accounts[index])).toString()));
     console.log(`account${index} vestBalanceOf:`, (await read('RewardEscrow', {}, 'vestBalanceOf', accounts[index])).toString());
     console.log(`account${index} numVestingEntries:`, (await read('RewardEscrow', {}, 'numVestingEntries', accounts[index])).toString());
+    console.log(`account${index} getNextVestingIndex:`, (await read('RewardEscrow', {}, 'getNextVestingIndex', accounts[index])).toString());
+    console.log(`account${index} getNextVestingTime:`, (await read('RewardEscrow', {}, 'getNextVestingTime', accounts[index])).toString());
+    console.log(`account${index} getNextVestingQuantity:`, fromUnit((await read('RewardEscrow', {}, 'getNextVestingQuantity', accounts[index])).toString()));
+    console.log(`account${index} checkAccountSchedule:`, (await read('RewardEscrow', {}, 'checkAccountSchedule', accounts[index])).toString());
   }
 
 
-  console.log((await read('RewardEscrow', {},'totalEscrowedBalance')).toString());
+  console.log((await read('RewardEscrow', {}, 'totalEscrowedBalance')).toString());
 
 };
 

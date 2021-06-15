@@ -9,19 +9,19 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const [account1, account2, account3, account4] = await getUnnamedAccounts();
   const accounts = [account1, account2, account3, account4, deployer];
 
-  console.log((await read('Synthesizer', {}, 'collateralisationRatio', deployer)).toString());
-  console.log((await read('Synthesizer', {}, 'issuanceRatio')).toString());
+  console.log('collateralisationRatio:', (await read('Synthesizer', {}, 'collateralisationRatio', deployer)).toString());
+  console.log('issuanceRatio:', (await read('Synthesizer', {}, 'issuanceRatio')).toString());
 
-  await execute(
-    'FeePool',
-     { from: deployer },
-    'closeCurrentFeePeriod'
-  );
+  // await execute(
+  //   'FeePool',
+  //    { from: deployer },
+  //   'closeCurrentFeePeriod'
+  // );
 
-  
+
   // for (const account of accounts) {
-  console.log((await read('FeePool', {}, 'feesAvailable', deployer)).toString());
-  console.log((await read('FeePool', {}, 'feesByPeriod', deployer)).toString());
+  console.log('feesAvailable:', (await read('FeePool', {}, 'feesAvailable', deployer)).toString());
+  console.log('feesByPeriod:', (await read('FeePool', {}, 'feesByPeriod', deployer)).toString());
   //await execute('FeePool', { from: deployer }, 'claimFees');
   // }
 
@@ -73,6 +73,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 };
 
-module.exports.tags = ['Fee', 'Config'];
+module.exports.tags = ['InitFee', 'Config'];
 
 

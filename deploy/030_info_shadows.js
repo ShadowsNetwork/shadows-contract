@@ -10,25 +10,28 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const [account1, account2, account3] = await getUnnamedAccounts();
   const accounts = [account1, account2, account3];
   const nowTime = await currentTime();
-  const testAccount = account1;
+  const testAccount = deployer;
 
   console.log('deployer:', deployer);
   console.log('now:', nowTime);
+
   // update DOWS rates  
-  await execute(
-    'Oracle',
-    { from: deployer },
-    'updateRates',
-    ['xAUD', 'xEUR', 'xETH', 'xBTC'].map(item => toBytes32(item)),
-    [0.5, 1.25, 2000, 30000].map(item => (toUnit(item)).toString()),
-    nowTime
-  );
+  // await execute(
+  //   'Oracle',
+  //   { from: deployer },
+  //   'updateRates',
+  //   ['xAUD', 'xEUR', 'xETH', 'xBTC'].map(item => toBytes32(item)),
+  //   [0.5, 1.25, 2000, 30000].map(item => (toUnit(item)).toString()),
+  //   nowTime
+  // );
 
 
   console.log(lines);
-  const rates = [0.5, 1.25, 0.1, 2000, 30000];
-  ['xAUD', 'xEUR', 'DOWS', 'xETH', 'xBTC'].map((item, index) => console.log(`${item} Rate: ${rates[index]}`));
-
+  for (const item of ['xAUD', 'xEUR', 'DOWS', 'xETH', 'xBTC']) {
+    let reta = await read('Oracle', {}, 'rateForCurrency', toBytes32(item));
+    console.log();
+    console.log(`${item} reta: ${reta.toString()}`);
+  }
 
   console.log(lines);
   console.log(`account (${testAccount}) info:`);

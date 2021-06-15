@@ -34,12 +34,12 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   );
   */
 
-  await execute(
-    'Oracle',
-    { from: deployer },
-    'removeAggregator',
-    toBytes32('xAUD')
-  );
+  // await execute(
+  //   'Oracle',
+  //   { from: deployer },
+  //   'removeAggregator',
+  //   toBytes32('xAUD')
+  // );
 
   const oracleConfig = [
     {
