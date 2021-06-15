@@ -3,6 +3,7 @@ pragma solidity >=0.6.0 <0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./library/AddressResolverUpgradeable.sol";
 import "./library/SafeDecimalMath.sol";
 import "./interfaces/ISynth.sol";
@@ -11,6 +12,7 @@ import "./interfaces/IExchanger.sol";
 import "./interfaces/IFeePool.sol";
 import "./interfaces/IRewardEscrow.sol";
 import "./interfaces/IShadows.sol";
+import "./interfaces/ILiquidations.sol";
 
 contract Synthesizer is
     Initializable,
@@ -288,6 +290,79 @@ contract Synthesizer is
         }
     }
 
+    function liquidateDelinquentAccount(
+        address account,
+        uint susdAmount,
+        address liquidator
+    ) external rateNotStale('DOWS') returns (uint totalRedeemed, uint amountToLiquidate) {
+        // Ensure waitingPeriod and xUSD balance is settled as burning impacts the size of debt pool
+        ILiquidations _liquidations = liquidations();
+
+        // Check account is liquidation open
+        require(_liquidations.isOpenForLiquidation(account), "Account not open for liquidation");
+
+        // require liquidator has enough xUSD
+        require(IERC20(address(synths[xUSD])).balanceOf(liquidator) >= susdAmount, "Not enough xUSD");
+
+        uint liquidationPenalty = _liquidations.liquidationPenalty();
+
+        uint accountCollateral = collateral(account);
+
+        // What is the value of their DOWS balance in xUSD?
+        uint collateralValue = oracle().effectiveValue("DOWS", accountCollateral, xUSD);
+
+        // What is their debt in xUSD?
+        uint debtBalance = debtBalanceOf(account, xUSD);
+
+        uint amountToFixRatio = _liquidations.calculateAmountToFixCollateral(debtBalance, collateralValue);
+
+        // Cap amount to liquidate to repair collateral ratio based on issuance ratio
+        amountToLiquidate = amountToFixRatio < susdAmount ? amountToFixRatio : susdAmount;
+
+        // what's the equivalent amount of snx for the amountToLiquidate?
+        uint snxRedeemed = oracle().effectiveValue(xUSD, amountToLiquidate, "DOWS");
+
+        // Add penalty
+        totalRedeemed = snxRedeemed.multiplyDecimal(SafeDecimalMath.unit().add(liquidationPenalty));
+
+        // if total DOWS to redeem is greater than account's collateral
+        // account is under collateralised, liquidate all collateral and reduce xUSD to burn
+        // an insurance fund will be added to cover these undercollateralised positions
+        if (totalRedeemed > accountCollateral) {
+            // set totalRedeemed to all collateral
+            totalRedeemed = accountCollateral;
+
+            // whats the equivalent xUSD to burn for all collateral less penalty
+            amountToLiquidate = oracle().effectiveValue("DOWS", accountCollateral.divideDecimal(SafeDecimalMath.unit().add(liquidationPenalty)), xUSD);
+        }
+
+        // burn xUSD from messageSender (liquidator) and reduce account's debt
+        _burnSynthsForLiquidation(account, liquidator, amountToLiquidate, debtBalance);
+
+        if (amountToLiquidate == amountToFixRatio) {
+            // Remove liquidation
+            _liquidations.removeAccountInLiquidation(account);
+        }
+    }
+
+    function _burnSynthsForLiquidation(
+        address burnForAddress,
+        address liquidator,
+        uint amount,
+        uint existingDebt
+    ) internal {
+        // liquidation requires sUSD to be already settled / not in waiting period
+
+        // Remove liquidated debt from the ledger
+        _removeFromDebtRegister(burnForAddress, amount, existingDebt);
+
+        // synth.burn does a safe subtraction on balance (so it will revert if there are not enough synths).
+        ISynth(address(synths[xUSD])).burn(liquidator, amount);
+
+        // Store their debtRatio against a feeperiod to determine their fee/rewards % for the period
+        _appendAccountIssuanceRecord(burnForAddress);
+    }
+
     function _addToDebtRegister(
         address from,
         uint256 amount,
@@ -463,6 +538,16 @@ contract Synthesizer is
                 resolver.requireAndGetAddress(
                     "Shadows",
                     "Missing Shadows address"
+                )
+            );
+    }
+
+    function liquidations() internal view returns (ILiquidations) {
+        return
+            ILiquidations(
+                resolver.requireAndGetAddress(
+                    "Liquidations",
+                    "Missing Liquidations address"
                 )
             );
     }
