@@ -22,7 +22,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     nowTime
   );
   */
-  
+
 
   /*
 
@@ -63,12 +63,12 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     const getCurrentRoundId = await read('Oracle', {}, 'getCurrentRoundId', toBytes32(item.name));
 
     const value = await read('Oracle', {}, 'rateAndTimestampAtRound', toBytes32(item.name), getCurrentRoundId);
-    console.log(fromUnit(value[0].toString()), value[1].toString());
+    console.log(item.name, fromUnit(value[0].toString()), value[1].toString());
   }
 
   const getDowsCurrentRoundId = await read('Oracle', {}, 'getCurrentRoundId', toBytes32('DOWS'));
   const dowsValue = await read('Oracle', {}, 'rateAndTimestampAtRound', toBytes32('DOWS'), getDowsCurrentRoundId);
-  console.log(fromUnit(dowsValue[0].toString()), dowsValue[1].toString());
+  console.log('DOWS', fromUnit(dowsValue[0].toString()), dowsValue[1].toString());
 
 };
 

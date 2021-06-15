@@ -7,16 +7,16 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   const { deployer, ...args } = await getNamedAccounts();
   const [account1, account2, account3, account4] = await getUnnamedAccounts();
-  const accounts = [account1, account2, account3, account4, deployer];
+  const accounts = ['0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', '0x70997970C51812dc3A010C7d01b50e0d17dc79C8', account1, account2, account3, account4, deployer];
 
-  console.log('collateralisationRatio:', (await read('Synthesizer', {}, 'collateralisationRatio', deployer)).toString());
-  console.log('issuanceRatio:', (await read('Synthesizer', {}, 'issuanceRatio')).toString());
+  console.log('collateralisationRatio:', fromUnit((await read('Synthesizer', {}, 'collateralisationRatio', deployer)).toString()));
+  console.log('issuanceRatio:', fromUnit((await read('Synthesizer', {}, 'issuanceRatio')).toString()));
 
-  // await execute(
-  //   'FeePool',
-  //    { from: deployer },
-  //   'closeCurrentFeePeriod'
-  // );
+  await execute(
+    'FeePool',
+     { from: deployer },
+    'closeCurrentFeePeriod'
+  );
 
 
   // for (const account of accounts) {
@@ -56,7 +56,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   }
   console.log(recentFeePeriods);
 
-  for (const account of [deployer, account1, account2, account3, account4]) {
+  for (const account of accounts) {
     console.log(`--------${account}--------`)
     console.log('lastFeeWithdrawalStorage', (await read('FeePool', {}, 'getLastFeeWithdrawal', account)).toString())
 
