@@ -1,6 +1,5 @@
 const { toBytes32, bytesToString, fromUnit, toUnit, currentTime } = require("../utils");
 const { synths } = require("../config/synths");
-const { red } = require("bn.js");
 
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deploy, get, execute, read } = deployments;
@@ -23,7 +22,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   );
   */
 
-
   /*
 
   await execute(
@@ -41,6 +39,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   //   toBytes32('xAUD')
   // );
 
+
   const oracleConfig = [
     {
       name: 'xBTC',
@@ -53,9 +52,10 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   ];
 
 
-
-  const ratesForCurrencies = await read('Oracle', {}, 'ratesForCurrencies', ['xUSD', 'xBTC', 'xETH', 'DOWS'].map(item => toBytes32(item)))
-  console.log(ratesForCurrencies.map(item => item.toString()));
+  for (const item of synths) {
+    const ratesForCurrencies = await read('Oracle', {}, 'rateForCurrency', toBytes32(item.symbol));
+    console.log(`${item.symbol} rete: ${fromUnit(ratesForCurrencies.toString())}`);
+  }
 
   for (const item of oracleConfig) {
     //await execute('Oracle', { from: deployer }, 'addAggregator', toBytes32(item.name), item.address);
