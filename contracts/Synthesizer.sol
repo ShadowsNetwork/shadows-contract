@@ -319,11 +319,11 @@ contract Synthesizer is
         // Cap amount to liquidate to repair collateral ratio based on issuance ratio
         amountToLiquidate = amountToFixRatio < susdAmount ? amountToFixRatio : susdAmount;
 
-        // what's the equivalent amount of snx for the amountToLiquidate?
-        uint snxRedeemed = oracle().effectiveValue(xUSD, amountToLiquidate, "DOWS");
+        // what's the equivalent amount of DOWS for the amountToLiquidate?
+        uint dowsRedeemed = oracle().effectiveValue(xUSD, amountToLiquidate, "DOWS");
 
         // Add penalty
-        totalRedeemed = snxRedeemed.multiplyDecimal(SafeDecimalMath.unit().add(liquidationPenalty));
+        totalRedeemed = dowsRedeemed.multiplyDecimal(SafeDecimalMath.unit().add(liquidationPenalty));
 
         // if total DOWS to redeem is greater than account's collateral
         // account is under collateralised, liquidate all collateral and reduce xUSD to burn

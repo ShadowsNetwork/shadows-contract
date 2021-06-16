@@ -155,7 +155,7 @@ contract Liquidations is
 
     // Public function to allow an account to remove from liquidations
     // Checks collateral ratio is fixed - below target issuance ratio
-    // Check SNX rate is not stale
+    // Check DOWS rate is not stale
     function checkAndRemoveAccountInLiquidation(address account)
         external
         rateNotStale("DOWS")
@@ -245,14 +245,6 @@ contract Liquidations is
     }
 
     /* ========== MODIFIERS ========== */
-
-    // modifier onlyIssuer() {
-    //     require(
-    //         msg.sender == address(issuer()),
-    //         "Liquidations: Only the Issuer contract can perform this action"
-    //     );
-    //     _;
-    // }
 
     modifier rateNotStale(bytes32 currencyKey) {
         require(

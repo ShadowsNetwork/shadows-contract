@@ -44,7 +44,7 @@ contract Shadows is
             _msgSender()
         );
 
-        // Transfer SNX redeemed to messageSender
+        // Transfer DOWS redeemed to messageSender
         // Reverts if amount to redeem is more than balanceOf account, ie due to escrowed balance
         _transfer(account, _msgSender(), totalRedeemed);
     }
@@ -89,7 +89,7 @@ contract Shadows is
     event SynthesizerUpdated(ISynthesizer _synthesizer);
     event AccountLiquidated(
         address indexed account,
-        uint256 snxRedeemed,
+        uint256 dowsRedeemed,
         uint256 amountLiquidated,
         address liquidator
     );
