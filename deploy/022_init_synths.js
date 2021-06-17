@@ -23,19 +23,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
       );
     }
   }
-
-  // remove xAUD,xEUR from synth
-  // for (const synth of synths) {
-  //   const xVal = toBytes32(synth.symbol);
-  //   if (synth.symbol == 'xAUD' || synth.symbol == 'xEUR') {
-  //     await execute(
-  //       "Synthesizer",
-  //       { from: deployer },
-  //       "removeSynth",
-  //       xVal
-  //     );
-  //   }
-  // }
 };
 module.exports.tags = ['InitSynth', 'Config'];
 module.exports.dependencies = ['Synth'];
