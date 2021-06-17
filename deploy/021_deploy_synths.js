@@ -16,7 +16,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
         proxyContract: "OptimizedTransparentProxy",
       },
       args: [
-        synth.name,
+        `Shadows ${synth.symbol}`,
         synth.symbol,
         toBytes32(synth.symbol),
         addressResolver.address,
@@ -25,4 +25,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     });
   }
 };
-module.exports.tags = ['Synth','Token']
+module.exports.tags = ['Synth', 'Token']

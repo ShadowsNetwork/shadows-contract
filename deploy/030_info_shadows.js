@@ -15,22 +15,10 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   console.log('deployer:', deployer);
   console.log('now:', nowTime);
 
-  // update DOWS rates  
-  // await execute(
-  //   'Oracle',
-  //   { from: deployer },
-  //   'updateRates',
-  //   ['xAUD', 'xEUR', 'xETH', 'xBTC'].map(item => toBytes32(item)),
-  //   [0.5, 1.25, 2000, 30000].map(item => (toUnit(item)).toString()),
-  //   nowTime
-  // );
-
-
   console.log(lines);
-  for (const item of ['xAUD', 'xEUR', 'DOWS', 'xETH', 'xBTC']) {
+  for (const item of ['xAUD', 'xEUR', 'DOWS', 'xETH', 'xBTC', 'xGOLD', 'xSILVER', 'xCOINBASE']) {
     let reta = await read('Oracle', {}, 'rateForCurrency', toBytes32(item));
-    console.log();
-    console.log(`${item} reta: ${reta.toString()}`);
+    console.log(`${item} reta: ${fromUnit(reta.toString())}`);
   }
 
   console.log(lines);

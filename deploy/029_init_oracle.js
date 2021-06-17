@@ -8,22 +8,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const [account1, account2, account3] = await getUnnamedAccounts();
   const accounts = [account1, account2, account3];
   const nowTime = await currentTime();
-  const testAccount = account1;
-
-  // update DOWS rates  
-  /*
-  await execute(
-    'Oracle',
-    { from: deployer },
-    'updateRates',
-    ['xAUD', 'xEUR'].map(item => toBytes32(item)),
-    [0.5, 1.25].map(item => (toUnit(item)).toString()),
-    nowTime
-  );
-  */
 
   /*
-
   await execute(
     'Oracle',
     { from: deployer },
@@ -39,31 +25,35 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   //   toBytes32('xAUD')
   // );
 
-
-  const oracleConfig = [
-    {
-      name: 'xBTC',
-      address: '0x5741306c21795FdCBb9b265Ea0255F499DFe515C'
-    },
-    {
-      name: 'xETH',
-      address: '0x143db3CEEfbdfe5631aDD3E50f7614B6ba708BA7'
-    }
-  ];
-
-
+  const newKeys = [];
   for (const item of synths) {
     const ratesForCurrencies = await read('Oracle', {}, 'rateForCurrency', toBytes32(item.symbol));
     console.log(`${item.symbol} rete: ${fromUnit(ratesForCurrencies.toString())}`);
+    const retaValue = fromUnit(ratesForCurrencies.toString());
+
+    if (!Number(retaValue) && item.address) {
+      newKeys.push(item.symbol);
+      await execute('Oracle', { from: deployer }, 'addAggregator', toBytes32(item.symbol), item.address);
+    }
   }
+  console.log(newKeys)
 
-  for (const item of oracleConfig) {
-    //await execute('Oracle', { from: deployer }, 'addAggregator', toBytes32(item.name), item.address);
+  // if (newKeys.length > 0) {
+  //   await execute(
+  //     'Oracle',
+  //     { from: deployer },
+  //     'updateRates',
+  //     newKeys.map(item => toBytes32(item)),
+  //     newKeys.map(item => (toUnit(1)).toString()),
+  //     nowTime
+  //   );
+  // }
 
-    const getCurrentRoundId = await read('Oracle', {}, 'getCurrentRoundId', toBytes32(item.name));
+  for (const item of synths) {
+    const getCurrentRoundId = await read('Oracle', {}, 'getCurrentRoundId', toBytes32(item.symbol));
 
-    const value = await read('Oracle', {}, 'rateAndTimestampAtRound', toBytes32(item.name), getCurrentRoundId);
-    console.log(item.name, fromUnit(value[0].toString()), value[1].toString());
+    const value = await read('Oracle', {}, 'rateAndTimestampAtRound', toBytes32(item.symbol), getCurrentRoundId);
+    console.log(item.symbol, fromUnit(value[0].toString()), value[1].toString());
   }
 
   const getDowsCurrentRoundId = await read('Oracle', {}, 'getCurrentRoundId', toBytes32('DOWS'));
