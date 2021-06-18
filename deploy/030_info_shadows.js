@@ -10,7 +10,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const [account1, account2, account3] = await getUnnamedAccounts();
   const accounts = [account1, account2, account3];
   const nowTime = await currentTime();
-  const testAccount = deployer;
+  const testAccount = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
 
   console.log('deployer:', deployer);
   console.log('now:', nowTime);
