@@ -14,16 +14,17 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const currentKeys = availableCurrencyKeys.map((item) => bytesToString(item));
 
   // add xUSD,xAUD,xEUR to synth
-  await execute("xEUR", { from: deployer }, "purge", [
+  await execute("xGOLD", { from: deployer }, "purge", [
     "0x9143860b52ed23fef5724ad975809e5c12e0334a",
-    "0x004a7e272ad85aa3d68fb8015e682196a63e6d16",
+    "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+    "0x43707c6bb6202a5e1007356539a925c052ea9767",
   ]);
 
   await execute(
     "Synthesizer",
     { from: deployer },
     "removeSynth",
-    toBytes32('xEUR')
+    toBytes32('xGOLD')
   );
 };
 module.exports.tags = ["PurgeSynth", "Config"];
