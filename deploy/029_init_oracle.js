@@ -32,14 +32,14 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   console.log(newKeys)
 
   // if (newKeys.length > 0) {
-  //   await execute(
-  //     'Oracle',
-  //     { from: deployer },
-  //     'updateRates',
-  //     newKeys.map(item => toBytes32(item)),
-  //     newKeys.map(item => (toUnit(1)).toString()),
-  //     nowTime
-  //   );
+    await execute(
+      'Oracle',
+      { from: deployer },
+      'updateRates',
+      ['xCOINBASE'].map(item => toBytes32(item)),
+      [0.7].map(item => (toUnit(item)).toString()),
+      nowTime
+    );
   // }
 
   for (const item of synths) {

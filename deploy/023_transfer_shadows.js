@@ -12,14 +12,14 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   console.log(accounts);
   // update DOWS rates
-  await execute(
-    'Oracle',
-    { from: deployer },
-    'updateRates',
-    ['xAUD', 'xEUR', 'DOWS', 'xETH', 'xBTC'].map(item => toBytes32(item)),
-    [0.5, 1.25, 0.1, 2000, 30000].map(item => (toUnit(item)).toString()),
-    nowTime
-  );
+  // await execute(
+  //   'Oracle',
+  //   { from: deployer },
+  //   'updateRates',
+  //   ['xAUD', 'xEUR', 'DOWS', 'xETH', 'xBTC'].map(item => toBytes32(item)),
+  //   [0.5, 1.25, 0.1, 2000, 30000].map(item => (toUnit(item)).toString()),
+  //   nowTime
+  // );
 
   // transfer Dows to some account
   for (const account of accounts) {

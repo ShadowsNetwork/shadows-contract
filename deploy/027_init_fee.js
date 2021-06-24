@@ -12,11 +12,11 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   console.log('collateralisationRatio:', fromUnit((await read('Synthesizer', {}, 'collateralisationRatio', deployer)).toString()));
   console.log('issuanceRatio:', fromUnit((await read('Synthesizer', {}, 'issuanceRatio')).toString()));
 
-  await execute(
-    'FeePool',
-     { from: deployer },
-    'closeCurrentFeePeriod'
-  );
+  // await execute(
+  //   'FeePool',
+  //   { from: deployer },
+  //   'closeCurrentFeePeriod'
+  // );
 
 
   // for (const account of accounts) {
