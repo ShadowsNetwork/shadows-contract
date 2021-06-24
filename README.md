@@ -20,3 +20,10 @@ yarn hardhat export  --network ropsten --export  ./deployments/ropsten.json
 yarn hardhat --network <networkName> run <script>
 //yarn hardhat --network bsctestnet run scripts/mint.js
 ```
+
+## test
+```
+yarn hardhat test ./test/contracts/Liquidations.js
+// or
+npx hardhat test ./test/contracts/Liquidations.js
+```
