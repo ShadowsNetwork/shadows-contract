@@ -23,7 +23,6 @@ contract Liquidations is
         address caller;
     }
 
-    address[] public liquidationAddressStorage;
     mapping(address => uint256) public liquidationDeadlineStorage;
 
     uint256 public liquidationPenalty;
@@ -46,29 +45,6 @@ contract Liquidations is
         LiquidationEntry memory liquidation =
             _getLiquidationEntryForAccount(account);
         return liquidation.deadline;
-    }
-
-    // function getliquidationAddressStorageLength()
-    //     public
-    //     view
-    //     returns (uint256)
-    // {
-    //     return liquidationAddressStorage.length;
-    // }
-
-    function getliquidationAddressStorage()
-        public
-        view
-        returns (address[] memory)
-    {
-        address[] memory liquidationAddress =
-            new address[](liquidationAddressStorage.length);
-
-        for (uint256 i = 0; i < liquidationAddressStorage.length; i++) {
-            liquidationAddress[i] = liquidationAddressStorage[i];
-        }
-
-        return liquidationAddressStorage;
     }
 
     function isOpenForLiquidation(address account)
@@ -200,17 +176,10 @@ contract Liquidations is
     ) internal {
         // record liquidation deadline
         liquidationDeadlineStorage[_account] = _deadline;
-        liquidationAddressStorage.push(_account);
     }
 
     function _removeLiquidationEntry(address _account) internal {
         // delete liquidation deadline
-        for (uint256 i = 0; i < liquidationAddressStorage.length; i++) {
-            if (_account == liquidationAddressStorage[i]) {
-                delete liquidationAddressStorage[i];
-                break;
-            }
-        }
         delete liquidationDeadlineStorage[_account];
         emit AccountRemovedFromLiquidation(_account, block.timestamp);
     }
