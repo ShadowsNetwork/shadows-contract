@@ -11,7 +11,6 @@ const RewardEscrow = artifacts.require("RewardEscrow");
 const Synth = artifacts.require("Synth");
 const Liquidations = artifacts.require("Liquidations");
 
-const { ContractFunctionVisibility } = require("hardhat/internal/hardhat-network/stack-traces/model");
 const {
   toBytes32,
   toUnit,
