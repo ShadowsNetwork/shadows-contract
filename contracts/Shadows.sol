@@ -30,12 +30,8 @@ contract Shadows is
             address(synthesizer) != address(0),
             "Missing Synthesizer address"
         );
-        (uint256 totalRedeemed, uint256 amountLiquidated) =
-            synthesizer.liquidateDelinquentAccount(
-                account,
-                susdAmount,
-                _msgSender()
-            );
+        (uint256 totalRedeemed, uint256 amountLiquidated) = synthesizer
+        .liquidateDelinquentAccount(account, susdAmount, _msgSender());
 
         emit AccountLiquidated(
             account,

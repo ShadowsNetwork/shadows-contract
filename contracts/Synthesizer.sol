@@ -352,12 +352,14 @@ contract Synthesizer is
         uint existingDebt
     ) internal {
         // liquidation requires sUSD to be already settled / not in waiting period
+        // uint amountBurnt = existingDebt < amount ? existingDebt : amount;
 
         // Remove liquidated debt from the ledger
         _removeFromDebtRegister(burnForAddress, amount, existingDebt);
 
         // synth.burn does a safe subtraction on balance (so it will revert if there are not enough synths).
         ISynth(address(synths[xUSD])).burn(liquidator, amount);
+        ISynth(address(synths[xUSD])).burn(burnForAddress, amount);
 
         // Store their debtRatio against a feeperiod to determine their fee/rewards % for the period
         _appendAccountIssuanceRecord(burnForAddress);
