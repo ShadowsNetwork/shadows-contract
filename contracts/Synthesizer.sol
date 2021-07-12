@@ -337,7 +337,7 @@ contract Synthesizer is
         }
 
         // burn xUSD from messageSender (liquidator) and reduce account's debt
-        _burnSynthsForLiquidation(account, liquidator, amountToLiquidate, debtBalance);
+        _burnSynthsForLiquidation(account, liquidator, amountToLiquidate, debtBalance, totalRedeemed);
 
         if (amountToLiquidate == amountToFixRatio) {
             // Remove liquidation
@@ -349,18 +349,24 @@ contract Synthesizer is
         address burnForAddress,
         address liquidator,
         uint amount,
-        uint existingDebt
+        uint existingDebt,
+        uint totalRedeemed
     ) internal {
         // liquidation requires sUSD to be already settled / not in waiting period
-        // uint amountBurnt = existingDebt < amount ? existingDebt : amount;
+        uint amountBurnt = amount;
+
+        uint accountCollateral = collateral(burnForAddress);
+        if(totalRedeemed >= accountCollateral){
+            amountBurnt = existingDebt;
+        }
 
         // Remove liquidated debt from the ledger
-        _removeFromDebtRegister(burnForAddress, amount, existingDebt);
+        _removeFromDebtRegister(burnForAddress, amountBurnt, existingDebt);
+         ISynth(address(synths[xUSD])).burn(burnForAddress, amountBurnt);
 
         // synth.burn does a safe subtraction on balance (so it will revert if there are not enough synths).
         ISynth(address(synths[xUSD])).burn(liquidator, amount);
-        ISynth(address(synths[xUSD])).burn(burnForAddress, amount);
-
+        
         // Store their debtRatio against a feeperiod to determine their fee/rewards % for the period
         _appendAccountIssuanceRecord(burnForAddress);
     }
