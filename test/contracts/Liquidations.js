@@ -690,7 +690,7 @@ contract("Liquidations", async (accounts) => {
           it('should isOpenForLiquidation is false', async () => {
             assert.isFalse(await liquidations.isOpenForLiquidation(account1));
           });
-          
+
         });
       });
 
@@ -815,32 +815,38 @@ contract("Liquidations", async (accounts) => {
 
           await oracle.updateRates(
             [DOWS],
-            ["0.04"].map(toUnit),
+            ["0.01"].map(toUnit),
             await currentTime(),
             { from: oracleAccount }
           );
 
-          await assert.revert(
-            shadows.liquidateDelinquentAccount(account1, toUnit('10'), { from: account2 }),
-            'Cannot transfer staked DOWS'
-          );
+          await shadows.liquidateDelinquentAccount(account1, toUnit('5'), { from: account2 });
 
-          await assert.revert(
-            shadows.liquidateDelinquentAccount(account1, toUnit('5'), { from: account2 }),
-            'Cannot transfer staked DOWS'
-          );
+          assert.bnNotEqual(await liquidations.getLiquidationDeadlineForAccount(account1), 0);
+          assert.isTrue(await liquidations.isOpenForLiquidation(account1))
+          assert.isTrue(await liquidations.isLiquidationDeadlinePassed(account1))
 
-          await shadows.liquidateDelinquentAccount(account1, toUnit('20'), { from: account2 });
-          const liquidationDeadline = await liquidations.getLiquidationDeadlineForAccount(account1);
-          assert.bnEqual(liquidationDeadline, 0);
+          await shadows.liquidateDelinquentAccount(account1, toUnit('5'), { from: account2 });
+
+          assert.bnEqual(await synthesizer.debtBalanceOf(account1, xUSD), 0)
+          assert.bnEqual(await synthesizer.collateral(account1), 0)
+          assert.bnEqual(await synthesizer.collateralisationRatio(account1), 0)
+
+          assert.bnNotEqual(await liquidations.getLiquidationDeadlineForAccount(account1), 0);
+          assert.isFalse(await liquidations.isOpenForLiquidation(account1))
+          assert.isTrue(await liquidations.isLiquidationDeadlinePassed(account1))
+
+          const removeFlagTransaction = await liquidations.checkAndRemoveAccountInLiquidation(account1);
+
+          assert.bnEqual(await liquidations.getLiquidationDeadlineForAccount(account1), 0)
+          assert.isFalse(await liquidations.isOpenForLiquidation(account1))
+          assert.isFalse(await liquidations.isLiquidationDeadlinePassed(account1))
+
           await assert.revert(liquidations.checkAndRemoveAccountInLiquidation(account1), 'Account has no liquidation set');
 
-
-
-          // const removeFlagTransaction = await liquidations.checkAndRemoveAccountInLiquidation(account1);
-          // assert.eventEqual(removeFlagTransaction, 'AccountRemovedFromLiquidation', {
-          //   account: account1,
-          // });
+          assert.eventEqual(removeFlagTransaction, 'AccountRemovedFromLiquidation', {
+            account: account1,
+          });
 
           // const susdAmount = toUnit(20);
           // const liquidationPenalty = await liquidations.liquidationPenalty();
@@ -884,6 +890,7 @@ contract("Liquidations", async (accounts) => {
           // }
 
         });
+
         it('should checkAndRemoveAccountInLiquidation deadline for account 0', async () => {
           // transfer new DOWS and enough xUSD
           await shadows.transfer(account2, toUnit('1000000'), {

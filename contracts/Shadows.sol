@@ -45,17 +45,48 @@ contract Shadows is
         _transfer(account, _msgSender(), totalRedeemed);
     }
 
-    function _beforeTokenTransfer(
+    function transfer(address recipient, uint256 amount)
+        public
+        virtual
+        override
+        returns (bool)
+    {
+        if (address(synthesizer) != address(0)) {
+            require(
+                amount <= synthesizer.transferableShadows(_msgSender()),
+                "Cannot transfer staked DOWS"
+            );
+        }
+        super.transfer(recipient, amount);
+        return true;
+    }
+
+    function transferFrom(
         address sender,
         address recipient,
         uint256 amount
-    ) internal override {
+    ) public virtual override returns (bool) {
         if (address(synthesizer) != address(0)) {
             require(
                 amount <= synthesizer.transferableShadows(sender),
                 "Cannot transfer staked DOWS"
             );
         }
+        super.transferFrom(sender, recipient, amount);
+        return true;
+    }
+
+    function _beforeTokenTransfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal override {
+        // if (address(synthesizer) != address(0)) {
+        //     require(
+        //         amount <= synthesizer.transferableShadows(sender),
+        //         "Cannot transfer staked DOWS"
+        //     );
+        // }
         return super._beforeTokenTransfer(sender, recipient, amount);
     }
 
