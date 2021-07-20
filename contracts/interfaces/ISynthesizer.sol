@@ -87,4 +87,13 @@ abstract contract ISynthesizer {
         view
         virtual
         returns (uint256);
+
+    function liquidateDelinquentAccount(
+        address account,
+        uint256 susdAmount,
+        address liquidator
+    )
+        external
+        virtual
+        returns (uint256 totalRedeemed, uint256 amountToLiquidate);
 }

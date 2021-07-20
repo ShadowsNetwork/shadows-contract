@@ -23,17 +23,70 @@ contract Shadows is
         _mint(_msgSender(), 37000000 ether);
     }
 
-    function _beforeTokenTransfer(
+    function liquidateDelinquentAccount(address account, uint256 susdAmount)
+        external
+    {
+        require(
+            address(synthesizer) != address(0),
+            "Missing Synthesizer address"
+        );
+        (uint256 totalRedeemed, uint256 amountLiquidated) = synthesizer
+        .liquidateDelinquentAccount(account, susdAmount, _msgSender());
+
+        emit AccountLiquidated(
+            account,
+            totalRedeemed,
+            amountLiquidated,
+            _msgSender()
+        );
+
+        // Transfer DOWS redeemed to messageSender
+        // Reverts if amount to redeem is more than balanceOf account, ie due to escrowed balance
+        _transfer(account, _msgSender(), totalRedeemed);
+    }
+
+    function transfer(address recipient, uint256 amount)
+        public
+        virtual
+        override
+        returns (bool)
+    {
+        if (address(synthesizer) != address(0)) {
+            require(
+                amount <= synthesizer.transferableShadows(_msgSender()),
+                "Cannot transfer staked DOWS"
+            );
+        }
+        super.transfer(recipient, amount);
+        return true;
+    }
+
+    function transferFrom(
         address sender,
         address recipient,
         uint256 amount
-    ) internal override {
+    ) public virtual override returns (bool) {
         if (address(synthesizer) != address(0)) {
             require(
                 amount <= synthesizer.transferableShadows(sender),
                 "Cannot transfer staked DOWS"
             );
         }
+        super.transferFrom(sender, recipient, amount);
+        return true;
+    }
+
+    function _beforeTokenTransfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal override {
+        // if (address(synthesizer) != address(0)) {
+        //     require(
+        //         amount <= synthesizer.transferableShadows(sender),
+        //         "Cannot transfer staked DOWS"
+        //     );
+        // }
         return super._beforeTokenTransfer(sender, recipient, amount);
     }
 
@@ -61,4 +114,10 @@ contract Shadows is
     }
 
     event SynthesizerUpdated(ISynthesizer _synthesizer);
+    event AccountLiquidated(
+        address indexed account,
+        uint256 dowsRedeemed,
+        uint256 amountLiquidated,
+        address liquidator
+    );
 }
