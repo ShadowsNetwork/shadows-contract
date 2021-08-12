@@ -9,18 +9,18 @@ const synths = [
     symbol: "xBTC",
     address: '0x5741306c21795FdCBb9b265Ea0255F499DFe515C'
   },
-  {
-    name: "gold",
-    symbol: "xGOLD",
-  },
-  {
-    name: "coin",
-    symbol: "xCOINBASE",
-  },
-  {
-    name: "silver",
-    symbol: "xSILVER",
-  },
+  // {
+  //   name: "gold",
+  //   symbol: "xGOLD",
+  // },
+  // {
+  //   name: "coin",
+  //   symbol: "xCOINBASE",
+  // },
+  // {
+  //   name: "silver",
+  //   symbol: "xSILVER",
+  // },
   // {
   //   name: "ada",
   //   symbol: "xADA",
