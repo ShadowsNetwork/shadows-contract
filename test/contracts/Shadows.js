@@ -60,7 +60,7 @@ contract("Shadows", async (accounts) => {
   const testAccounts = [account1, account2, account3];
 
   const [xUSD, DOWS, xBTC, xETH] = [
-    "xUSD",
+    "ShaUSD",
     "DOWS",
     "xBTC",
     "xETH",
@@ -139,8 +139,8 @@ contract("Shadows", async (accounts) => {
     //add xUSD
     const xUSDSynth = await Synth.new();
     await xUSDSynth.initialize(
-      "Synth xUSD",
-      "xUSD",
+      "Shadows USD",
+      "ShaUSD",
       xUSD,
       addressResolver.address,
       { from: owner }
