@@ -10,7 +10,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const availableCurrencyKeys = await read('Synthesizer', 'availableCurrencyKeys');
   const currentKeys = availableCurrencyKeys.map(item => bytesToString(item));
 
-  // add xUSD,xAUD,xEUR to synth
+  // add ShaUSD,xAUD,xEUR to synth
   for (const synth of synths) {
     const instance = await get(synth.symbol);
 

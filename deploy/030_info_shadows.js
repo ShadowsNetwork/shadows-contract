@@ -29,8 +29,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   let allPrice = toUnit('0');
   for (const synth of synths) {
-    // let xUSDPool = await read('Synthesizer', {}, 'debtBalanceOf', testAccount, toBytes32(synth.symbol));
-    // console.log(`${synth.name} max balance: ${fromUnit(xUSDPool.toString())}`);
+    // let ShaUSDPool = await read('Synthesizer', {}, 'debtBalanceOf', testAccount, toBytes32(synth.symbol));
+    // console.log(`${synth.name} max balance: ${fromUnit(ShaUSDPool.toString())}`);
 
     const availableBalance = await read(synth.symbol, {}, 'transferableSynths', testAccount);
     const reta = await read('Oracle', {}, 'rateForCurrency', toBytes32(synth.symbol));
@@ -42,10 +42,10 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     // allPrice = allPrice.add()
   }
 
-  const xusdavailableBalance = await read('xUSD', {}, 'transferableSynths', testAccount);
-  console.log(`xUSD Balance: ${fromUnit(xusdavailableBalance.toString())}, value: $${fromUnit(xusdavailableBalance.toString())}`);
+  const ShaUSDAvailableBalance = await read('ShaUSD', {}, 'transferableSynths', testAccount);
+  console.log(`ShaUSD Balance: ${fromUnit(ShaUSDAvailableBalance.toString())}, value: $${fromUnit(ShaUSDAvailableBalance.toString())}`);
 
-  allPrice = allPrice.add(toUnit(fromUnit(xusdavailableBalance.toString())));
+  allPrice = allPrice.add(toUnit(fromUnit(ShaUSDAvailableBalance.toString())));
 
   console.log(lines);
   console.log(`account (${testAccount}) info:`);
@@ -74,8 +74,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   console.log(lines);
   const remainingIssuableSynths = await read('Synthesizer', {}, 'remainingIssuableSynths', testAccount);
-  console.log(`max issure xUSD: ${fromUnit(remainingIssuableSynths[0].toString())}`);
-  console.log(`already issure xUSD: ${fromUnit(remainingIssuableSynths[1].toString())}`);
+  console.log(`max issure ShaUSD: ${fromUnit(remainingIssuableSynths[0].toString())}`);
+  console.log(`already issure ShaUSD: ${fromUnit(remainingIssuableSynths[1].toString())}`);
 
   console.log(lines);
   const collateralisationRatio = await read('Synthesizer', {}, 'collateralisationRatio', testAccount);
@@ -95,11 +95,11 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   let totalFeeAccountBalance = await read('FeePool', {}, 'feesByPeriod', testAccount);
   let totalFeeBalance = await read('FeePool', {}, 'feesAvailable', testAccount);
 
-  const xusdTotalRewards = totalFeeAccountBalance.reduce((sum, item) =>
+  const ShaUSDTotalRewards = totalFeeAccountBalance.reduce((sum, item) =>
     sum.add(toUnit(fromUnit(item[0].toString())))
     , toUnit(0));
 
-  console.log(`Tatal xUSD Rewards: ${fromUnit(xusdTotalRewards.toString())}`);
+  console.log(`Tatal ShaUSD Rewards: ${fromUnit(ShaUSDTotalRewards.toString())}`);
   console.log(`Redeemable: ${fromUnit(totalFeeBalance[0].toString())}`);
 
 
@@ -126,7 +126,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   for (const keys of availableCurrencyKeys) {
     const rate = await read('Oracle', {}, 'rateForCurrency', keys);
-    console.log(`Symbol: ${bytesToString(keys)}/xUSD; Last Price: $${fromUnit(rate.toString())}`);
+    console.log(`Symbol: ${bytesToString(keys)}/ShaUSD; Last Price: $${fromUnit(rate.toString())}`);
   }
 
 

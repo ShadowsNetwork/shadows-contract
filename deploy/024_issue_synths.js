@@ -7,6 +7,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const [account1, account2, account3, account4] = await getUnnamedAccounts();
   const accounts = [account1, account2, account3,account4];
 
+  const ShaUSD = toBytes32('ShaUSD');
+
   // add issue synth
   // account1 has already ?
   const hasIssueAccount1 = await read('Synthesizer', {}, 'hasIssued', account1);
@@ -58,7 +60,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   // console.log('availableCurrencyKeys:', availableCurrencyKeys.toString());
 
   // console.log('totalIssuedSynths DOWS:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', toBytes32('DOWS'))).toString()));
-  // console.log('totalIssuedSynths xUSD:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', toBytes32('xUSD'))).toString()));
+  // console.log('totalIssuedSynths ShaUSD:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', ShaUSD)).toString()));
   // console.log('totalIssuedSynths xAUD:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', toBytes32('xAUD'))).toString()));
   // console.log('totalIssuedSynths xEUR:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', toBytes32('xEUR'))).toString()));
 
@@ -84,12 +86,12 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
       const collateralisationRatio = await read('Synthesizer', {}, 'collateralisationRatio', account);
       console.log(`account${index + 1} collateralisationRatio: ${fromUnit(collateralisationRatio.toString())}`);
 
-      const balanceOf = await read('Synthesizer', {}, 'debtBalanceOf', account, toBytes32('xUSD'));
+      const balanceOf = await read('Synthesizer', {}, 'debtBalanceOf', account, ShaUSD);
       console.log(`account${index + 1}  debtBalanceOf: ${fromUnit(balanceOf.toString())}`);
 
 
       // lock value
-      // ['DOWS', 'xUSD', 'xAUD', 'xEUR'].forEach(async item => {
+      // ['DOWS', 'ShaUSD', 'xAUD', 'xEUR'].forEach(async item => {
       //   const balanceOf = await read('Synthesizer', {}, 'debtBalanceOf', account, toBytes32(item));
       //   console.log(`account${index + 1}  ${item} debtBalanceOf: ${fromUnit(balanceOf.toString())}`);
       // });

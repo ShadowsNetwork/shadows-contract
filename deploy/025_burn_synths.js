@@ -7,9 +7,10 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const [account1, account2, account3, account4] = await getUnnamedAccounts();
   const accounts = [account1];
 
+  const ShaUSD = toBytes32('ShaUSD');
   // add issue synth
   // account1 has already ?
-  const balanceOf = await read('Synthesizer', {}, 'debtBalanceOf', account4, toBytes32('xUSD'));
+  const balanceOf = await read('Synthesizer', {}, 'debtBalanceOf', account4, ShaUSD);
   console.log(fromUnit(balanceOf.toString()));
   const value = fromUnit(balanceOf.toString()) - 100;
   if (value > 0) {
@@ -28,7 +29,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   // console.log('availableCurrencyKeys:', availableCurrencyKeys.toString());
 
   // console.log('totalIssuedSynths DOWS:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', toBytes32('DOWS'))).toString()));
-  // console.log('totalIssuedSynths xUSD:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', toBytes32('xUSD'))).toString()));
+  // console.log('totalIssuedSynths ShaUSD:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', ShaUSD)).toString()));
   // console.log('totalIssuedSynths xAUD:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', toBytes32('xAUD'))).toString()));
   // console.log('totalIssuedSynths xEUR:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', toBytes32('xEUR'))).toString()));
 
@@ -52,7 +53,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   //     console.log(`account${index + 1} collateralisationRatio: ${fromUnit(collateralisationRatio.toString())}`);
 
   //     // lock value
-  //     ['DOWS', 'xUSD', 'xAUD', 'xEUR'].forEach(async item => {
+  //     ['DOWS', 'ShaUSD', 'xAUD', 'xEUR'].forEach(async item => {
   //       const balanceOf = await read('Synthesizer', {}, 'debtBalanceOf', account, toBytes32(item));
   //       console.log(`account${index + 1}  ${item} debtBalanceOf: ${fromUnit(balanceOf.toString())}`);
   //     });

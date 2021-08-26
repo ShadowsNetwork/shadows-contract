@@ -13,7 +13,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   );
   const currentKeys = availableCurrencyKeys.map((item) => bytesToString(item));
 
-  // add xUSD,xAUD,xEUR to synth
   await execute("xGOLD", { from: deployer }, "purge", [
     "0x9143860b52ed23fef5724ad975809e5c12e0334a",
     "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
