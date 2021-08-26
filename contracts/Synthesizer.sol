@@ -22,7 +22,7 @@ contract Synthesizer is
     using SafeMath for uint;
     using SafeDecimalMath for uint;
 
-    bytes32 constant xUSD = "xUSD";
+    bytes32 constant xUSD = "ShaUSD";
     uint256 public issuanceRatio;
 
     ISynth[] public availableSynths;

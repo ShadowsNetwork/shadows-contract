@@ -15,7 +15,7 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
 
     bool public exchangeEnabled;
 
-    bytes32 private constant xUSD = "xUSD";
+    bytes32 private constant xUSD = "ShaUSD";
 
     bytes32 private constant DOWS = "DOWS";
 
