@@ -3,7 +3,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deployer, shadowsOwner } = await getNamedAccounts();
   const synthesizer = await get("Synthesizer");
 
-  console.log(synthesizer.address);
   await execute(
     "Shadows",
     { from: deployer },

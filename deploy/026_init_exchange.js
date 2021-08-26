@@ -16,7 +16,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   //   }
   // }
   const nowTime = await currentTime();
-  // change exchangeEnabled
+  // change exchangeEnabled ; default: true
   await execute(
     'Exchanger',
     { from: deployer },
@@ -90,6 +90,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 };
 
 module.exports.tags = ['Exchange', 'Config'];
-module.exports.dependencies  = ['Exchanger'];
+module.exports.dependencies = ['Exchanger'];
 
 

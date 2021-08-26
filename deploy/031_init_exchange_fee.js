@@ -11,6 +11,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   let FEE = await read('FeePool', {}, 'exchangeFeeRate');
   console.log(FEE.toString());
 
+  // change ExchangeFeeRate; default:0.0030
   await execute(
     'FeePool',
     { from: deployer },
