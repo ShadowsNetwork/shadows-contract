@@ -14,12 +14,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   for (const item of synths) {
     const ratesForCurrencies = await read('Oracle', {}, 'rateForCurrency', toBytes32(item.symbol));
     console.log(`${item.symbol} rete: ${fromUnit(ratesForCurrencies.toString())}`);
-    const retaValue = fromUnit(ratesForCurrencies.toString());
-
-    // if (!Number(retaValue) && item.address) {
-    //   newKeys.push(item.symbol);
-    //   await execute('Oracle', { from: deployer }, 'addAggregator', toBytes32(item.symbol), item.address);
-    // }
   }
   console.log(newKeys)
 

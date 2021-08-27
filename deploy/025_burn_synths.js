@@ -12,7 +12,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   // account1 has already ?
   const balanceOf = await read('Synthesizer', {}, 'debtBalanceOf', account4, ShaUSD);
   console.log(fromUnit(balanceOf.toString()));
+  
   const value = fromUnit(balanceOf.toString()) - 100;
+
   if (value > 0) {
     await execute(
       'Synthesizer',
@@ -21,44 +23,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
       toUnit(value).toString()
     );
   }
-
-  // const availableSynthCount = await read('Synthesizer', {}, 'availableSynthCount')
-  // console.log('availableSynthCount:', availableSynthCount.toString());
-
-  // const availableCurrencyKeys = await read('Synthesizer', {}, 'availableCurrencyKeys')
-  // console.log('availableCurrencyKeys:', availableCurrencyKeys.toString());
-
-  // console.log('totalIssuedSynths DOWS:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', toBytes32('DOWS'))).toString()));
-  // console.log('totalIssuedSynths ShaUSD:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', ShaUSD)).toString()));
-  // console.log('totalIssuedSynths xAUD:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', toBytes32('xAUD'))).toString()));
-  // console.log('totalIssuedSynths xEUR:', fromUnit((await read('Synthesizer', {}, 'totalIssuedSynths', toBytes32('xEUR'))).toString()));
-
-  // const debtLedger = await read('Synthesizer', {}, 'lastDebtLedgerEntry');
-  // console.log(fromUnit(debtLedger.toString()));
-
-  // const len = await read('Synthesizer', {}, 'debtLedgerLength');
-  // for (const i of fromUnit(len.toString())) {
-  //   const debtVal = await read('Synthesizer', {}, 'debtLedger', i);
-  //   console.log(`${i}: ${fromUnit(debtVal.toString())}`);
-  // }
-
-  // accounts log info
-  // await new Promise(async resolve => {
-  //   accounts.forEach(async (account, index) => {
-  //     // maxIssuableSynths
-  //     const maxIssuableSynths = await read('Synthesizer', {}, 'maxIssuableSynths', account);
-  //     console.log(`account${index + 1} maxIssuableSynths: ${fromUnit(maxIssuableSynths.toString())}`);
-
-  //     const collateralisationRatio = await read('Synthesizer', {}, 'collateralisationRatio', account);
-  //     console.log(`account${index + 1} collateralisationRatio: ${fromUnit(collateralisationRatio.toString())}`);
-
-  //     // lock value
-  //     ['DOWS', 'ShaUSD', 'xAUD', 'xEUR'].forEach(async item => {
-  //       const balanceOf = await read('Synthesizer', {}, 'debtBalanceOf', account, toBytes32(item));
-  //       console.log(`account${index + 1}  ${item} debtBalanceOf: ${fromUnit(balanceOf.toString())}`);
-  //     });
-  //   });
-  // });
 
 };
 

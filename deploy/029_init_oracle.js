@@ -17,6 +17,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   //   3600 * 3
   // );
 
+  // add address to oracle
   const newKeys = [];
   for (const item of synths) {
     const ratesForCurrencies = await read('Oracle', {}, 'rateForCurrency', toBytes32(item.symbol));
@@ -25,20 +26,20 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
     if (!Number(retaValue) && item.address) {
       newKeys.push(item.symbol);
-      // await execute('Oracle', { from: deployer }, 'addAggregator', toBytes32(item.symbol), item.address);
+      await execute('Oracle', { from: deployer }, 'addAggregator', toBytes32(item.symbol), item.address);
     }
   }
   console.log(newKeys)
 
   // if (newKeys.length > 0) {
-  // await execute(
-  //   'Oracle',
-  //   { from: deployer },
-  //   'updateRates',
-  //   ['xCOINBASE'].map(item => toBytes32(item)),
-  //   [0.7].map(item => (toUnit(item)).toString()),
-  //   nowTime
-  // );
+  await execute(
+    'Oracle',
+    { from: deployer },
+    'updateRates',
+    ['DOWS'].map(item => toBytes32(item)),
+    [0.219055].map(item => (toUnit(item)).toString()),
+    nowTime
+  );
   // }
 
 };
