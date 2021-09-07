@@ -37,9 +37,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     { from: deployer },
     'updateRates',
     ['DOWS'].map(item => toBytes32(item)),
-    [0.219055].map(item => (toUnit(item)).toString()),
+    [0.198275].map(item => (toUnit(item)).toString()),
     nowTime
-  );
+
   // }
 
 };

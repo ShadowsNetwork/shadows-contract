@@ -3,7 +3,7 @@
   "chainId": "97",
   "contracts": {
     "AddressResolver": {
-      "address": "0xfB10e308bF589991b3f4370183BCD0b5a03B4658",
+      "address": "0x9Ef9F4d20e6E0025B7bdAE8BcDA866167B8A326E",
       "abi": [
         {
           "anonymous": false,
@@ -140,7 +140,7 @@
       ]
     },
     "DefaultProxyAdmin": {
-      "address": "0xE936197912EaeEF45B0Ca82a41D55CBb4cBc26EC",
+      "address": "0xE542B70aDC14B96DC339DDcFc71f3170579f6AdC",
       "abi": [
         {
           "inputs": [
@@ -305,7 +305,7 @@
       ]
     },
     "Exchanger": {
-      "address": "0x5ECA431C2bfc304232D5bE56A546Fd9DbDd8713A",
+      "address": "0x9faF87F68142D86402254f1793f66ACb1AB58C0f",
       "abi": [
         {
           "anonymous": false,
@@ -608,7 +608,7 @@
       ]
     },
     "Exchanger_Implementation": {
-      "address": "0x5b04c6517Ecc901DC0f5b6be9DeDB1e75cefB920",
+      "address": "0xDa31316512204F7B69cedD14bCAdBaEc754cE075",
       "abi": [
         {
           "anonymous": false,
@@ -812,7 +812,7 @@
       ]
     },
     "Exchanger_Proxy": {
-      "address": "0x5ECA431C2bfc304232D5bE56A546Fd9DbDd8713A",
+      "address": "0x9faF87F68142D86402254f1793f66ACb1AB58C0f",
       "abi": [
         {
           "inputs": [
@@ -916,7 +916,7 @@
       ]
     },
     "FeePool": {
-      "address": "0xAf5889a73C4c82Cd71fc9De9e9E730C3a5D8ffaf",
+      "address": "0x87C410bD56F97183E17E4dA32eC4206f7a3E21E6",
       "abi": [
         {
           "anonymous": false,
@@ -1576,7 +1576,7 @@
       ]
     },
     "FeePool_Implementation": {
-      "address": "0x0b7c27916a06624F722Bd6CFa615039C72cBA867",
+      "address": "0xC93C87EE8ADb6c6D244D5CB9bad2dEf404E08d1F",
       "abi": [
         {
           "anonymous": false,
@@ -2137,7 +2137,7 @@
       ]
     },
     "FeePool_Proxy": {
-      "address": "0xAf5889a73C4c82Cd71fc9De9e9E730C3a5D8ffaf",
+      "address": "0x87C410bD56F97183E17E4dA32eC4206f7a3E21E6",
       "abi": [
         {
           "inputs": [
@@ -2241,7 +2241,7 @@
       ]
     },
     "Liquidations": {
-      "address": "0xd57f8C37d3d6680BaF2f3271a0f3aCC9A410BB6D",
+      "address": "0x56212fe148F49f120A25a0e4304F0a51EcA745a5",
       "abi": [
         {
           "anonymous": false,
@@ -2691,7 +2691,7 @@
       ]
     },
     "Liquidations_Implementation": {
-      "address": "0x3D879171F247C5da685ceE2D8C33E3126C05A999",
+      "address": "0x4163ca8c7330Ceb50C0E8975E1A2471B9Af37318",
       "abi": [
         {
           "anonymous": false,
@@ -3042,7 +3042,7 @@
       ]
     },
     "Liquidations_Proxy": {
-      "address": "0xd57f8C37d3d6680BaF2f3271a0f3aCC9A410BB6D",
+      "address": "0x56212fe148F49f120A25a0e4304F0a51EcA745a5",
       "abi": [
         {
           "inputs": [
@@ -3146,7 +3146,7 @@
       ]
     },
     "Oracle": {
-      "address": "0x86C86F8d7E8AC0324fB901A3BCe8602879a77d07",
+      "address": "0x89D087A1C6Ed64756a03C546CB1Ace6d53c3fCCe",
       "abi": [
         {
           "anonymous": false,
@@ -3872,7 +3872,7 @@
       ]
     },
     "Oracle_Implementation": {
-      "address": "0xa3aedff899465185b61c5439e0803aa990b013b7",
+      "address": "0xd20f9afCa327B1a61375e51861fCB39e6914f63f",
       "abi": [
         {
           "anonymous": false,
@@ -4499,7 +4499,7 @@
       ]
     },
     "Oracle_Proxy": {
-      "address": "0x86C86F8d7E8AC0324fB901A3BCe8602879a77d07",
+      "address": "0x89D087A1C6Ed64756a03C546CB1Ace6d53c3fCCe",
       "abi": [
         {
           "inputs": [
@@ -4603,7 +4603,7 @@
       ]
     },
     "RewardEscrow": {
-      "address": "0xc2299642a5587D709ACF09a11F7E0B01e2FbcbFf",
+      "address": "0xddf8661F0F106f0690D4135989118c616aca7f4b",
       "abi": [
         {
           "anonymous": false,
@@ -5216,7 +5216,7 @@
       ]
     },
     "RewardEscrow_Implementation": {
-      "address": "0xF9157C1E357bB4D6Ec131637fa560154075B9CaD",
+      "address": "0x075899F7CeE618FAcF3e9AA1514Fb094FAcA1b16",
       "abi": [
         {
           "anonymous": false,
@@ -5730,7 +5730,7 @@
       ]
     },
     "RewardEscrow_Proxy": {
-      "address": "0xc2299642a5587D709ACF09a11F7E0B01e2FbcbFf",
+      "address": "0xddf8661F0F106f0690D4135989118c616aca7f4b",
       "abi": [
         {
           "inputs": [
@@ -5834,7 +5834,7 @@
       ]
     },
     "SafeDecimalMath": {
-      "address": "0xc64F5722Ba05CdD6648E6e209b99a322b93956bC",
+      "address": "0xBCE1584059046A691f0dBFD6aa3D7DEfd1122519",
       "abi": [
         {
           "inputs": [],
@@ -5917,7 +5917,7 @@
       ]
     },
     "ShaUSD": {
-      "address": "0x432e74aeCbb0B0ba338597947ef5c6fbDbD7444C",
+      "address": "0xCe1B9F787587293980046fEA7734963eA169Eec9",
       "abi": [
         {
           "anonymous": false,
@@ -6548,7 +6548,7 @@
       ]
     },
     "ShaUSD_Implementation": {
-      "address": "0xd188045d4e6763ca5A15ff1dD6C374A5c62cd5c9",
+      "address": "0x08F92823D619A660bAf481b6506f155c6218320B",
       "abi": [
         {
           "anonymous": false,
@@ -7080,7 +7080,7 @@
       ]
     },
     "ShaUSD_Proxy": {
-      "address": "0x432e74aeCbb0B0ba338597947ef5c6fbDbD7444C",
+      "address": "0xCe1B9F787587293980046fEA7734963eA169Eec9",
       "abi": [
         {
           "inputs": [
@@ -7184,7 +7184,7 @@
       ]
     },
     "Shadows": {
-      "address": "0x08CA552B82FCAc4C7B3E8b7f96dd714262C66224",
+      "address": "0x3217dae29DeBF25DfF2743345B9525c508F30BfF",
       "abi": [
         {
           "anonymous": false,
@@ -7762,7 +7762,7 @@
       ]
     },
     "Shadows_Implementation": {
-      "address": "0x703f10Dc71c91A9C6A731b7BaDAC6Cf92b396E04",
+      "address": "0x287Bd6d32c6F6ef6e92A607B125dbE2A8aAbAbCA",
       "abi": [
         {
           "anonymous": false,
@@ -8241,7 +8241,7 @@
       ]
     },
     "Shadows_Proxy": {
-      "address": "0x08CA552B82FCAc4C7B3E8b7f96dd714262C66224",
+      "address": "0x3217dae29DeBF25DfF2743345B9525c508F30BfF",
       "abi": [
         {
           "inputs": [
@@ -8345,7 +8345,7 @@
       ]
     },
     "Synthesizer": {
-      "address": "0xAB93CeF1f330519d98E77FF7AE84F02981175803",
+      "address": "0x60Ae01f518dD3222306438EB948E05C0D18EBF76",
       "abi": [
         {
           "anonymous": false,
@@ -9046,7 +9046,7 @@
       ]
     },
     "Synthesizer_Implementation": {
-      "address": "0xd58033bc9C92014b875ea67960E22E5FdEF9fB4F",
+      "address": "0xD45A36A44065B9Ee569Cf1Ddd5330b5CbF241BE0",
       "abi": [
         {
           "anonymous": false,
@@ -9648,7 +9648,7 @@
       ]
     },
     "Synthesizer_Proxy": {
-      "address": "0xAB93CeF1f330519d98E77FF7AE84F02981175803",
+      "address": "0x60Ae01f518dD3222306438EB948E05C0D18EBF76",
       "abi": [
         {
           "inputs": [
@@ -9752,7 +9752,7 @@
       ]
     },
     "xBNB": {
-      "address": "0xA6fB56C195160371ec7C9B870c471B0F43AB0D05",
+      "address": "0x4b14973D9d6bb0FDC760db7D6Ed4d337f46406e7",
       "abi": [
         {
           "anonymous": false,
@@ -10383,7 +10383,7 @@
       ]
     },
     "xBNB_Implementation": {
-      "address": "0x9c81BBbE1D203B94F7c1170fD24dd1f811991a55",
+      "address": "0xF5dA2142831B916d91eb7F17516d9e97AE5C87a1",
       "abi": [
         {
           "anonymous": false,
@@ -10915,7 +10915,7 @@
       ]
     },
     "xBNB_Proxy": {
-      "address": "0xA6fB56C195160371ec7C9B870c471B0F43AB0D05",
+      "address": "0x4b14973D9d6bb0FDC760db7D6Ed4d337f46406e7",
       "abi": [
         {
           "inputs": [
@@ -11019,7 +11019,7 @@
       ]
     },
     "xBTC": {
-      "address": "0x31204F48560029A0fD0B7cfED1a9b87cB467D33f",
+      "address": "0x492d82063F65eC837e4aD145673Aa03Ee9055CD5",
       "abi": [
         {
           "anonymous": false,
@@ -11650,7 +11650,7 @@
       ]
     },
     "xBTC_Implementation": {
-      "address": "0x10722C030b695c1aF1Cf11293C91e78DCFCA1AaA",
+      "address": "0x48b41dfb8F628eb82e16E4ffCBB349d6F3a19Fbd",
       "abi": [
         {
           "anonymous": false,
@@ -12182,7 +12182,7 @@
       ]
     },
     "xBTC_Proxy": {
-      "address": "0x31204F48560029A0fD0B7cfED1a9b87cB467D33f",
+      "address": "0x492d82063F65eC837e4aD145673Aa03Ee9055CD5",
       "abi": [
         {
           "inputs": [
@@ -12286,7 +12286,7 @@
       ]
     },
     "xETH": {
-      "address": "0xBf473ae1664D947C6f348Cc2B4A0836B1f240767",
+      "address": "0xA83AB6Ea613759152d12247d374889c9F49F191F",
       "abi": [
         {
           "anonymous": false,
@@ -12917,7 +12917,7 @@
       ]
     },
     "xETH_Implementation": {
-      "address": "0x97D377fdc1e34130A841E45770aC64A5393cB149",
+      "address": "0x5952BE7e5E8326c58C2a0752a853f42f96Fa56B2",
       "abi": [
         {
           "anonymous": false,
@@ -13449,7 +13449,7 @@
       ]
     },
     "xETH_Proxy": {
-      "address": "0xBf473ae1664D947C6f348Cc2B4A0836B1f240767",
+      "address": "0xA83AB6Ea613759152d12247d374889c9F49F191F",
       "abi": [
         {
           "inputs": [
@@ -13553,7 +13553,7 @@
       ]
     },
     "xLINK": {
-      "address": "0x122D3d8858f87316a8e403a6e6B6c69449F08189",
+      "address": "0xA123F3556A1C8f067BE52AEC4cD400AaA7709714",
       "abi": [
         {
           "anonymous": false,
@@ -14184,7 +14184,7 @@
       ]
     },
     "xLINK_Implementation": {
-      "address": "0xf775940c28A09d9ff3e8C19FDA0dd3416AAf2B00",
+      "address": "0xc07E2C0daC85068B9D58A1165C41E8423a65c8e4",
       "abi": [
         {
           "anonymous": false,
@@ -14716,7 +14716,7 @@
       ]
     },
     "xLINK_Proxy": {
-      "address": "0x122D3d8858f87316a8e403a6e6B6c69449F08189",
+      "address": "0xA123F3556A1C8f067BE52AEC4cD400AaA7709714",
       "abi": [
         {
           "inputs": [
@@ -14820,7 +14820,7 @@
       ]
     },
     "xSXP": {
-      "address": "0x3cB0e68A01Bf894326ee504958B2E68e381db371",
+      "address": "0xd494cfb664b70f1b72c556a7c2A4e88B36b63C59",
       "abi": [
         {
           "anonymous": false,
@@ -15451,7 +15451,7 @@
       ]
     },
     "xSXP_Implementation": {
-      "address": "0xB7eCCe565cc0ab8A928D60e7Add71B2689F88255",
+      "address": "0xFDF7BF19fB0e595d851d756B2B11981b7556565d",
       "abi": [
         {
           "anonymous": false,
@@ -15983,7 +15983,7 @@
       ]
     },
     "xSXP_Proxy": {
-      "address": "0x3cB0e68A01Bf894326ee504958B2E68e381db371",
+      "address": "0xd494cfb664b70f1b72c556a7c2A4e88B36b63C59",
       "abi": [
         {
           "inputs": [
@@ -16087,7 +16087,7 @@
       ]
     },
     "xXVS": {
-      "address": "0x19cB6dd9dc593525b082A869Da5C57Da9c6aE223",
+      "address": "0xd48Feb2b92a18A72597b07ED619cFA4Ce2B727ec",
       "abi": [
         {
           "anonymous": false,
@@ -16718,7 +16718,7 @@
       ]
     },
     "xXVS_Implementation": {
-      "address": "0xBDcf642FC0bAAa2040BeC3e9A82E47a00692F583",
+      "address": "0x151CF43B1509c0205bB5f9856E18d8F4ac8fC489",
       "abi": [
         {
           "anonymous": false,
@@ -17250,7 +17250,7 @@
       ]
     },
     "xXVS_Proxy": {
-      "address": "0x19cB6dd9dc593525b082A869Da5C57Da9c6aE223",
+      "address": "0xd48Feb2b92a18A72597b07ED619cFA4Ce2B727ec",
       "abi": [
         {
           "inputs": [

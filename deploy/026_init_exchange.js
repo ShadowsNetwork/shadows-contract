@@ -24,15 +24,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     true
   );
 
-  await execute(
-    'Oracle',
-    { from: deployer },
-    'updateRates',
-    ['xAUD', 'xEUR', 'DOWS', 'xETH', 'xBTC'].map(item => toBytes32(item)),
-    [0.5, 1.25, 0.1, 2000, 30000].map(item => (toUnit(item)).toString()),
-    nowTime
-  );
-
   // account1 exchange xAUD
   // account1 buy xAUD to ShaUSD
   const value = await read('xAUD', {}, 'balanceOf', account4);

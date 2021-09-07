@@ -9,8 +9,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const [account1, account2, account3, account4] = await getUnnamedAccounts();
   const accounts = [account1, account2, account3, account4, deployer];
 
-  console.log('collateralisationRatio:', fromUnit((await read('Synthesizer', {}, 'collateralisationRatio', deployer)).toString()));
   console.log('issuanceRatio:', fromUnit((await read('Synthesizer', {}, 'issuanceRatio')).toString()));
+  console.log('collateralisationRatio:', fromUnit((await read('Synthesizer', {}, 'debtLedgerLength')).toString()));
+  
 
   // await execute(
   //   'FeePool',

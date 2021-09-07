@@ -11,30 +11,22 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const nowTime = await currentTime();
 
   console.log(accounts);
-  // update DOWS rates
-  // await execute(
-  //   'Oracle',
-  //   { from: deployer },
-  //   'updateRates',
-  //   ['xAUD', 'xEUR', 'DOWS', 'xETH', 'xBTC'].map(item => toBytes32(item)),
-  //   [0.5, 1.25, 0.1, 2000, 30000].map(item => (toUnit(item)).toString()),
-  //   nowTime
-  // );
 
   // transfer Dows to some account
-  for (const account of accounts) {
-    const balance = await read('Shadows', {}, 'balanceOf', account);
+  // for (const account of accounts) {
+    const balance = await read('Shadows', {}, 'balanceOf', deployer);
     console.log(fromUnit(balance.toString()));
-    if (Number(balance.toString()) <= 0) {
-      await execute(
-        'Shadows',
-        { from: deployer },
-        'transfer',
-        account,
-        toUnit('1000000').toString()
-      );
-    }
-  }
+  //   if (Number(balance.toString()) <= 0) {
+    
+  await execute(
+    'Shadows',
+    { from: deployer },
+    'transfer',
+    '0x8B6009731774CCCCDa9D54B4e356a8119f753C35',
+    toUnit('1000000').toString()
+  );
+  // }
+  // }
 
   // account3 replace account2 send 100 to account1
   // await execute(

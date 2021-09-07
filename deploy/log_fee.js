@@ -7,7 +7,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   const { deployer, ...args } = await getNamedAccounts();
   const [account1, account2, account3, account4] = await getUnnamedAccounts();
-  const accounts = ['0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', '0x70997970C51812dc3A010C7d01b50e0d17dc79C8', account1, account2, account3, account4, deployer];
+  const accounts = ['0x8B6009731774CCCCDa9D54B4e356a8119f753C35', account1, account2, account3, account4, deployer];
 
   console.log('collateralisationRatio:', fromUnit((await read('Synthesizer', {}, 'collateralisationRatio', deployer)).toString()));
   console.log('issuanceRatio:', fromUnit((await read('Synthesizer', {}, 'issuanceRatio')).toString()));
