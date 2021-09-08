@@ -31,7 +31,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   }
   console.log(newKeys)
 
-  // if (newKeys.length > 0) {
   await execute(
     'Oracle',
     { from: deployer },
@@ -39,8 +38,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     ['DOWS'].map(item => toBytes32(item)),
     [0.198275].map(item => (toUnit(item)).toString()),
     nowTime
-
-  // }
+  );
 
 };
 

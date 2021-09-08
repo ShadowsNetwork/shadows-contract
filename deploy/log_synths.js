@@ -100,6 +100,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 };
 
-module.exports.tags = ['LogIssueSynth', 'Config'];
+module.exports.tags = ['LogIssueSynth'];
 
 

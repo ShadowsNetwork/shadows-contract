@@ -132,6 +132,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 };
 
-module.exports.tags = ['InfoShadows', 'Config'];
+module.exports.tags = ['InfoShadows'];
 
 

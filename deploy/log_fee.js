@@ -73,6 +73,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 };
 
-module.exports.tags = ['LogFee', 'Config'];
+module.exports.tags = ['LogFee'];
 
 

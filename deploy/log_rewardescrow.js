@@ -30,6 +30,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 };
 
-module.exports.tags = ['LogRewardescrow', 'Config'];
+module.exports.tags = ['LogRewardescrow'];
 
 

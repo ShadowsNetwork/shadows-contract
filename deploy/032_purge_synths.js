@@ -26,4 +26,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     toBytes32('xGOLD')
   );
 };
-module.exports.tags = ["PurgeSynth", "Config"];
+module.exports.tags = ["PurgeSynth"];

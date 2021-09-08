@@ -31,10 +31,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   // await execute('FeePool', { from: deployer }, 'setFeePeriodDuration', 1 * 60 * 10);
 
-
-
 };
 
-module.exports.tags = ['InitFee', 'Config'];
+module.exports.tags = ['InitFeePool', 'Config'];
 
 

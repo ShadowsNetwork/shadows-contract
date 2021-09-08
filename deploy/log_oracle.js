@@ -31,6 +31,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 };
 
-module.exports.tags = ['LogOracle', 'Config'];
+module.exports.tags = ['LogOracle'];
 
 

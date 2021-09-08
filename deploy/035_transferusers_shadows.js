@@ -42,4 +42,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     await sleep(5000);
   }
 };
-module.exports.tags = ['TransferUsersShadows', 'Config'];
+module.exports.tags = ['TransferUsersShadows'];

@@ -15,7 +15,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   //     console.log(`account${index} ${synth.symbol} balanceOf : ${fromUnit(synthBalanceOf.toString())}`);
   //   }
   // }
+
   const nowTime = await currentTime();
+
   // change exchangeEnabled ; default: true
   await execute(
     'Exchanger',
@@ -26,20 +28,21 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   // account1 exchange xAUD
   // account1 buy xAUD to ShaUSD
-  const value = await read('xAUD', {}, 'balanceOf', account4);
-  console.log(value.toString());
-  // if (Number(value.toString()) <= 0) {
-  console.log(account4, toBytes32('ShaUSD'),
-    toUnit(2).toString(),
-    toBytes32('xAUD'));
-  await execute(
-    'Synthesizer',
-    { from: account4 },
-    'exchange',
-    toBytes32('ShaUSD'),
-    toUnit(10).toString(),
-    toBytes32('xAUD')
-  );
+  // const value = await read('xAUD', {}, 'balanceOf', account4);
+  // console.log(value.toString());
+  // // if (Number(value.toString()) <= 0) {
+  // console.log(account4, toBytes32('ShaUSD'),
+  //   toUnit(2).toString(),
+  //   toBytes32('xAUD'));
+
+  // await execute(
+  //   'Synthesizer',
+  //   { from: account4 },
+  //   'exchange',
+  //   toBytes32('ShaUSD'),
+  //   toUnit(10).toString(),
+  //   toBytes32('xAUD')
+  // );
 
   // await execute(
   //   'Synthesizer',
@@ -80,7 +83,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 };
 
-module.exports.tags = ['Exchange', 'Config'];
+module.exports.tags = ['InitExchange'];
 module.exports.dependencies = ['Exchanger'];
 
 

@@ -4,33 +4,33 @@ const synths = [
     symbol: "ShaUSD",
   },
   {
-    name: "shadows xETH",
-    symbol: "xETH",
+    name: "shadows ShaETH",
+    symbol: "ShaETH",
     address: '0x143db3CEEfbdfe5631aDD3E50f7614B6ba708BA7'
   },
   {
-    name: "shadows xBTC",
-    symbol: "xBTC",
+    name: "shadows ShaBTC",
+    symbol: "ShaBTC",
     address: '0x5741306c21795FdCBb9b265Ea0255F499DFe515C'
   },
   {
-    name: "shadows xBNB",
-    symbol: "xBNB",
+    name: "shadows ShaBNB",
+    symbol: "ShaBNB",
     address: '0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526'
   },
   {
-    name: "shadows xLINK",
-    symbol: "xLINK",
+    name: "shadows ShaLINK",
+    symbol: "ShaLINK",
     address: '0x1B329402Cb1825C6F30A0d92aB9E2862BE47333f'
   },
   {
-    name: "shadows xSXP",
-    symbol: "xSXP",
+    name: "shadows ShaSXP",
+    symbol: "ShaSXP",
     address: '0x678AC35ACbcE272651874E782DB5343F9B8a7D66'
   },
   {
-    name: "shadows xXVS",
-    symbol: "xXVS",
+    name: "shadows ShaXVS",
+    symbol: "ShaXVS",
     address: '0xCfA786C17d6739CBC702693F23cA4417B5945491'
   },
   // {

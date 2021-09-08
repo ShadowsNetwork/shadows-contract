@@ -55,5 +55,5 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   // console.log(remaining.toString());
 };
 
-module.exports.tags = ['TransferShadows', 'Config'];
+module.exports.tags = ['TransferShadows'];
 

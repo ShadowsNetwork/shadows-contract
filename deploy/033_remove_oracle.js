@@ -19,6 +19,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   }
 };
 
-module.exports.tags = ['RemoveOracle', 'Config'];
+module.exports.tags = ['RemoveOracle'];
 
 

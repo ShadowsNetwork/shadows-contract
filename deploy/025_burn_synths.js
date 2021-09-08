@@ -26,6 +26,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 };
 
-module.exports.tags = ['BurnSynth', 'Config'];
+module.exports.tags = ['BurnSynth'];
 
 
