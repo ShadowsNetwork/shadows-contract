@@ -57,7 +57,7 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
 
     function _transfer(address sender, address recipient, uint256 amount) internal override {
         if (recipient == feePool().FEE_ADDRESS()) {
-            return _transferToFeeAddress(sender, amount);
+            return _transferToFeeAddress(recipient, amount);
         }
 
         if (recipient == address(0)) {
