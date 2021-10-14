@@ -64,6 +64,10 @@ contract FeePool is
         external
         initializer
     {
+        require(
+            _exchangeFeeRate < SafeDecimalMath.unit() / 10,
+            "rate < MAX_EXCHANGE_FEE_RATE"
+        );
         __Ownable_init();
         __AddressResolver_init(_resolver);
         feePeriodDuration = 1 weeks;
