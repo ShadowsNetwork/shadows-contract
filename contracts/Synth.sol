@@ -13,8 +13,6 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
 
     bytes32 public currencyKey;
 
-    uint8 public constant DECIMALS = 18;
-    
     bytes32 private constant xUSD = "ShaUSD";
     function initialize(
         string calldata _tokenName,
