@@ -23,5 +23,8 @@ contract AddressResolverUpgradeable is Initializable, OwnableUpgradeable {
 
     function setResolver(AddressResolver _resolver) public onlyOwner {
         resolver = _resolver;
+        emit ResolverUpdated(_resolver);
     }
+
+    event ResolverUpdated(AddressResolver _resolver);
 }
