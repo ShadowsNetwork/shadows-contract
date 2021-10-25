@@ -18,4 +18,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     libraries: { SafeDecimalMath: safeDecimalMath.address },
   });
 };
-module.exports.tags = ['Oracle']
+module.exports.tags = ['Oracle','deploy']

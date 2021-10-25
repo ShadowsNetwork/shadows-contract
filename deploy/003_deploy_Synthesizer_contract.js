@@ -16,4 +16,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     libraries: { SafeDecimalMath: safeDecimalMath.address },
   });
 };
-module.exports.tags = ['Synthesizer']
+module.exports.tags = ['Synthesizer','deploy']

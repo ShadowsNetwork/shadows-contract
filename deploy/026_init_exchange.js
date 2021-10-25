@@ -83,7 +83,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
 };
 
-module.exports.tags = ['InitExchange'];
+module.exports.tags = ['InitExchange','deploy'];
 module.exports.dependencies = ['Exchanger'];
 
 

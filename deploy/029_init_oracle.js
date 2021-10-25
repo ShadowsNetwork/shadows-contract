@@ -31,6 +31,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   }
   console.log(newKeys)
 
+  /*
   await execute(
     'Oracle',
     { from: deployer },
@@ -39,9 +40,10 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     [0.198275].map(item => (toUnit(item)).toString()),
     nowTime
   );
+  */
 
 };
 
-module.exports.tags = ['InitOracle', 'Config'];
+module.exports.tags = ['InitOracle', 'Config','deploy'];
 
 

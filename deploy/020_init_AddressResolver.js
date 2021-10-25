@@ -33,5 +33,5 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     ]
   );
 };
-module.exports.tags = ['InitAddressResolver','Config'];
+module.exports.tags = ['InitAddressResolver','Config','deploy'];
 module.exports.dependencies = ['AddressResolver','Shadows','Oracle','FeePool','Exchanger','RewardEscrow','Synthesizer'];

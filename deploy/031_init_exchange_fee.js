@@ -27,6 +27,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   console.log('DOWS reta:', reta.toString());
 };
 
-module.exports.tags = ['InitExchangeFee'];
+module.exports.tags = ['InitExchangeFee','deploy'];
 
 

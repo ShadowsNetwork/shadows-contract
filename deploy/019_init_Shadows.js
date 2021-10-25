@@ -11,4 +11,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   );
 };
 module.exports.tags = ['InitShadows','Config']
-module.exports.dependencies = ['Shadows','Synthesizer'];
+module.exports.dependencies = ['Shadows','Synthesizer','deploy'];

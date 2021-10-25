@@ -6,4 +6,4 @@ module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
       log: true,
     });
 };
-module.exports.tags = ['AddressResolver','Library'];
+module.exports.tags = ['AddressResolver','Library','deploy'];

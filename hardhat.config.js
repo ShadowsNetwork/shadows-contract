@@ -68,6 +68,12 @@ module.exports = {
       loggingEnabled: true,
       gasPrice: parseInt(we3utils.toWei("20", "gwei")),
     },
+    bsctestnetv2: {
+      url: process.env.BSC_TESTNET_PROVIDER_URL,
+      accounts: {mnemonic: mnemonic},
+      loggingEnabled: true,
+      gasPrice: parseInt(we3utils.toWei("20", "gwei")),
+    },
     bsc: {
       url: process.env.BSC_MAINNET_PROVIDER_URL,
       accounts: {mnemonic: mnemonic},
