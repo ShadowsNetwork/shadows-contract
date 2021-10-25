@@ -130,7 +130,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
         bytes32 destinationCurrencyKey,
         uint roundIdForSrc,
         uint roundIdForDest
-    ) external view rateNotStale(sourceCurrencyKey) rateNotStale(destinationCurrencyKey) returns (uint) {
+    ) external view returns (uint) {
         // If there's no change in the currency, then just return the amount they gave us
         if (sourceCurrencyKey == destinationCurrencyKey) return sourceAmount;
 

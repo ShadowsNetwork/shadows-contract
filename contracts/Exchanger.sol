@@ -101,9 +101,6 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         view
         returns (uint256 amountReceived, uint256 fee)
     {
-        // What's the fee on that currency that we should deduct?
-        amountReceived = destinationAmount;
-
         // Get the exchange fee rate
         uint256 exchangeFeeRate = feePool().exchangeFeeRate();
 

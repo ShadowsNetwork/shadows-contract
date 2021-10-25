@@ -13,8 +13,6 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
 
     bytes32 public currencyKey;
 
-    uint8 public constant DECIMALS = 18;
-    
     bytes32 private constant xUSD = "ShaUSD";
     function initialize(
         string calldata _tokenName,
@@ -57,7 +55,7 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
 
     function _transfer(address sender, address recipient, uint256 amount) internal override {
         if (recipient == feePool().FEE_ADDRESS()) {
-            return _transferToFeeAddress(sender, amount);
+            return _transferToFeeAddress(recipient, amount);
         }
 
         if (recipient == address(0)) {
