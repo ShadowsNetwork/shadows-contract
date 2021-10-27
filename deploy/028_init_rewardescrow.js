@@ -12,11 +12,11 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     'RewardEscrow',
     { from: deployer },
     'setVestingScheduleTime',
-    '1800', //30 min
+    '2419200', //30 min
   );
 
 };
 
-module.exports.tags = ['InitRewardescrow', 'Config'];
+module.exports.tags = ['InitRewardescrow', 'Config', 'deploy'];
 
 

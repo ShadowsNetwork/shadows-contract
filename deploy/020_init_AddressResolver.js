@@ -10,6 +10,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const exchanger = await get("Exchanger");
   const rewardEscrow = await get("RewardEscrow");
   const synthesizer = await get("Synthesizer");
+  const liquidations = await get("Liquidations");
 
   await execute(
     "AddressResolver",
@@ -22,6 +23,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
       toBytes32("Exchanger"),
       toBytes32("RewardEscrow"),
       toBytes32("Synthesizer"),
+      toBytes32("Liquidations"),
     ],
     [
       shadows.address,
@@ -30,8 +32,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
       exchanger.address,
       rewardEscrow.address,
       synthesizer.address,
+      liquidations.address,
     ]
   );
 };
 module.exports.tags = ['InitAddressResolver','Config','deploy'];
-module.exports.dependencies = ['AddressResolver','Shadows','Oracle','FeePool','Exchanger','RewardEscrow','Synthesizer'];
+//module.exports.dependencies = ['AddressResolver','Shadows','Oracle','FeePool','Exchanger','RewardEscrow','Synthesizer'];
