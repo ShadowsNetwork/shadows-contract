@@ -11,6 +11,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   let FEE = await read('FeePool', {}, 'exchangeFeeRate');
   console.log(FEE.toString());
 
+  // change ExchangeFeeRate; default:0.0030
   await execute(
     'FeePool',
     { from: deployer },
@@ -26,6 +27,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   console.log('DOWS reta:', reta.toString());
 };
 
-module.exports.tags = ['ExchangeFee', 'Config'];
+module.exports.tags = ['InitExchangeFee','deploy'];
 
 

@@ -40,7 +40,7 @@ contract("Synthesizer", async (accounts) => {
   ] = accounts;
 
   const [xUSD, xAUD, xEUR, DOWS, xBTC, xETH] = [
-    "xUSD",
+    "ShaUSD",
     "xAUD",
     "xEUR",
     "DOWS",
@@ -126,8 +126,8 @@ contract("Synthesizer", async (accounts) => {
     //add xUSD
     const xUSDSynth = await Synth.new();
     await xUSDSynth.initialize(
-      "Synth xUSD",
-      "xUSD",
+      "Shadows USD",
+      "ShaUSD",
       xUSD,
       addressResolver.address,
       { from: owner }
@@ -759,11 +759,11 @@ contract("Synthesizer", async (accounts) => {
 
       const debt1 = await synthesizer.debtBalanceOf(
         account1,
-        toBytes32("xUSD")
+        xUSD
       );
       const debt2 = await synthesizer.debtBalanceOf(
         account2,
-        toBytes32("xUSD")
+        xUSD
       );
       assert.bnEqual(debt1, 0);
       assert.bnEqual(debt2, 0);
@@ -779,7 +779,7 @@ contract("Synthesizer", async (accounts) => {
       const issuedSynths = toUnit("1001");
       await synthesizer.issueSynths(issuedSynths, { from: account1 });
 
-      const debt = await synthesizer.debtBalanceOf(account1, toBytes32("xUSD"));
+      const debt = await synthesizer.debtBalanceOf(account1, xUSD);
       assert.bnEqual(debt, issuedSynths);
     });
   });
@@ -1317,7 +1317,7 @@ contract("Synthesizer", async (accounts) => {
     await synthesizer.issueSynths(toUnit("51"), { from: account2 });
     await synthesizer.burnSynths(burntSynthsPt2, { from: account1 });
 
-    const debt = await synthesizer.debtBalanceOf(account1, toBytes32("xUSD"));
+    const debt = await synthesizer.debtBalanceOf(account1, xUSD);
     const expectedDebt = issuedSynthsPt1
       .add(issuedSynthsPt2)
       .sub(burntSynthsPt1)

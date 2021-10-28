@@ -16,4 +16,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     libraries: { SafeDecimalMath: safeDecimalMath.address },
   });
 };
-module.exports.tags = ['Liquidations']
+module.exports.tags = ['Liquidations','deploy']

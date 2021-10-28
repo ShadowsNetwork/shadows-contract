@@ -6,4 +6,4 @@ module.exports = async ({getNamedAccounts, deployments, getChainId}) => {
       log: true,
     });
 };
-module.exports.tags = ['SafeDecimalMath','Library'];
+module.exports.tags = ['SafeDecimalMath','Library','deploy'];

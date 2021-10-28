@@ -22,7 +22,7 @@ contract Synthesizer is
     using SafeMath for uint;
     using SafeDecimalMath for uint;
 
-    bytes32 constant xUSD = "xUSD";
+    bytes32 constant xUSD = "ShaUSD";
     uint256 public issuanceRatio;
 
     ISynth[] public availableSynths;
@@ -141,7 +141,7 @@ contract Synthesizer is
         delete synths[currencyKey];
     }
 
-    function issueSynthsFrom(address from, uint256 amount) public {
+    function _issueSynthsFrom(address from, uint256 amount) internal {
         (uint256 maxIssuable, uint256 existingDebt) =
             remainingIssuableSynths(from);
         require(amount <= maxIssuable, "Amount too large");
@@ -154,13 +154,13 @@ contract Synthesizer is
     }
 
     function issueSynths(uint256 amount) external {
-        return issueSynthsFrom(_msgSender(), amount);
+        return _issueSynthsFrom(_msgSender(), amount);
     }
 
     function issueMaxSynths() external {
         (uint256 maxIssuable, ) = remainingIssuableSynths(_msgSender());
 
-        return issueSynthsFrom(_msgSender(), maxIssuable);
+        return _issueSynthsFrom(_msgSender(), maxIssuable);
     }
 
     function burnSynths(uint256 amount) external {

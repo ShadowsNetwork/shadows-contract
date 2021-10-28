@@ -9,52 +9,41 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const accounts = [account1, account2, account3];
   const nowTime = await currentTime();
 
-  /*
-  await execute(
-    'Oracle',
-    { from: deployer },
-    'setRateStalePeriod',
-    3600 * 3
-  );
-  */
+  // setRateStalePeriod; default: 3 hours
+  // await execute(
+  //   'Oracle',
+  //   { from: deployer },
+  //   'setRateStalePeriod',
+  //   3600 * 3
+  // );
 
+  // add address to oracle
   const newKeys = [];
   for (const item of synths) {
     const ratesForCurrencies = await read('Oracle', {}, 'rateForCurrency', toBytes32(item.symbol));
     console.log(`${item.symbol} rete: ${fromUnit(ratesForCurrencies.toString())}`);
     const retaValue = fromUnit(ratesForCurrencies.toString());
 
-    // if (!Number(retaValue) && item.address) {
-    //   newKeys.push(item.symbol);
-    //   await execute('Oracle', { from: deployer }, 'addAggregator', toBytes32(item.symbol), item.address);
-    // }
+    if (!Number(retaValue) && item.address) {
+      newKeys.push(item.symbol);
+      await execute('Oracle', { from: deployer }, 'addAggregator', toBytes32(item.symbol), item.address);
+    }
   }
   console.log(newKeys)
 
-  // if (newKeys.length > 0) {
-    await execute(
-      'Oracle',
-      { from: deployer },
-      'updateRates',
-      ['xCOINBASE'].map(item => toBytes32(item)),
-      [0.7].map(item => (toUnit(item)).toString()),
-      nowTime
-    );
-  // }
-
-  for (const item of synths) {
-    const getCurrentRoundId = await read('Oracle', {}, 'getCurrentRoundId', toBytes32(item.symbol));
-
-    const value = await read('Oracle', {}, 'rateAndTimestampAtRound', toBytes32(item.symbol), getCurrentRoundId);
-    console.log(item.symbol, getCurrentRoundId.toString(), fromUnit(value[0].toString()), value[1].toString(), new Date(Number(value[1].toString() + '000')));
-  }
-
-  const getDowsCurrentRoundId = await read('Oracle', {}, 'getCurrentRoundId', toBytes32('DOWS'));
-  const dowsValue = await read('Oracle', {}, 'rateAndTimestampAtRound', toBytes32('DOWS'), getDowsCurrentRoundId);
-  console.log('DOWS', fromUnit(dowsValue[0].toString()), dowsValue[1].toString(), new Date(Number(dowsValue[1].toString() + '000')));
+  /*
+  await execute(
+    'Oracle',
+    { from: deployer },
+    'updateRates',
+    ['DOWS'].map(item => toBytes32(item)),
+    [0.198275].map(item => (toUnit(item)).toString()),
+    nowTime
+  );
+  */
 
 };
 
-module.exports.tags = ['InitOracle', 'Config'];
+module.exports.tags = ['InitOracle', 'Config','deploy'];
 
 

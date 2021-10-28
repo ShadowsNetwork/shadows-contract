@@ -1,16 +1,24 @@
+const { toBN } = require('web3-utils');
+
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
-  const { deploy, get, execute } = deployments;
+  const { deploy, get, execute, read } = deployments;
   const { deployer, shadowsOwner } = await getNamedAccounts();
 
-  // set Issuance Ratio
-  const unit = await read('SafeDecimalMath', 'unit');
+  // set Issuance Ratio, 800%
   await execute(
     'Synthesizer',
     { from: deployer },
     'setIssuanceRatio',
-    toBN(10 ** 18 / 5).toString()
+    toBN(10 ** 18 / 8).toString()
   );
-  console.log((await read('Synthesizer', 'issuanceRatio')).toString());
+
+  // set liquidation Ratio, 300%
+  await execute(
+    'Liquidations',
+    { from: deployer },
+    'setLiquidationRatio',
+    toBN(10 ** 18 / 3).toString()
+  );
 };
-module.exports.tags = ['InitValue', 'Config']
-module.exports.dependencies = ['SafeDecimalMath', 'AddressResolver', 'Shadows', 'Oracle', 'FeePool', 'Exchanger', 'RewardEscrow', 'Synthesizer'];
+module.exports.tags = ['InitValue', 'Config','deploy']
+//module.exports.dependencies = ['SafeDecimalMath', 'AddressResolver', 'Shadows', 'Oracle', 'FeePool', 'Exchanger', 'RewardEscrow', 'Synthesizer'];

@@ -13,8 +13,7 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
 
     bytes32 public currencyKey;
 
-    uint8 public constant DECIMALS = 18;
-
+    bytes32 private constant xUSD = "ShaUSD";
     function initialize(
         string calldata _tokenName,
         string calldata _tokenSymbol,
@@ -48,7 +47,7 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
             uint amountHeld = balanceOf(holder);
 
             if (amountHeld > 0) {
-                exchanger().exchange(holder, currencyKey, amountHeld, "xUSD", holder);
+                exchanger().exchange(holder, currencyKey, amountHeld, xUSD, holder);
                 emit Purged(holder, amountHeld);
             }
         }
@@ -56,7 +55,7 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
 
     function _transfer(address sender, address recipient, uint256 amount) internal override {
         if (recipient == feePool().FEE_ADDRESS()) {
-            return _transferToFeeAddress(sender, amount);
+            return _transferToFeeAddress(recipient, amount);
         }
 
         if (recipient == address(0)) {
@@ -72,11 +71,11 @@ contract Synth is Initializable, OwnableUpgradeable, ERC20Upgradeable, AddressRe
     function _transferToFeeAddress(address recipient, uint amount) internal{
         uint amountInUSD;
 
-        if (currencyKey == "xUSD") {
+        if (currencyKey == xUSD) {
             amountInUSD = amount;
             super._transfer(_msgSender(), recipient, amount);
         } else {
-            amountInUSD = exchanger().exchange(_msgSender(), currencyKey, amount, "xUSD", feePool().FEE_ADDRESS());
+            amountInUSD = exchanger().exchange(_msgSender(), currencyKey, amount, xUSD, feePool().FEE_ADDRESS());
         }
 
         feePool().recordFeePaid(amountInUSD);

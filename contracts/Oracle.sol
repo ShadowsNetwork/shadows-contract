@@ -11,6 +11,8 @@ contract Oracle is Initializable, OwnableUpgradeable {
     using SafeMath for uint;
     using SafeDecimalMath for uint;
 
+    bytes32 private constant xUSD = "ShaUSD";
+
     struct RateAndUpdatedTime {
         uint216 rate;
         uint40 time;
@@ -47,7 +49,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
         oracle = _oracle;
 
         // The xUSD rate is always 1 and is never stale.
-        _setRate("xUSD", SafeDecimalMath.unit(), block.timestamp);
+        _setRate(xUSD, SafeDecimalMath.unit(), block.timestamp);
 
         internalUpdateRates(_currencyKeys, _newRates, block.timestamp);
 
@@ -128,7 +130,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
         bytes32 destinationCurrencyKey,
         uint roundIdForSrc,
         uint roundIdForDest
-    ) external view rateNotStale(sourceCurrencyKey) rateNotStale(destinationCurrencyKey) returns (uint) {
+    ) external view returns (uint) {
         // If there's no change in the currency, then just return the amount they gave us
         if (sourceCurrencyKey == destinationCurrencyKey) return sourceAmount;
 
@@ -196,7 +198,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
             RateAndUpdatedTime memory rateAndUpdateTime = getRateAndUpdatedTime(currencyKeys[i]);
             _localRates[i] = uint256(rateAndUpdateTime.rate);
             if (!anyRateStale) {
-                anyRateStale = (currencyKeys[i] != "xUSD" && uint256(rateAndUpdateTime.time).add(period) < block.timestamp);
+                anyRateStale = (currencyKeys[i] != xUSD && uint256(rateAndUpdateTime.time).add(period) < block.timestamp);
             }
         }
 
@@ -205,7 +207,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
 
     function rateIsStale(bytes32 currencyKey) public view returns (bool) {
         // xUSD is a special case and is never stale.
-        if (currencyKey == "xUSD") return false;
+        if (currencyKey == xUSD) return false;
 
         return lastRateUpdateTimes(currencyKey).add(rateStalePeriod) < block.timestamp;
     }
@@ -216,7 +218,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
 
         while (i < currencyKeys.length) {
             // xUSD is a special case and is never false
-            if (currencyKeys[i] != "xUSD" && lastRateUpdateTimes(currencyKeys[i]).add(rateStalePeriod) < block.timestamp) {
+            if (currencyKeys[i] != xUSD && lastRateUpdateTimes(currencyKeys[i]).add(rateStalePeriod) < block.timestamp) {
                 return true;
             }
             i += 1;
@@ -247,7 +249,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
             // truely worthless and still valid. In this scenario, we should
             // delete the rate and remove it from the system.
             require(newRates[i] != 0, "Zero is not a valid rate, please call deleteRate instead.");
-            require(currencyKey != "xUSD", "Rate of xUSD cannot be updated, it's always UNIT.");
+            require(currencyKey != xUSD, "Rate of xUSD cannot be updated, it's always UNIT.");
 
             // We should only update the rate if it's at least the same age as the last rate we've got.
             if (timeSent < lastRateUpdateTimes(currencyKey)) {

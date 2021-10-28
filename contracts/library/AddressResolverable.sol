@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract AddressResolverable is Ownable {
     AddressResolver public resolver;
 
-    constructor(address _resolver) public {
+    constructor(address _resolver)  {
         resolver = AddressResolver(_resolver);
     }
 

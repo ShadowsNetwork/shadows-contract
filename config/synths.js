@@ -1,13 +1,37 @@
 const synths = [
   {
-    name: "eth",
-    symbol: "xETH",
+    name: "Shadows USD",
+    symbol: "ShaUSD",
+  },
+  {
+    name: "shadows ShaETH",
+    symbol: "ShaETH",
     address: '0x143db3CEEfbdfe5631aDD3E50f7614B6ba708BA7'
   },
   {
-    name: "btc",
-    symbol: "xBTC",
+    name: "shadows ShaBTC",
+    symbol: "ShaBTC",
     address: '0x5741306c21795FdCBb9b265Ea0255F499DFe515C'
+  },
+  {
+    name: "shadows ShaBNB",
+    symbol: "ShaBNB",
+    address: '0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526'
+  },
+  {
+    name: "shadows ShaLINK",
+    symbol: "ShaLINK",
+    address: '0x1B329402Cb1825C6F30A0d92aB9E2862BE47333f'
+  },
+  {
+    name: "shadows ShaSXP",
+    symbol: "ShaSXP",
+    address: '0x678AC35ACbcE272651874E782DB5343F9B8a7D66'
+  },
+  {
+    name: "shadows ShaXVS",
+    symbol: "ShaXVS",
+    address: '0xCfA786C17d6739CBC702693F23cA4417B5945491'
   },
   // {
   //   name: "gold",
@@ -26,11 +50,6 @@ const synths = [
   //   symbol: "xADA",
   //   address: '0x5e66a1775BbC249b5D51C13d29245522582E671C'
   // },
-  {
-    name: "bnb",
-    symbol: "xBNB",
-    address: '0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526'
-  },
   // {
   //   name: "doge",
   //   symbol: "xDOGE",
@@ -41,11 +60,6 @@ const synths = [
   //   symbol: "xDOT",
   //   address: '0xEA8731FD0685DB8AeAde9EcAE90C4fdf1d8164ed'
   // },
-  {
-    name: "link",
-    symbol: "xLINK",
-    address: '0x1B329402Cb1825C6F30A0d92aB9E2862BE47333f'
-  },
   // {
   //   name: "ltc",
   //   symbol: "xLTC",
@@ -66,16 +80,6 @@ const synths = [
   //   symbol: "xCAKE",
   //   address: '0x81faeDDfeBc2F8Ac524327d70Cf913001732224C'
   // },
-  {
-    name: "sxp",
-    symbol: "xSXP",
-    address: '0x678AC35ACbcE272651874E782DB5343F9B8a7D66'
-  },
-  {
-    name: "xvs",
-    symbol: "xXVS",
-    address: '0xCfA786C17d6739CBC702693F23cA4417B5945491'
-  }
 ];
 
 module.exports = { synths };

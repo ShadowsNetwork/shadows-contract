@@ -15,7 +15,7 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
 
     bool public exchangeEnabled;
 
-    bytes32 private constant xUSD = "xUSD";
+    bytes32 private constant xUSD = "ShaUSD";
 
     bytes32 private constant DOWS = "DOWS";
 
@@ -44,12 +44,11 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
 
         _synthesizer.synths(sourceCurrencyKey).burn(from, sourceAmount);
 
-        uint256 destinationAmount =
-            _oracle.effectiveValue(
-                sourceCurrencyKey,
-                sourceAmount,
-                destinationCurrencyKey
-            );
+        uint256 destinationAmount = _oracle.effectiveValue(
+            sourceCurrencyKey,
+            sourceAmount,
+            destinationCurrencyKey
+        );
 
         uint256 fee;
 
@@ -93,6 +92,8 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         // Remit the rewards in DOWS
         uint256 rewardAmount = _oracle.effectiveValue(currencyKey, fee, DOWS);
         feePool().recordRewardPaid(rewardAmount);
+
+        emit FeePaided(currencyKey, usdFeeAmount, rewardAmount);
     }
 
     function calculateExchangeAmountMinusFees(uint256 destinationAmount)
@@ -100,9 +101,6 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         view
         returns (uint256 amountReceived, uint256 fee)
     {
-        // What's the fee on that currency that we should deduct?
-        amountReceived = destinationAmount;
-
         // Get the exchange fee rate
         uint256 exchangeFeeRate = feePool().exchangeFeeRate();
 
@@ -164,5 +162,11 @@ contract Exchanger is Initializable, AddressResolverUpgradeable {
         bytes32 toCurrencyKey,
         uint256 toAmount,
         address toAddress
+    );
+
+    event FeePaided(
+        bytes32 currencyKey,
+        uint256 usdFeeAmount,
+        uint256 rewardAmount
     );
 }

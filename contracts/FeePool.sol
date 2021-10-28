@@ -39,7 +39,7 @@ contract FeePool is
     address public constant FEE_ADDRESS =
         0x43707C6Bb6202a5E1007356539a925C052EA9767;
 
-    bytes32 private constant xUSD = "xUSD";
+    bytes32 private constant xUSD = "ShaUSD";
 
     // This struct represents the issuance activity that's happened in a fee period.
     struct FeePeriod {
@@ -64,6 +64,10 @@ contract FeePool is
         external
         initializer
     {
+        require(
+            _exchangeFeeRate < SafeDecimalMath.unit() / 10,
+            "rate < MAX_EXCHANGE_FEE_RATE"
+        );
         __Ownable_init();
         __AddressResolver_init(_resolver);
         feePeriodDuration = 1 weeks;

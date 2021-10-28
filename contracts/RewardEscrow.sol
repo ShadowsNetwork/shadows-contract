@@ -44,7 +44,7 @@ contract RewardEscrow is
     function initialize(address _resolver) external initializer {
         __Ownable_init();
         __AddressResolver_init(_resolver);
-        vestingScheduleTime = 52 weeks; // 1 year
+        vestingScheduleTime = 4 weeks;
     }
 
     function setVestingScheduleTime(uint256 _vestingScheduleTime) public onlyOwner {
