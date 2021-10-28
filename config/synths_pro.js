@@ -39,11 +39,6 @@ const synths = [
     address: '0x0Db8945f9aEf5651fa5bd52314C5aAe78DfDe540'
   },
   {
-    name: "shadows DAI",
-    symbol: "ShaDAI",
-    address: '0x132d3C0B1D2cEa0BC552588063bdBb210FDeecfA'
-  },
-  {
     name: "shadows DOGE",
     symbol: "ShaDOGE",
     address: '0x3AB0A0d137D4F946fBB19eecc6e92E64660231C8'
