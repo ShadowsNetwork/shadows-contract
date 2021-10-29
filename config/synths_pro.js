@@ -1,4 +1,4 @@
-const synths = [
+const synths_pro = [
   {
     name: "Shadows USD",
     symbol: "ShaUSD",
@@ -135,4 +135,4 @@ const synths = [
   },
 ];
 
-module.exports = { synths };
+module.exports = { synths_pro };
