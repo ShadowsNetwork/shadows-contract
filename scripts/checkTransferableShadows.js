@@ -5,12 +5,12 @@ const { ethers, upgrades, deployments, getNamedAccounts } = require("hardhat");
   const { deploy, get, execute, read } = deployments;
   const { deployer, owner } = await getNamedAccounts();
 
-  let dows = await execute(
+  let dows = await read(
     'Synthesizer',
-    { from: deployer },
+    { },
     'transferableShadows',
-    '0x564160aB47Ff2f414397B89BaaFcfAD06a02cB0a'
+    '0x64F77f32f62B0FDD5AE54acF9525Ca10D6F810CF'
   );
 
-  console.log('transferableShadows:', fromUnit(dows).toString());
+  console.log('transferableShadows:', dows.toString());
 })();
