@@ -1,6 +1,5 @@
 const { toBN } = require('web3-utils');
 const { toBytes32, bytesToString, fromUnit, toUnit } = require("../utils");
-const { synths } = require("../config/synths")
 
 (async () => {
   const { deploy, get, execute, read } = deployments;
