@@ -25,4 +25,4 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   }
 };
 module.exports.tags = ['InitSynth', 'Config','deploy'];
-module.exports.dependencies = ['Synth'];
+//module.exports.dependencies = ['Synth'];

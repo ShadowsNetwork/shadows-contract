@@ -1,18 +1,14 @@
 const { toBN } = require('web3-utils');
 const { toBytes32, bytesToString, fromUnit, toUnit } = require("../utils");
-const { synths } = require("../config/synths")
 
-module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
+(async () => {
   const { deploy, get, execute, read } = deployments;
   const { deployer, shadowsOwner } = await getNamedAccounts();
 
-  for (const synth of ['xBANK', 'xCAKE']) {
     await execute(
-      "Synthesizer",
+      "Oracle",
       { from: deployer },
-      "removeSynth",
-      toBytes32(synth)
+      "setRateStalePeriod",
+      14400
     );
-  }
-};
-module.exports.tags = ['RemoveSynth'];
+})();

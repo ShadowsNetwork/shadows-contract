@@ -5,6 +5,9 @@ const { ethers, upgrades, deployments, getNamedAccounts } = require("hardhat");
   const { deploy, get, execute, read } = deployments;
   const { deployer, owner } = await getNamedAccounts();
 
+  console.log('Feed Pool Address:', (await read('FeePool', {}, 'FEE_ADDRESS')).toString());
+  console.log('Shadows owner:', (await read('Shadows', {}, 'owner')).toString());
+  console.log('synthesizer:', (await read('Shadows', {}, 'synthesizer')).toString());
   console.log('issuanceRatio:', fromUnit((await read('Synthesizer', {}, 'issuanceRatio')).toString()));
   console.log('liquidationRatio:', fromUnit((await read('Liquidations', {}, 'liquidationRatio')).toString()));
   console.log('liquidationPenalty:', fromUnit((await read('Liquidations', {}, 'liquidationPenalty')).toString()));

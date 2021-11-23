@@ -37,7 +37,7 @@ contract FeePool is
     uint256 public exchangeFeeRate;
 
     address public constant FEE_ADDRESS =
-        0x43707C6Bb6202a5E1007356539a925C052EA9767;
+        0x06674B0236E817140b3e62134841BF724E08a793;
 
     bytes32 private constant xUSD = "ShaUSD";
 

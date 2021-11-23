@@ -105,10 +105,10 @@ contract Shadows is
     }
 
     function setSynthesizer(ISynthesizer _synthesizer) external onlyOwner {
-        require(
-            address(_synthesizer) != address(0),
-            "synthesizer can not be zero address"
-        );
+        // require(
+        // address(_synthesizer) != address(0),
+        //    "synthesizer can not be zero address"
+        // );
         synthesizer = _synthesizer;
         emit SynthesizerUpdated(_synthesizer);
     }

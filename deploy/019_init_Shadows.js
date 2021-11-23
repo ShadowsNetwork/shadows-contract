@@ -3,6 +3,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deployer, shadowsOwner } = await getNamedAccounts();
   const synthesizer = await get("Synthesizer");
 
+  console.log(synthesizer.address);
   await execute(
     "Shadows",
     { from: deployer },
@@ -10,5 +11,5 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     synthesizer.address
   );
 };
-module.exports.tags = ['InitShadows','Config']
+module.exports.tags = ['InitShadows','Config','deploy']
 //module.exports.dependencies = ['Shadows','Synthesizer','deploy'];
