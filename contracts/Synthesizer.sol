@@ -353,18 +353,11 @@ contract Synthesizer is
         uint totalRedeemed
     ) internal {
         // liquidation requires sUSD to be already settled / not in waiting period
-        uint amountBurnt = amount;
-
-        uint accountCollateral = collateral(burnForAddress);
-        if(totalRedeemed >= accountCollateral){
-            amountBurnt = existingDebt;
-        }
+        uint amountBurnt = existingDebt < amount ? existingDebt : amount;
 
         // Remove liquidated debt from the ledger
         _removeFromDebtRegister(burnForAddress, amountBurnt, existingDebt);
-        require(IERC20(address(synths[xUSD])).balanceOf(burnForAddress) >= amountBurnt, "Burn For Address Not enough xUSD");
-        ISynth(address(synths[xUSD])).burn(burnForAddress, amountBurnt);
-
+       
         // synth.burn does a safe subtraction on balance (so it will revert if there are not enough synths).
         require(IERC20(address(synths[xUSD])).balanceOf(liquidator) >= amountBurnt, "Liquidator Not enough xUSD");
         ISynth(address(synths[xUSD])).burn(liquidator, amount);
