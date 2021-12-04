@@ -19,8 +19,8 @@ contract Synthesizer is
     OwnableUpgradeable,
     AddressResolverUpgradeable
 {
-    using SafeMath for uint;
-    using SafeDecimalMath for uint;
+    using SafeMath for uint256;
+    using SafeDecimalMath for uint256;
 
     bytes32 constant xUSD = "ShaUSD";
     uint256 public issuanceRatio;
@@ -68,8 +68,8 @@ contract Synthesizer is
         uint256 total = 0;
         uint256 currencyRate = oracle.rateForCurrency(currencyKey);
 
-        (uint256[] memory rates, bool anyRateStale) =
-            oracle.ratesAndStaleForCurrencies(availableCurrencyKeys());
+        (uint256[] memory rates, bool anyRateStale) = oracle
+            .ratesAndStaleForCurrencies(availableCurrencyKeys());
         require(!anyRateStale, "Rates are stale");
 
         for (uint256 i = 0; i < availableSynths.length; i++) {
@@ -142,8 +142,9 @@ contract Synthesizer is
     }
 
     function _issueSynthsFrom(address from, uint256 amount) internal {
-        (uint256 maxIssuable, uint256 existingDebt) =
-            remainingIssuableSynths(from);
+        (uint256 maxIssuable, uint256 existingDebt) = remainingIssuableSynths(
+            from
+        );
         require(amount <= maxIssuable, "Amount too large");
 
         _addToDebtRegister(from, amount, existingDebt);
@@ -209,18 +210,16 @@ contract Synthesizer is
 
         // Figure out the global debt percentage delta from when they entered the system.
         // This is a high precision integer of 27 (1e27) decimals.
-        uint256 currentDebtOwnership =
-            lastDebtLedgerEntry()
-                .divideDecimalRoundPrecise(debtLedger[debtEntryIndex])
-                .multiplyDecimalRoundPrecise(initialDebtOwnership);
+        uint256 currentDebtOwnership = lastDebtLedgerEntry()
+            .divideDecimalRoundPrecise(debtLedger[debtEntryIndex])
+            .multiplyDecimalRoundPrecise(initialDebtOwnership);
 
         uint256 totalSystemValue = totalIssuedSynths(currencyKey);
 
         // Their debt balance is their portion of the total system value.
-        uint256 highPrecisionBalance =
-            totalSystemValue
-                .decimalToPreciseDecimal()
-                .multiplyDecimalRoundPrecise(currentDebtOwnership);
+        uint256 highPrecisionBalance = totalSystemValue
+            .decimalToPreciseDecimal()
+            .multiplyDecimalRoundPrecise(currentDebtOwnership);
 
         // Convert back into 18 decimals (1e18)
         return highPrecisionBalance.preciseDecimalToDecimal();
@@ -228,8 +227,11 @@ contract Synthesizer is
 
     function maxIssuableSynths(address _issuer) public view returns (uint256) {
         // What is the value of their DOWS balance in the destination currency?
-        uint256 destinationValue =
-            oracle().effectiveValue("DOWS", collateral(_issuer), xUSD);
+        uint256 destinationValue = oracle().effectiveValue(
+            "DOWS",
+            collateral(_issuer),
+            xUSD
+        );
 
         // They're allowed to issue up to issuanceRatio of that value
         return destinationValue.multiplyDecimal(issuanceRatio);
@@ -280,8 +282,8 @@ contract Synthesizer is
     {
         uint256 balance = shadows().balanceOf(account);
 
-        uint256 lockedShadowsValue =
-            debtBalanceOf(account, "DOWS").divideDecimalRound(issuanceRatio);
+        uint256 lockedShadowsValue = debtBalanceOf(account, "DOWS")
+            .divideDecimalRound(issuanceRatio);
 
         if (lockedShadowsValue >= balance) {
             return 0;
@@ -292,38 +294,63 @@ contract Synthesizer is
 
     function liquidateDelinquentAccount(
         address account,
-        uint susdAmount,
+        uint256 susdAmount,
         address liquidator
-    ) external rateNotStale('DOWS') returns (uint totalRedeemed, uint amountToLiquidate) {
+    )
+        external
+        rateNotStale("DOWS")
+        returns (uint256 totalRedeemed, uint256 amountToLiquidate)
+    {
         // Ensure waitingPeriod and xUSD balance is settled as burning impacts the size of debt pool
         ILiquidations _liquidations = liquidations();
 
         // Check account is liquidation open
-        require(_liquidations.isOpenForLiquidation(account), "Account not open for liquidation");
+        require(
+            _liquidations.isOpenForLiquidation(account),
+            "Account not open for liquidation"
+        );
 
         // require liquidator has enough xUSD
-        require(IERC20(address(synths[xUSD])).balanceOf(liquidator) >= susdAmount, "Not enough xUSD");
+        require(
+            IERC20(address(synths[xUSD])).balanceOf(liquidator) >= susdAmount,
+            "Not enough xUSD"
+        );
 
-        uint liquidationPenalty = _liquidations.liquidationPenalty();
+        uint256 liquidationPenalty = _liquidations.liquidationPenalty();
 
-        uint accountCollateral = collateral(account);
+        uint256 accountCollateral = collateral(account);
 
         // What is the value of their DOWS balance in xUSD?
-        uint collateralValue = oracle().effectiveValue("DOWS", accountCollateral, xUSD);
+        uint256 collateralValue = oracle().effectiveValue(
+            "DOWS",
+            accountCollateral,
+            xUSD
+        );
 
         // What is their debt in xUSD?
-        uint debtBalance = debtBalanceOf(account, xUSD);
+        uint256 debtBalance = debtBalanceOf(account, xUSD);
 
-        uint amountToFixRatio = _liquidations.calculateAmountToFixCollateral(debtBalance, collateralValue);
+        uint256 amountToFixRatio = _liquidations.calculateAmountToFixCollateral(
+            debtBalance,
+            collateralValue
+        );
 
         // Cap amount to liquidate to repair collateral ratio based on issuance ratio
-        amountToLiquidate = amountToFixRatio < susdAmount ? amountToFixRatio : susdAmount;
+        amountToLiquidate = amountToFixRatio < susdAmount
+            ? amountToFixRatio
+            : susdAmount;
 
         // what's the equivalent amount of DOWS for the amountToLiquidate?
-        uint dowsRedeemed = oracle().effectiveValue(xUSD, amountToLiquidate, "DOWS");
+        uint256 dowsRedeemed = oracle().effectiveValue(
+            xUSD,
+            amountToLiquidate,
+            "DOWS"
+        );
 
         // Add penalty
-        totalRedeemed = dowsRedeemed.multiplyDecimal(SafeDecimalMath.unit().add(liquidationPenalty));
+        totalRedeemed = dowsRedeemed.multiplyDecimal(
+            SafeDecimalMath.unit().add(liquidationPenalty)
+        );
 
         // if total DOWS to redeem is greater than account's collateral
         // account is under collateralised, liquidate all collateral and reduce xUSD to burn
@@ -333,11 +360,23 @@ contract Synthesizer is
             totalRedeemed = accountCollateral;
 
             // whats the equivalent xUSD to burn for all collateral less penalty
-            amountToLiquidate = oracle().effectiveValue("DOWS", accountCollateral.divideDecimal(SafeDecimalMath.unit().add(liquidationPenalty)), xUSD);
+            amountToLiquidate = oracle().effectiveValue(
+                "DOWS",
+                accountCollateral.divideDecimal(
+                    SafeDecimalMath.unit().add(liquidationPenalty)
+                ),
+                xUSD
+            );
         }
 
         // burn xUSD from messageSender (liquidator) and reduce account's debt
-        _burnSynthsForLiquidation(account, liquidator, amountToLiquidate, debtBalance, totalRedeemed);
+        _burnSynthsForLiquidation(
+            account,
+            liquidator,
+            amountToLiquidate,
+            debtBalance,
+            totalRedeemed
+        );
 
         if (amountToLiquidate == amountToFixRatio) {
             // Remove liquidation
@@ -348,25 +387,34 @@ contract Synthesizer is
     function _burnSynthsForLiquidation(
         address burnForAddress,
         address liquidator,
-        uint amount,
-        uint existingDebt,
-        uint totalRedeemed
+        uint256 amount,
+        uint256 existingDebt,
+        uint256 totalRedeemed
     ) internal {
         // liquidation requires sUSD to be already settled / not in waiting period
-        uint amountBurnt = amount;
+        uint256 amountBurnt = amount;
 
-        uint accountCollateral = collateral(burnForAddress);
-        if(totalRedeemed >= accountCollateral){
+        uint256 accountCollateral = collateral(burnForAddress);
+        if (totalRedeemed >= accountCollateral) {
             amountBurnt = existingDebt;
         }
 
         // Remove liquidated debt from the ledger
         _removeFromDebtRegister(burnForAddress, amountBurnt, existingDebt);
-         ISynth(address(synths[xUSD])).burn(burnForAddress, amountBurnt);
+        require(
+            IERC20(address(synths[xUSD])).balanceOf(burnForAddress) >=
+                amountBurnt,
+            "Burn For Address Not enough xUSD"
+        );
+        ISynth(address(synths[xUSD])).burn(burnForAddress, amountBurnt);
 
         // synth.burn does a safe subtraction on balance (so it will revert if there are not enough synths).
+        require(
+            IERC20(address(synths[xUSD])).balanceOf(liquidator) >= amountBurnt,
+            "Liquidator Not enough xUSD"
+        );
         ISynth(address(synths[xUSD])).burn(liquidator, amount);
-        
+
         // Store their debtRatio against a feeperiod to determine their fee/rewards % for the period
         _appendAccountIssuanceRecord(burnForAddress);
     }
@@ -380,8 +428,9 @@ contract Synthesizer is
 
         uint256 newTotalDebtIssued = amount.add(totalDebtIssued);
 
-        uint256 debtPercentage =
-            amount.divideDecimalRoundPrecise(newTotalDebtIssued);
+        uint256 debtPercentage = amount.divideDecimalRoundPrecise(
+            newTotalDebtIssued
+        );
 
         // And what effect does this percentage change have on the global debt holding of other issuers?
         // The delta specifically needs to not take into account any existing debt as it's already
@@ -392,8 +441,8 @@ contract Synthesizer is
         // And what does their debt ownership look like including this previous stake?
         if (existingDebt > 0) {
             debtPercentage = amount.add(existingDebt).divideDecimalRoundPrecise(
-                newTotalDebtIssued
-            );
+                    newTotalDebtIssued
+                );
         }
 
         // Are they a new issuer? If so, record them.
@@ -432,8 +481,9 @@ contract Synthesizer is
         // Set delta to 0 if no more debt left in system after user
         if (newTotalDebtIssued > 0) {
             // What is the percentage of the withdrawn debt (as a high precision int) of the total debt after?
-            uint256 debtPercentage =
-                debtToRemove.divideDecimalRoundPrecise(newTotalDebtIssued);
+            uint256 debtPercentage = debtToRemove.divideDecimalRoundPrecise(
+                newTotalDebtIssued
+            );
 
             // And what effect does this percentage change have on the global debt holding of other issuers?
             // The delta specifically needs to not take into account any existing debt as it's already
@@ -448,8 +498,9 @@ contract Synthesizer is
         } else {
             // What percentage of the debt will they be left with?
             uint256 newDebt = existingDebt.sub(debtToRemove);
-            uint256 newDebtPercentage =
-                newDebt.divideDecimalRoundPrecise(newTotalDebtIssued);
+            uint256 newDebtPercentage = newDebt.divideDecimalRoundPrecise(
+                newTotalDebtIssued
+            );
 
             // Store the debt percentage and debt ledger as high precision integers
             _setCurrentIssuanceData(from, newDebtPercentage);
