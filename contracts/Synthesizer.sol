@@ -362,9 +362,11 @@ contract Synthesizer is
 
         // Remove liquidated debt from the ledger
         _removeFromDebtRegister(burnForAddress, amountBurnt, existingDebt);
-         ISynth(address(synths[xUSD])).burn(burnForAddress, amountBurnt);
+        require(IERC20(address(synths[xUSD])).balanceOf(burnForAddress) >= amountBurnt, "Burn For Address Not enough xUSD");
+        ISynth(address(synths[xUSD])).burn(burnForAddress, amountBurnt);
 
         // synth.burn does a safe subtraction on balance (so it will revert if there are not enough synths).
+        require(IERC20(address(synths[xUSD])).balanceOf(liquidator) >= amountBurnt, "Liquidator Not enough xUSD");
         ISynth(address(synths[xUSD])).burn(liquidator, amount);
         
         // Store their debtRatio against a feeperiod to determine their fee/rewards % for the period
