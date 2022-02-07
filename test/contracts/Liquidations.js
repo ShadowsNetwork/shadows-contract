@@ -679,7 +679,7 @@ contract("Liquidations", async (accounts) => {
             let dowsRedeemed = await oracle.effectiveValue(xUSD, AmountToFix, toBytes32("DOWS"));
             dowsRedeemed = multiplyDecimal(dowsRedeemed, toUnit(1).add(liquidationPenalty));
 
-            assert.eventEqual(trans.logs[2], 'AccountLiquidated', {
+            assert.eventEqual(trans.logs[1], 'AccountLiquidated', {
               account: account1,
               dowsRedeemed: dowsRedeemed,
               amountLiquidated: AmountToFix,
@@ -815,81 +815,153 @@ contract("Liquidations", async (accounts) => {
 
           await oracle.updateRates(
             [DOWS],
-            ["0.01"].map(toUnit),
+            ["0.04"].map(toUnit),
             await currentTime(),
             { from: oracleAccount }
           );
 
-          await shadows.liquidateDelinquentAccount(account1, toUnit('5'), { from: account2 });
-
-          assert.bnNotEqual(await liquidations.getLiquidationDeadlineForAccount(account1), 0);
+          assert.bnEqual(await synthesizer.debtBalanceOf(account1, xUSD), toUnit('20'))
+          assert.bnEqual(await synthesizer.collateral(account1), toUnit('1000'))
+          assert.bnEqual(await synthesizer.collateralisationRatio(account1), toUnit("0.5"))
           assert.isTrue(await liquidations.isOpenForLiquidation(account1))
           assert.isTrue(await liquidations.isLiquidationDeadlinePassed(account1))
 
-          await shadows.liquidateDelinquentAccount(account1, toUnit('5'), { from: account2 });
+          await shadows.liquidateDelinquentAccount(account1, toUnit('20'), { from: account2 });
 
-          assert.bnEqual(await synthesizer.debtBalanceOf(account1, xUSD), 0)
-          assert.bnEqual(await synthesizer.collateral(account1), 0)
-          assert.bnEqual(await synthesizer.collateralisationRatio(account1), 0)
+          // // log((await synthesizer.debtBalanceOf(account1, xUSD)).toString());
+          // // log((await synthesizer.collateral(account1)).toString())
+          // // log((await synthesizer.collateralisationRatio(account1)).toString());
 
-          assert.bnNotEqual(await liquidations.getLiquidationDeadlineForAccount(account1), 0);
-          assert.isFalse(await liquidations.isOpenForLiquidation(account1))
-          assert.isTrue(await liquidations.isLiquidationDeadlinePassed(account1))
+          // assert.bnEqual(await synthesizer.debtBalanceOf(account1, xUSD), 0)
+          // // assert.bnEqual(await synthesizer.collateral(account1), 0)
 
-          const removeFlagTransaction = await liquidations.checkAndRemoveAccountInLiquidation(account1);
+          assert.bnEqual(await synthesizer.collateralisationRatio(account1), await synthesizer.issuanceRatio());
 
           assert.bnEqual(await liquidations.getLiquidationDeadlineForAccount(account1), 0)
           assert.isFalse(await liquidations.isOpenForLiquidation(account1))
           assert.isFalse(await liquidations.isLiquidationDeadlinePassed(account1))
 
+          // const removeFlagTransaction = await liquidations.checkAndRemoveAccountInLiquidation(account1);
+          // assert.bnEqual(await liquidations.getLiquidationDeadlineForAccount(account1), 0)
+          // assert.isFalse(await liquidations.isOpenForLiquidation(account1))
+          // assert.isFalse(await liquidations.isLiquidationDeadlinePassed(account1))
+
           await assert.revert(liquidations.checkAndRemoveAccountInLiquidation(account1), 'Account has no liquidation set');
 
-          assert.eventEqual(removeFlagTransaction, 'AccountRemovedFromLiquidation', {
-            account: account1,
+          // assert.eventEqual(removeFlagTransaction, 'AccountRemovedFromLiquidation', {
+          //   account: account1,
+          // });
+        });
+
+        it('should be able to check and remove liquidation flag as no more collateral balanceOf eq 0', async () => {
+          // transfer new DOWS and enough xUSD
+          await shadows.transfer(account2, toUnit('1000000'), {
+            from: owner,
           });
+          // Issue $800 xUSD
+          await synthesizer.issueMaxSynths({ from: account2 });
 
-          // const susdAmount = toUnit(20);
-          // const liquidationPenalty = await liquidations.liquidationPenalty();
-          // const accountCollateral = await synthesizer.collateral(account1);
-          // const collateralValue = await oracle.effectiveValue(toBytes32("DOWS"), accountCollateral, xUSD);
-          // const debtBalance = await synthesizer.debtBalanceOf(account1, xUSD);
-          // let amountToLiquidate;
-          // const amountToFixRatio = await liquidations.calculateAmountToFixCollateral(debtBalance, collateralValue);
-          // amountToLiquidate = amountToFixRatio.sub(susdAmount) < toUnit(0) ? amountToFixRatio : susdAmount;
-          // let dowsRedeemed = await oracle.effectiveValue(xUSD, amountToLiquidate, toBytes32("DOWS"));
-          // totalRedeemed = multiplyDecimal(dowsRedeemed, toUnit(1).add(liquidationPenalty));
+          await oracle.updateRates(
+            [DOWS],
+            ["0.02"].map(toUnit),
+            await currentTime(),
+            { from: oracleAccount }
+          );
 
-          // // log(amountToLiquidate)
-          // // log(dowsRedeemed)
-          // log(totalRedeemed)
-          // log(accountCollateral)
-          // console.log(totalRedeemed.sub(accountCollateral) > toUnit(0))
-          // // console.log(accountCollateral.sub(totalRedeemed) > toUnit(0))
-          // // log(totalRedeemed)
-          // // log(accountCollateral)
-          // // console.log(totalRedeemed > accountCollateral)
+          assert.bnEqual(await synthesizer.debtBalanceOf(account1, xUSD), toUnit('20'))
+          assert.bnEqual(await synthesizer.collateral(account1), toUnit('1000'))
+          assert.bnEqual(await synthesizer.collateralisationRatio(account1), toUnit('1'))
 
-          // if (totalRedeemed.sub(accountCollateral) > toUnit(0)) {
-          //   // set totalRedeemed to all collateral
-          //   totalRedeemed = accountCollateral;
+          await shadows.liquidateDelinquentAccount(account1, toUnit('20'), { from: account2 });
 
-          //   // whats the equivalent xUSD to burn for all collateral less penalty
-          //   amountToLiquidate = await oracle.effectiveValue(toBytes32("DOWS"), divideDecimal(accountCollateral, toUnit(1).add(liquidationPenalty)), xUSD);
-          // }
+          // assert.bnEqual(await synthesizer.debtBalanceOf(account1, xUSD), 0);
+          assert.bnEqual(await synthesizer.collateral(account1), 0);
+          assert.bnEqual(await synthesizer.collateralisationRatio(account1), 0);
 
-          // log(amountToLiquidate)
-          // log(debtBalance)
-          // log(totalRedeemed)
-          // log(amountToFixRatio)
-          // // burn xUSD from messageSender (liquidator) and reduce account's debt
-          // // _burnSynthsForLiquidation(account, liquidator, amountToLiquidate, debtBalance);
-
-          // if (amountToLiquidate == amountToFixRatio) {
-          //   //     // Remove liquidation
-          //   //     _liquidations.removeAccountInLiquidation(account);
-          // }
+          assert.bnEqual(await synthesizer.collateral(account2), toUnit('1001000'));
 
         });
+
+
+        it('should account1 transfer usd to anther account', async () => {
+
+          // assert.bnEqual(await xUSDContract.balanceOf(account1), toUnit(20))
+          // const account1Balance = await xUSDContract.balanceOf(account1);
+          // await xUSDContract.transfer(account3, account1Balance, {
+          //   from: account1,
+          // });
+
+          // assert.bnEqual(await xUSDContract.balanceOf(account1), toUnit(0));
+
+
+          await oracle.updateRates(
+            [DOWS],
+            ["0.04"].map(toUnit),
+            await currentTime(),
+            { from: oracleAccount }
+          );
+
+          await shadows.transfer(account2, toUnit('1000000'), {
+            from: owner,
+          });
+          // Issue $800 xUSD
+          await synthesizer.issueMaxSynths({ from: account2 });
+
+          // liquidateDelinquentAccount
+          await shadows.liquidateDelinquentAccount(account1, toUnit('20'), { from: account2 });
+
+          // log((await synthesizer.debtBalanceOf(account1, xUSD)).toString());
+          // log((await synthesizer.collateral(account1)).toString())
+          // log((await synthesizer.collateralisationRatio(account1)).toString());
+
+          // assert.bnEqual(await synthesizer.debtBalanceOf(account1, xUSD), 0)
+          // assert.bnEqual(await synthesizer.collateral(account1), 0)
+          assert.bnEqual(await synthesizer.collateralisationRatio(account1), await synthesizer.issuanceRatio())
+
+        });
+
+        // it('should account1 exchange', async () => {
+
+        //   await oracle.updateRates(
+        //     [xETH, DOWS, xBTC],
+        //     ["2000", "0.1", "30000"].map(toUnit),
+        //     await currentTime(),
+        //     { from: oracleAccount }
+        //   );
+        //   assert.bnEqual(await xUSDContract.balanceOf(account1), toUnit(20));
+
+        //   await synthesizer.exchange(xUSD, toUnit("20"), xETH, { from: account1 });
+
+        //   assert.bnEqual(await xUSDContract.balanceOf(account1), toUnit(0));
+
+
+        //   await oracle.updateRates(
+        //     [DOWS],
+        //     ["0.04"].map(toUnit),
+        //     await currentTime(),
+        //     { from: oracleAccount }
+        //   );
+
+        //   await shadows.transfer(account2, toUnit('1000000'), {
+        //     from: owner,
+        //   });
+        //   // Issue $800 xUSD
+        //   await synthesizer.issueMaxSynths({ from: account2 });
+
+        //   // liquidateDelinquentAccount
+        //   await shadows.liquidateDelinquentAccount(account1, toUnit('20'), { from: account2 });
+
+        //   // log((await synthesizer.debtBalanceOf(account1, xUSD)).toString());
+        //   // log((await synthesizer.collateral(account1)).toString())
+        //   // log((await synthesizer.collateralisationRatio(account1)).toString());
+
+        //   // assert.bnEqual(await synthesizer.debtBalanceOf(account1, xUSD), 0)
+        //   // assert.bnEqual(await synthesizer.collateral(account1), 0)
+        //   assert.bnEqual(await synthesizer.collateralisationRatio(account1), await synthesizer.issuanceRatio())
+
+        // });
+
+
 
         it('should checkAndRemoveAccountInLiquidation deadline for account 0', async () => {
           // transfer new DOWS and enough xUSD
@@ -945,7 +1017,7 @@ contract("Liquidations", async (accounts) => {
           const afterDebtBalanceOf = await synthesizer.debtBalanceOf(account3, xUSD);
 
           //  debtBalanceOf, DOWS number and collateralisationRatio eq 0
-          assert.bnEqual(await synthesizer.debtBalanceOf(account1, xUSD), 0);
+          // assert.bnEqual(await synthesizer.debtBalanceOf(account1, xUSD), 0);
           assert.bnEqual(await synthesizer.collateral(account1), 0);
           assert.bnEqual(await synthesizer.collateralisationRatio(account1), 0);
 
@@ -965,7 +1037,6 @@ contract("Liquidations", async (accounts) => {
       });
 
     });
-
 
   });
 
