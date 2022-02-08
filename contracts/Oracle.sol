@@ -36,6 +36,8 @@ contract Oracle is Initializable, OwnableUpgradeable {
     // How long will the contract assume the rate of any asset is correct
     uint public rateStalePeriod;
 
+    mapping(bytes32 => uint) private rateStalePeriods;
+
     mapping(bytes32 => uint) currentRoundForRate;
 
     function initialize(
@@ -193,8 +195,8 @@ contract Oracle is Initializable, OwnableUpgradeable {
         uint[] memory _localRates = new uint[](currencyKeys.length);
 
         bool anyRateStale = false;
-        uint period = rateStalePeriod;
         for (uint i = 0; i < currencyKeys.length; i++) {
+            uint period = _getRateStalePeriod(currencyKeys[i]);
             RateAndUpdatedTime memory rateAndUpdateTime = getRateAndUpdatedTime(currencyKeys[i]);
             _localRates[i] = uint256(rateAndUpdateTime.rate);
             if (!anyRateStale) {
@@ -209,7 +211,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
         // xUSD is a special case and is never stale.
         if (currencyKey == xUSD) return false;
 
-        return lastRateUpdateTimes(currencyKey).add(rateStalePeriod) < block.timestamp;
+        return lastRateUpdateTimes(currencyKey).add(_getRateStalePeriod(currencyKey)) < block.timestamp;
     }
 
     function anyRateIsStale(bytes32[] calldata currencyKeys) external view returns (bool) {
@@ -218,7 +220,7 @@ contract Oracle is Initializable, OwnableUpgradeable {
 
         while (i < currencyKeys.length) {
             // xUSD is a special case and is never false
-            if (currencyKeys[i] != xUSD && lastRateUpdateTimes(currencyKeys[i]).add(rateStalePeriod) < block.timestamp) {
+            if (currencyKeys[i] != xUSD && lastRateUpdateTimes(currencyKeys[i]).add(_getRateStalePeriod(currencyKeys[i])) < block.timestamp) {
                 return true;
             }
             i += 1;
@@ -235,6 +237,18 @@ contract Oracle is Initializable, OwnableUpgradeable {
             rate: uint216(rate),
             time: uint40(time)
         });
+    }
+
+    function _getRateStalePeriod(bytes32 currencyKey)
+        internal
+        view
+        returns (uint)
+    {
+        uint period = rateStalePeriods[currencyKey];
+        if (period <= 0) {
+            period = rateStalePeriod;
+        }
+        return period;
     }
 
     function internalUpdateRates(bytes32[] calldata currencyKeys, uint[] calldata newRates, uint timeSent) internal returns (bool) {
@@ -317,6 +331,28 @@ contract Oracle is Initializable, OwnableUpgradeable {
         emit RateStalePeriodUpdated(rateStalePeriod);
     }
 
+    function setRateStalePeriods(
+        bytes32[] calldata currencyKeys,
+        uint[] calldata newPeriods
+    ) external onlyOwner returns (bool) {
+        require(
+            currencyKeys.length == newPeriods.length,
+            "Currency key array length must match period array length."
+        );
+        // Loop through each key and perform update.
+        for (uint i = 0; i < currencyKeys.length; i++) {
+            bytes32 currencyKey = currencyKeys[i];
+
+            require(currencyKey != xUSD, "period of xUSD cannot be updated.");
+
+            rateStalePeriods[currencyKey] = newPeriods[i];
+        }
+
+        emit RatesStalePeriodUpdated(currencyKeys, newPeriods);
+
+        return true;
+    }
+
     modifier rateNotStale(bytes32 currencyKey) {
         require(!rateIsStale(currencyKey), "Rate stale or nonexistant currency");
         _;
@@ -333,4 +369,5 @@ contract Oracle is Initializable, OwnableUpgradeable {
     event RateDeleted(bytes32 currencyKey);
     event AggregatorAdded(bytes32 currencyKey, address aggregator);
     event AggregatorRemoved(bytes32 currencyKey, address aggregator);
+     event RatesStalePeriodUpdated(bytes32[] currencyKeys, uint[] newPeriods);
 }
