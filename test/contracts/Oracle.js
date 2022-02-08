@@ -126,5 +126,12 @@ contract("Oracle", async (accounts) => {
       await aggregatorETH.setLatestAnswer(convertToAggregatorPrice(20),await currentTime()-4000);
       assert.equal(await oracle.anyRateIsStale([xUSD,xBTC,xETH,DOWS]), false);
     });
+
+    it('when period is zero', async () => {
+      await oracle.setRateStalePeriods([xBTC],[0],{ from: owner });
+      assert.equal(await oracle.rateIsStale(xBTC), true);
+      await aggregatorBTC.setLatestAnswer(convertToAggregatorPrice(10),await currentTime()-900);
+      assert.equal(await oracle.rateIsStale(xBTC), false);
+    });
   });
 });
