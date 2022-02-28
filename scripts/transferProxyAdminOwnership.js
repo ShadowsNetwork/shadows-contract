@@ -8,6 +8,6 @@ const { ethers, upgrades, deployments, getNamedAccounts } = require("hardhat");
     "DefaultProxyAdmin",
     { from: deployer },
     "transferOwnership",
-    owner,
+    "0x6C8B64CB4194eC9F43AFFF6eA98e9405F6d36261",
   );
 })();

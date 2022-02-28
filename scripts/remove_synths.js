@@ -5,7 +5,7 @@ const { toBytes32, bytesToString, fromUnit, toUnit } = require("../utils");
   const { deploy, get, execute, read } = deployments;
   const { deployer, shadowsOwner } = await getNamedAccounts();
 
-  for (const synth of ['ShaVAI']) {
+  for (const synth of ['ShaXTZ']) {
     await execute(
       "Synthesizer",
       { from: deployer },
